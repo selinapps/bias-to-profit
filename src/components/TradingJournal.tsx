@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Download, FileText, RotateCcw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Clock, Download, FileText, RotateCcw, TrendingUp, TrendingDown, Minus, Shield, Globe, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Trading models and rules
@@ -73,6 +74,64 @@ const ASSETS = [
   'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'ES', 'NQ', '6E', 'XAUUSD', 'BTCUSD'
 ];
 
+// Trading Sessions (EST time zones)
+const TRADING_SESSIONS = [
+  {
+    id: 'asian_range',
+    name: 'Asian Range',
+    start: { hour: 20, minute: 0 }, // 8:00 PM EST
+    end: { hour: 4, minute: 0 }, // 4:00 AM EST (next day)
+    localTime: '3:00 AM - 11:00 AM (+03)',
+    color: 'bg-purple-500/20 text-purple-300 border-purple-400/50',
+    description: 'Consolidation period'
+  },
+  {
+    id: 'london_killzone',
+    name: 'London Killzone',
+    start: { hour: 2, minute: 0 }, // 2:00 AM EST
+    end: { hour: 5, minute: 0 }, // 5:00 AM EST
+    localTime: '9:00 AM - 12:00 PM (+03)',
+    color: 'bg-red-500/20 text-red-300 border-red-400/50',
+    description: 'High volatility - London open'
+  },
+  {
+    id: 'london_lunch',
+    name: 'London Lunch',
+    start: { hour: 7, minute: 0 }, // 7:00 AM EST
+    end: { hour: 8, minute: 0 }, // 8:00 AM EST
+    localTime: '2:00 PM - 3:00 PM (+03)',
+    color: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50',
+    description: 'Lower volatility'
+  },
+  {
+    id: 'london_ny_overlap',
+    name: 'London vs. New York',
+    start: { hour: 8, minute: 0 }, // 8:00 AM EST
+    end: { hour: 12, minute: 0 }, // 12:00 PM EST
+    localTime: '3:00 PM - 7:00 PM (+03)',
+    color: 'bg-blue-500/20 text-blue-300 border-blue-400/50',
+    description: 'Key trading window - Major overlap'
+  },
+  {
+    id: 'silver_bullet',
+    name: 'Silver Bullet Hours',
+    start: { hour: 10, minute: 0 }, // 10:00 AM EST
+    end: { hour: 11, minute: 0 }, // 11:00 AM EST
+    localTime: '5:00 PM - 6:00 PM (+03)',
+    color: 'bg-green-500/20 text-green-300 border-green-400/50',
+    description: 'Reversal window'
+  },
+  {
+    id: 'ny_session',
+    name: 'New York Session',
+    start: { hour: 8, minute: 0 }, // 8:00 AM EST
+    end: { hour: 17, minute: 0 }, // 5:00 PM EST
+    localTime: '3:00 PM - 12:00 AM (+03)',
+    color: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/50',
+    description: 'Major U.S. trading hours'
+  }
+];
+
 interface Trade {
   id: string;
   timestamp: string;
@@ -90,6 +149,16 @@ interface Trade {
   rMultiple?: number;
   pnl?: number;
   duration?: string;
+  entryChecklist?: Record<string, boolean>;
+  rulesTracked?: Record<string, boolean>;
+}
+
+interface DailyStats {
+  tradesCount: number;
+  profitableCount: number;
+  totalPnL: number;
+  isHouseMoneyActive: boolean;
+  isDayDisabled: boolean;
 }
 
 interface KPIStats {
@@ -135,11 +204,47 @@ export default function TradingJournal() {
   const [exitReason, setExitReason] = useState('Target Hit');
   const [selectedScenario, setSelectedScenario] = useState('');
   
-  // Time
+  // Entry checklist and rules tracking
+  const [entryChecklist, setEntryChecklist] = useState<Record<string, boolean>>({});
+  const [currentRulesChecked, setCurrentRulesChecked] = useState<Record<string, boolean>>({});
+  
+  // House of Money & Daily limits
+  const [dailyStats, setDailyStats] = useState<DailyStats>({
+    tradesCount: 0,
+    profitableCount: 0,
+    totalPnL: 0,
+    isHouseMoneyActive: false,
+    isDayDisabled: false
+  });
+  
+  // Time and session
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentSession, setCurrentSession] = useState<typeof TRADING_SESSIONS[0] | null>(null);
   
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => {
+      const now = new Date();
+      setCurrentTime(now);
+      
+      // Detect current trading session
+      const est = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+      const currentHour = est.getHours();
+      const currentMinute = est.getMinutes();
+      
+      const activeSession = TRADING_SESSIONS.find(session => {
+        const startMinutes = session.start.hour * 60 + session.start.minute;
+        const endMinutes = session.end.hour * 60 + session.end.minute;
+        const currentMinutes = currentHour * 60 + currentMinute;
+        
+        // Handle overnight sessions (like Asian Range)
+        if (startMinutes > endMinutes) {
+          return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+        }
+        return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+      });
+      
+      setCurrentSession(activeSession || null);
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
   
@@ -147,11 +252,60 @@ export default function TradingJournal() {
   useEffect(() => {
     if (marketState && EXECUTION_MODELS[marketState as keyof typeof EXECUTION_MODELS]) {
       setAvailableModels(EXECUTION_MODELS[marketState as keyof typeof EXECUTION_MODELS]);
+      // Reset entry checklist when model changes
+      setEntryChecklist({});
     } else {
       setAvailableModels([]);
     }
     setSelectedModel('');
   }, [marketState]);
+  
+  // Initialize entry checklist when model is selected
+  useEffect(() => {
+    if (selectedModel && TRADING_RULES[selectedModel]) {
+      const initialChecklist: Record<string, boolean> = {};
+      TRADING_RULES[selectedModel].forEach((_, index) => {
+        initialChecklist[`rule_${index}`] = false;
+      });
+      setEntryChecklist(initialChecklist);
+    }
+  }, [selectedModel]);
+  
+  // Update daily stats when trades change
+  useEffect(() => {
+    const todayTrades = closedTrades.filter(trade => {
+      const tradeDate = new Date(trade.timestamp).toDateString();
+      const today = new Date().toDateString();
+      return tradeDate === today;
+    });
+    
+    const profitableTrades = todayTrades.filter(trade => (trade.pnl || 0) > 0);
+    const lossTrades = todayTrades.filter(trade => (trade.pnl || 0) < 0);
+    const totalPnL = todayTrades.reduce((sum, trade) => sum + (trade.pnl || 0), 0);
+    
+    // House of Money logic: After 3 trades, if profitable, activate house money
+    const isHouseMoneyActive = todayTrades.length >= 3 && totalPnL > 0;
+    
+    // Disable day if 3 consecutive losses
+    const isDayDisabled = lossTrades.length >= 3;
+    
+    setDailyStats({
+      tradesCount: todayTrades.length,
+      profitableCount: profitableTrades.length,
+      totalPnL,
+      isHouseMoneyActive,
+      isDayDisabled
+    });
+    
+    // Update trade form risk based on House of Money
+    if (isHouseMoneyActive && !isDayDisabled) {
+      const halfProfit = Math.floor(totalPnL / 2);
+      setTradeForm(prev => ({ 
+        ...prev, 
+        risk: Math.max(halfProfit, 125).toString() // Min risk of $125
+      }));
+    }
+  }, [closedTrades]);
   
   // Calculate trading stats
   const calculateStats = useCallback((): KPIStats => {
@@ -188,9 +342,13 @@ export default function TradingJournal() {
   
   const stats = calculateStats();
   
-  // Form validation
+  // Form validation with checklist requirement
+  const allRulesChecked = selectedModel && TRADING_RULES[selectedModel] ? 
+    TRADING_RULES[selectedModel].every((_, index) => entryChecklist[`rule_${index}`]) : false;
+  
   const isFormValid = tradeForm.asset && tradeForm.side && tradeForm.model && 
-                     tradeForm.entry && tradeForm.stop && tradeForm.risk;
+                     tradeForm.entry && tradeForm.stop && tradeForm.risk && 
+                     allRulesChecked && !dailyStats.isDayDisabled;
   
   // Calculate risk metrics
   const calculateRiskMetrics = () => {
@@ -229,12 +387,14 @@ export default function TradingJournal() {
       target: tradeForm.target ? parseFloat(tradeForm.target) : undefined,
       risk: parseFloat(tradeForm.risk),
       notes: tradeForm.notes,
-      status: 'open'
+      status: 'open',
+      entryChecklist: { ...entryChecklist },
+      rulesTracked: {}
     };
     
     setOpenTrades(prev => [...prev, newTrade]);
     
-    // Clear form
+    // Clear form and checklist
     setTradeForm({
       ...tradeForm,
       model: '',
@@ -243,6 +403,7 @@ export default function TradingJournal() {
       target: '',
       notes: ''
     });
+    setEntryChecklist({});
     
     toast({
       title: "Trade Added",
@@ -257,6 +418,15 @@ export default function TradingJournal() {
     setExitReason('Target Hit');
     setSelectedScenario('');
     setShowTradeSheet(true);
+    
+    // Initialize rules tracking for this trade
+    if (trade.model && TRADING_RULES[trade.model]) {
+      const initialRulesTracked: Record<string, boolean> = {};
+      TRADING_RULES[trade.model].forEach((_, index) => {
+        initialRulesTracked[`rule_${index}`] = trade.rulesTracked?.[`rule_${index}`] || false;
+      });
+      setCurrentRulesChecked(initialRulesTracked);
+    }
   };
   
   // Execute scenario
@@ -299,12 +469,14 @@ export default function TradingJournal() {
       exitReason,
       rMultiple,
       pnl,
-      duration: calculateDuration(currentTrade.timestamp)
+      duration: calculateDuration(currentTrade.timestamp),
+      rulesTracked: { ...currentRulesChecked }
     };
     
     setClosedTrades(prev => [...prev, closedTrade]);
     setOpenTrades(prev => prev.filter(t => t.id !== currentTrade.id));
     setShowTradeSheet(false);
+    setCurrentRulesChecked({});
     
     toast({
       title: "Trade Closed",
@@ -384,6 +556,17 @@ ${closedTrades.map(trade =>
     setBias('');
     setMarketState('');
     setSelectedModel('');
+    setEntryChecklist({});
+    setCurrentRulesChecked({});
+    setDailyStats({
+      tradesCount: 0,
+      profitableCount: 0,
+      totalPnL: 0,
+      isHouseMoneyActive: false,
+      isDayDisabled: false
+    });
+    // Reset risk back to default
+    setTradeForm(prev => ({ ...prev, risk: '250' }));
     toast({ title: "Day Reset", description: "All trades and settings cleared." });
   };
 
@@ -398,6 +581,24 @@ ${closedTrades.map(trade =>
               <Clock className="mr-1 h-3 w-3" />
               {currentTime.toLocaleTimeString()}
             </Badge>
+            {currentSession && (
+              <Badge className={`${currentSession.color} border`}>
+                <Globe className="mr-1 h-3 w-3" />
+                {currentSession.name}
+              </Badge>
+            )}
+            {dailyStats.isHouseMoneyActive && (
+              <Badge className="bg-green-500/20 text-green-300 border-green-400/50">
+                <Shield className="mr-1 h-3 w-3" />
+                House Money
+              </Badge>
+            )}
+            {dailyStats.isDayDisabled && (
+              <Badge className="bg-red-500/20 text-red-300 border-red-400/50">
+                <AlertTriangle className="mr-1 h-3 w-3" />
+                Day Disabled
+              </Badge>
+            )}
             <Button variant="terminal" size="sm" onClick={() => exportReport('md')}>
               <FileText className="mr-1 h-3 w-3" />
               Export MD
@@ -421,6 +622,84 @@ ${closedTrades.map(trade =>
       <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6 p-6 max-w-7xl mx-auto">
         {/* Left Sidebar - Decision Tree & KPIs */}
         <div className="space-y-6">
+          {/* Current Session Display */}
+          <Card className="bg-gradient-card border-trading-border shadow-trading">
+            <CardHeader>
+              <CardTitle className="text-sm uppercase tracking-wider text-trading-muted">
+                Trading Sessions (EST)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {TRADING_SESSIONS.map(session => (
+                  <div
+                    key={session.id}
+                    className={`p-3 rounded-lg border transition-all ${
+                      currentSession?.id === session.id
+                        ? session.color + ' border-opacity-100'
+                        : 'border-trading-border bg-secondary/20'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm">{session.name}</div>
+                        <div className="text-xs text-trading-muted">{session.localTime}</div>
+                      </div>
+                      <div className="text-xs text-trading-muted">{session.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Daily Stats Card */}
+          <Card className="bg-gradient-card border-trading-border shadow-trading">
+            <CardHeader>
+              <CardTitle className="text-sm uppercase tracking-wider text-trading-muted">
+                Daily Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-secondary/50 border border-trading-border rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-foreground">{dailyStats.tradesCount}</div>
+                  <div className="text-xs text-trading-muted uppercase">Today's Trades</div>
+                </div>
+                <div className="bg-secondary/50 border border-trading-border rounded-lg p-3 text-center">
+                  <div className={`text-lg font-bold ${dailyStats.totalPnL >= 0 ? 'text-trading-success' : 'text-trading-danger'}`}>
+                    {formatCurrency(dailyStats.totalPnL)}
+                  </div>
+                  <div className="text-xs text-trading-muted uppercase">Daily P&L</div>
+                </div>
+              </div>
+              
+              {dailyStats.isHouseMoneyActive && (
+                <div className="mt-3 p-3 bg-green-500/10 border border-green-400/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-300">
+                    <Shield className="h-4 w-4" />
+                    <span className="text-sm font-medium">House Money Active</span>
+                  </div>
+                  <p className="text-xs text-green-300/80 mt-1">
+                    Risk adjusted to half of current profit: ${Math.floor(dailyStats.totalPnL / 2)}
+                  </p>
+                </div>
+              )}
+              
+              {dailyStats.isDayDisabled && (
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-400/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-300">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Day Disabled</span>
+                  </div>
+                  <p className="text-xs text-red-300/80 mt-1">
+                    3 losses reached. No more trading today.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="bg-gradient-card border-trading-border shadow-trading sticky top-24">
             <CardHeader>
               <CardTitle className="text-sm uppercase tracking-wider text-trading-muted">
@@ -476,17 +755,37 @@ ${closedTrades.map(trade =>
                 </Select>
               </div>
 
-              {/* Rules Display */}
+              {/* Entry Rules Checklist */}
               {selectedModel && TRADING_RULES[selectedModel] && (
                 <div className="space-y-2 pt-4 border-t border-trading-border">
-                  <h4 className="text-xs font-medium text-trading-accent uppercase tracking-wider">Active Rules</h4>
+                  <h4 className="text-xs font-medium text-trading-accent uppercase tracking-wider flex items-center gap-2">
+                    Entry Checklist
+                    <Badge variant="outline" className="text-xs">
+                      {Object.values(entryChecklist).filter(Boolean).length}/{TRADING_RULES[selectedModel].length}
+                    </Badge>
+                  </h4>
                   <div className="space-y-2">
                     {TRADING_RULES[selectedModel].map((rule, idx) => (
-                      <div key={idx} className="p-3 rounded-lg bg-secondary/50 border border-trading-border/50">
-                        <p className="text-xs leading-relaxed">{rule}</p>
+                      <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50 border border-trading-border/50">
+                        <Checkbox
+                          id={`rule_${idx}`}
+                          checked={entryChecklist[`rule_${idx}`] || false}
+                          onCheckedChange={(checked) => 
+                            setEntryChecklist(prev => ({ ...prev, [`rule_${idx}`]: !!checked }))
+                          }
+                          className="mt-1"
+                        />
+                        <label htmlFor={`rule_${idx}`} className="text-xs leading-relaxed cursor-pointer flex-1">
+                          {rule}
+                        </label>
                       </div>
                     ))}
                   </div>
+                  {!allRulesChecked && (
+                    <p className="text-xs text-trading-muted italic">
+                      ⚠️ Complete all checklist items to enable trade entry
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -680,7 +979,7 @@ ${closedTrades.map(trade =>
                     disabled={!isFormValid}
                     className="flex-1"
                   >
-                    Add Trade
+                    {dailyStats.isDayDisabled ? 'Day Disabled' : 'Add Trade'}
                   </Button>
                   <Button variant="terminal" onClick={() => {
                     setTradeForm({
@@ -866,6 +1165,35 @@ ${closedTrades.map(trade =>
                   <div className="font-mono font-semibold">{formatCurrency(currentTrade.risk)}</div>
                 </div>
               </div>
+
+              {/* Rules Tracking in Trade Management */}
+              {currentTrade.model && TRADING_RULES[currentTrade.model] && (
+                <div>
+                  <h3 className="text-sm font-medium mb-3 text-trading-accent uppercase tracking-wide flex items-center gap-2">
+                    Trade Rules Tracking
+                    <Badge variant="outline" className="text-xs">
+                      {Object.values(currentRulesChecked).filter(Boolean).length}/{TRADING_RULES[currentTrade.model].length}
+                    </Badge>
+                  </h3>
+                  <div className="space-y-2 mb-6">
+                    {TRADING_RULES[currentTrade.model].map((rule, idx) => (
+                      <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50 border border-trading-border/50">
+                        <Checkbox
+                          id={`manage_rule_${idx}`}
+                          checked={currentRulesChecked[`rule_${idx}`] || false}
+                          onCheckedChange={(checked) => 
+                            setCurrentRulesChecked(prev => ({ ...prev, [`rule_${idx}`]: !!checked }))
+                          }
+                          className="mt-1"
+                        />
+                        <label htmlFor={`manage_rule_${idx}`} className="text-xs leading-relaxed cursor-pointer flex-1">
+                          {rule}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h3 className="text-sm font-medium mb-3 text-trading-accent uppercase tracking-wide">Trade Scenarios</h3>
