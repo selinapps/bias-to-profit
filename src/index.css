@@ -8,89 +8,65 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Trading Terminal Design System */
+    --background: 220 25% 6%;  /* Deep navy background */
+    --foreground: 228 20% 95%; /* Light blue-white text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 221 25% 8%;        /* Slightly lighter cards */
+    --card-foreground: 228 20% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 221 25% 8%;
+    --popover-foreground: 228 20% 95%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 212 100% 70%;   /* Bright trading blue */
+    --primary-foreground: 220 25% 6%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 221 20% 12%;  /* Darker secondary */
+    --secondary-foreground: 228 20% 95%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 221 20% 12%;
+    --muted-foreground: 218 15% 65%; /* Blue-gray muted */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 212 100% 70%;    /* Trading accent blue */
+    --accent-foreground: 220 25% 6%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;  /* Trading red */
+    --destructive-foreground: 228 20% 95%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 150 60% 60%;    /* Trading green */
+    --success-foreground: 220 25% 6%;
 
-    --radius: 0.5rem;
+    --warning: 45 93% 70%;     /* Trading yellow */
+    --warning-foreground: 220 25% 6%;
 
-    --sidebar-background: 0 0% 98%;
+    --border: 220 20% 18%;     /* Subtle borders */
+    --input: 221 25% 8%;
+    --ring: 212 100% 70%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --radius: 0.75rem;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Trading specific colors */
+    --trading-bg: 220 25% 6%;
+    --trading-card: 221 25% 8%;
+    --trading-border: 220 20% 18%;
+    --trading-accent: 212 100% 70%;
+    --trading-muted: 218 15% 65%;
+    --trading-success: 150 60% 60%;
+    --trading-danger: 0 84% 60%;
+    --trading-warning: 45 93% 70%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(212 100% 70%), hsl(212 100% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(150 60% 60%), hsl(150 60% 55%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(0 84% 55%));
+    --gradient-card: linear-gradient(135deg, hsl(221 25% 8%), hsl(221 25% 9%));
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    /* Shadows */
+    --shadow-trading: 0 4px 20px hsl(220 25% 3% / 0.4);
+    --shadow-accent: 0 0 30px hsl(212 100% 70% / 0.15);
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Animations */
+    --transition-trading: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
