@@ -77,6 +77,9 @@ const biasStateMissingSchemaMessage =
 const localBiasFallbackMessage =
   "Supabase bias tracking is currently unavailable. Today's bias will be saved locally until migrations are completed.";
 
+const ENABLE_BIAS_RPC =
+  (import.meta.env.VITE_ENABLE_BIAS_RPC ?? '').toString().toLowerCase() === 'true';
+
 type SchemaStatus = 'unknown' | 'available' | 'missing';
 
 type BiasSchemaState = {
@@ -207,9 +210,9 @@ export function useBiasState() {
 
     const { data, error } = await supabase
       .from('bias_state')
-      .select('*')
-      .eq('day_key', dayKey)
+      .select('id, day_key, bias, market_state, confidence, tags, selected_at, active')
       .eq('active', true)
+      .eq('day_key', dayKey)
       .order('selected_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -298,7 +301,7 @@ export function useBiasState() {
     }
 
     setLoading(true);
-    let shouldAttemptRpc = schemaStatus.rpc !== 'missing';
+    const shouldAttemptRpc = ENABLE_BIAS_RPC && schemaStatus.rpc !== 'missing';
 
     if (shouldAttemptRpc) {
       const { data, error } = await supabase.rpc('get_current_bias', {
@@ -318,7 +321,6 @@ export function useBiasState() {
             );
           }
 
-          shouldAttemptRpc = false;
         } else {
           console.error('Error loading bias state', error);
           setBiasState(null);
