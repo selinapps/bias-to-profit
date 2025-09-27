@@ -372,6 +372,20 @@ export type Database = {
         Args: { target_date: string; target_user_id: string }
         Returns: Json
       }
+      get_current_bias: {
+        Args: { target_day: string }
+        Returns: Database['public']['Tables']['bias_state']['Row'] | null
+      }
+      set_bias_state: {
+        Args: {
+          target_day: string
+          target_bias: Database['public']['Tables']['bias_state']['Row']['bias']
+          target_market_state?: Database['public']['Tables']['bias_state']['Row']['market_state'] | null
+          target_confidence?: Database['public']['Tables']['bias_state']['Row']['confidence'] | null
+          target_tags?: string[] | null
+        }
+        Returns: Database['public']['Tables']['bias_state']['Row']
+      }
     }
     Enums: {
       [_ in never]: never
