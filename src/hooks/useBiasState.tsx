@@ -47,8 +47,30 @@ export function useBiasState() {
     });
 
     if (error) {
-      console.error('Error loading bias state', error);
-      setBiasState(null);
+      if (error.code === 'PGRST202') {
+        console.warn(
+          'get_current_bias function missing. Falling back to view query. Run the latest Supabase migrations to enable RPC support.'
+        );
+
+        const {
+          data: fallbackData,
+          error: fallbackError,
+        } = await supabase
+          .from('v_current_bias')
+          .select('*')
+          .eq('day_key', dayKey)
+          .maybeSingle();
+
+        if (fallbackError) {
+          console.error('Error loading bias state fallback', fallbackError);
+          setBiasState(null);
+        } else {
+          setBiasState(fallbackData ? mapRowToSnapshot(fallbackData) : null);
+        }
+      } else {
+        console.error('Error loading bias state', error);
+        setBiasState(null);
+      }
     } else {
       setBiasState(data ? mapRowToSnapshot(data) : null);
     }
@@ -76,6 +98,12 @@ export function useBiasState() {
         });
 
         if (error) {
+          if (error.code === 'PGRST202') {
+            throw new Error(
+              'set_bias_state function is missing. Please run the latest Supabase migrations to enable saving bias selections.'
+            );
+          }
+
           throw error;
         }
 
