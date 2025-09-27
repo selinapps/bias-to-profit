@@ -32,32 +32,83 @@ const mapRowToSnapshot = (row: BiasViewRow | BiasTableRow): BiasStateSnapshot =>
 const isMissingFunctionError = (error: PostgrestError | null): boolean => {
   if (!error) return false;
 
-  if (error.code === 'PGRST202') return true;
+  const normalizedCode = error.code?.trim().toUpperCase();
+
+  if (normalizedCode === 'PGRST202' || normalizedCode === '42704' || normalizedCode === '42883') {
+    return true;
+  }
 
   const message = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
-  return message.includes('could not find the function');
+  return (
+    message.includes('could not find the function') ||
+    message.includes('function does not exist') ||
+    message.includes('rpc')
+  );
 };
 
 const isMissingRelationError = (error: PostgrestError | null): boolean => {
   if (!error) return false;
 
-  if (error.code === 'PGRST205') return true;
+  const normalizedCode = error.code?.trim().toUpperCase();
+
+  if (
+    normalizedCode === 'PGRST205' ||
+    normalizedCode === 'PGRST101' ||
+    normalizedCode === 'PGRST201' ||
+    normalizedCode === '42P01'
+  ) {
+    return true;
+  }
 
   const message = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
-  return message.includes('could not find the table') || message.includes('could not find the view');
+  return (
+    message.includes('could not find the table') ||
+    message.includes('could not find the view') ||
+    message.includes('relation does not exist')
+  );
 };
 
 const biasStateMissingSchemaMessage =
   'Bias state storage is not available. Please run the latest Supabase migrations to enable bias tracking.';
+
+type SchemaStatus = 'unknown' | 'available' | 'missing';
+
+type BiasSchemaState = {
+  rpc: SchemaStatus;
+  view: SchemaStatus;
+  table: SchemaStatus;
+};
 
 export function useBiasState() {
   const { user } = useAuth();
   const [biasState, setBiasState] = useState<BiasStateResponse>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [schemaStatus, setSchemaStatus] = useState<BiasSchemaState>({
+    rpc: 'unknown',
+    view: 'unknown',
+    table: 'unknown',
+  });
+  const [schemaMessage, setSchemaMessage] = useState<string | null>(null);
+  const markSchemaStatus = useCallback(
+    (key: keyof BiasSchemaState, status: SchemaStatus) => {
+      setSchemaStatus(prev => {
+        if (prev[key] === status) {
+          return prev;
+        }
+
+        return { ...prev, [key]: status };
+      });
+    },
+    []
+  );
   const dayKey = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
 
   const fetchFromTable = useCallback(async (): Promise<BiasStateResponse> => {
+    if (schemaStatus.table === 'missing') {
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('bias_state')
       .select('*')
@@ -70,16 +121,24 @@ export function useBiasState() {
     if (error) {
       if (isMissingRelationError(error)) {
         console.error(biasStateMissingSchemaMessage, error);
+        markSchemaStatus('table', 'missing');
+        setSchemaMessage(biasStateMissingSchemaMessage);
         return null;
       }
 
       throw error;
     }
 
+    markSchemaStatus('table', 'available');
+
     return data ? mapRowToSnapshot(data) : null;
-  }, [dayKey]);
+  }, [dayKey, schemaStatus.table, markSchemaStatus]);
 
   const fetchFromView = useCallback(async (): Promise<BiasStateResponse> => {
+    if (schemaStatus.view === 'missing') {
+      return fetchFromTable();
+    }
+
     const { data, error } = await supabase
       .from('v_current_bias')
       .select('*')
@@ -92,14 +151,23 @@ export function useBiasState() {
           'v_current_bias view missing. Falling back to direct table query. Run the latest Supabase migrations to enable optimized bias queries.'
         );
 
+        markSchemaStatus('view', 'missing');
+        if (!schemaMessage) {
+          setSchemaMessage(
+            'Bias view is missing. Please run the latest Supabase migrations to enable optimized bias queries.'
+          );
+        }
+
         return fetchFromTable();
       }
 
       throw error;
     }
 
+    markSchemaStatus('view', 'available');
+
     return data ? mapRowToSnapshot(data) : null;
-  }, [dayKey, fetchFromTable]);
+  }, [dayKey, fetchFromTable, schemaStatus.view, schemaMessage, markSchemaStatus]);
 
   const fetchCurrent = useCallback(async () => {
     if (!user) {
@@ -108,33 +176,62 @@ export function useBiasState() {
     }
 
     setLoading(true);
-    const { data, error } = await supabase.rpc('get_current_bias', {
-      target_day: dayKey,
-    });
+    let shouldAttemptRpc = schemaStatus.rpc !== 'missing';
 
-    if (error) {
-      if (isMissingFunctionError(error)) {
-        console.warn(
-          'get_current_bias function missing. Falling back to view query. Run the latest Supabase migrations to enable RPC support.'
-        );
+    if (shouldAttemptRpc) {
+      const { data, error } = await supabase.rpc('get_current_bias', {
+        target_day: dayKey,
+      });
 
-        try {
-          const fallbackSnapshot = await fetchFromView();
-          setBiasState(fallbackSnapshot);
-        } catch (fallbackError) {
-          console.error('Error loading bias state fallback', fallbackError);
+      if (error) {
+        if (isMissingFunctionError(error)) {
+          console.warn(
+            'get_current_bias function missing. Falling back to view query. Run the latest Supabase migrations to enable RPC support.'
+          );
+
+          markSchemaStatus('rpc', 'missing');
+          if (!schemaMessage) {
+            setSchemaMessage(
+              'Bias RPC functions are unavailable. Please run the latest Supabase migrations to enable bias tracking.'
+            );
+          }
+
+          shouldAttemptRpc = false;
+        } else {
+          console.error('Error loading bias state', error);
           setBiasState(null);
+          setLoading(false);
+          return;
         }
       } else {
-        console.error('Error loading bias state', error);
-        setBiasState(null);
+        markSchemaStatus('rpc', 'available');
+        setBiasState(data ? mapRowToSnapshot(data) : null);
+        setLoading(false);
+        return;
       }
-    } else {
-      setBiasState(data ? mapRowToSnapshot(data) : null);
     }
 
-    setLoading(false);
-  }, [user, dayKey, fetchFromView]);
+    try {
+      const fallbackSnapshot = await fetchFromView();
+      setBiasState(fallbackSnapshot);
+    } catch (fallbackError) {
+      const postgrestError =
+        fallbackError && typeof fallbackError === 'object' && 'code' in fallbackError
+          ? (fallbackError as PostgrestError)
+          : null;
+
+      if (isMissingRelationError(postgrestError)) {
+        markSchemaStatus('view', 'missing');
+        markSchemaStatus('table', 'missing');
+        setSchemaMessage(biasStateMissingSchemaMessage);
+      }
+
+      console.error('Error loading bias state fallback', fallbackError);
+      setBiasState(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, dayKey, fetchFromView, schemaStatus.rpc, schemaMessage, markSchemaStatus]);
 
   useEffect(() => {
     fetchCurrent();
@@ -204,6 +301,13 @@ export function useBiasState() {
               'set_bias_state function missing. Falling back to direct table mutation. Run the latest Supabase migrations to enable RPC support.'
             );
 
+            markSchemaStatus('rpc', 'missing');
+            if (!schemaMessage) {
+              setSchemaMessage(
+                'Bias RPC functions are unavailable. Please run the latest Supabase migrations to enable bias tracking.'
+              );
+            }
+
             try {
               await fallbackSaveBiasState(result);
             } catch (fallbackError) {
@@ -229,7 +333,7 @@ export function useBiasState() {
         setSaving(false);
       }
     },
-    [user, dayKey, fallbackSaveBiasState]
+    [user, dayKey, fallbackSaveBiasState, markSchemaStatus, schemaMessage]
   );
 
   return {
@@ -239,5 +343,6 @@ export function useBiasState() {
     saving,
     refresh: fetchCurrent,
     saveBiasState,
+    schemaMessage,
   } as const;
 }
