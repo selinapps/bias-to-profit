@@ -11,6 +11,10 @@ type BiasTableRow = Database['public']['Tables']['bias_state']['Row'];
 
 type BiasStateResponse = BiasStateSnapshot | null;
 
+const LOCAL_BIAS_STORAGE_KEY = 'bias-to-profit:bias-state-cache';
+
+type LocalBiasStore = Record<string, Record<string, BiasStateSnapshot>>;
+
 const mapTags = (value: unknown): string[] | null => {
   if (!value) return null;
   if (Array.isArray(value)) {
@@ -69,7 +73,9 @@ const isMissingRelationError = (error: PostgrestError | null): boolean => {
 };
 
 const biasStateMissingSchemaMessage =
-  'Bias state storage is not available. Please run the latest Supabase migrations to enable bias tracking.';
+  "Bias state storage is not available. We'll keep today's bias selection on this device until the latest Supabase migrations are applied.";
+const localBiasFallbackMessage =
+  "Supabase bias tracking is currently unavailable. Today's bias will be saved locally until migrations are completed.";
 
 type SchemaStatus = 'unknown' | 'available' | 'missing';
 
@@ -104,9 +110,99 @@ export function useBiasState() {
   );
   const dayKey = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
 
+  const loadBiasFromLocal = useCallback((): BiasStateResponse => {
+    if (typeof window === 'undefined' || !user?.id) {
+      return null;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(LOCAL_BIAS_STORAGE_KEY);
+      if (!raw) return null;
+
+      const store = JSON.parse(raw) as LocalBiasStore;
+      const snapshot = store[user.id]?.[dayKey];
+
+      if (!snapshot) return null;
+
+      return {
+        ...snapshot,
+        day_key: snapshot.day_key ?? dayKey,
+      };
+    } catch (error) {
+      console.error('Failed to load bias state from local storage', error);
+      return null;
+    }
+  }, [dayKey, user?.id]);
+
+  const persistBiasToLocal = useCallback(
+    (snapshot: BiasStateSnapshot) => {
+      if (typeof window === 'undefined' || !user?.id) {
+        return;
+      }
+
+      try {
+        const raw = window.localStorage.getItem(LOCAL_BIAS_STORAGE_KEY);
+        const store = raw ? (JSON.parse(raw) as LocalBiasStore) : {};
+
+        const userStore = store[user.id] ?? {};
+        userStore[dayKey] = snapshot;
+        store[user.id] = userStore;
+
+        window.localStorage.setItem(LOCAL_BIAS_STORAGE_KEY, JSON.stringify(store));
+      } catch (error) {
+        console.error('Failed to persist bias state locally', error);
+      }
+    },
+    [dayKey, user?.id]
+  );
+
+  const clearLocalBias = useCallback(() => {
+    if (typeof window === 'undefined' || !user?.id) {
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(LOCAL_BIAS_STORAGE_KEY);
+      if (!raw) return;
+
+      const store = JSON.parse(raw) as LocalBiasStore;
+      const userStore = store[user.id];
+      if (!userStore) return;
+
+      if (userStore[dayKey]) {
+        delete userStore[dayKey];
+      }
+
+      if (Object.keys(userStore).length === 0) {
+        delete store[user.id];
+      } else {
+        store[user.id] = userStore;
+      }
+
+      window.localStorage.setItem(LOCAL_BIAS_STORAGE_KEY, JSON.stringify(store));
+    } catch (error) {
+      console.error('Failed to clear local bias cache', error);
+    }
+  }, [dayKey, user?.id]);
+
+  const createLocalSnapshot = useCallback(
+    (result: BiasQuizResult): BiasStateSnapshot => ({
+      day_key: dayKey,
+      bias: result.bias,
+      market_state: result.market_state ?? null,
+      confidence: result.confidence ?? null,
+      tags: result.tags.length ? result.tags : null,
+      selected_at: new Date().toISOString(),
+    }),
+    [dayKey]
+  );
+
   const fetchFromTable = useCallback(async (): Promise<BiasStateResponse> => {
     if (schemaStatus.table === 'missing') {
-      return null;
+      if (schemaMessage !== localBiasFallbackMessage) {
+        setSchemaMessage(localBiasFallbackMessage);
+      }
+      return loadBiasFromLocal();
     }
 
     const { data, error } = await supabase
@@ -122,8 +218,10 @@ export function useBiasState() {
       if (isMissingRelationError(error)) {
         console.error(biasStateMissingSchemaMessage, error);
         markSchemaStatus('table', 'missing');
-        setSchemaMessage(biasStateMissingSchemaMessage);
-        return null;
+        if (schemaMessage !== localBiasFallbackMessage) {
+          setSchemaMessage(localBiasFallbackMessage);
+        }
+        return loadBiasFromLocal();
       }
 
       throw error;
@@ -131,8 +229,20 @@ export function useBiasState() {
 
     markSchemaStatus('table', 'available');
 
-    return data ? mapRowToSnapshot(data) : null;
-  }, [dayKey, schemaStatus.table, markSchemaStatus]);
+    const snapshot = data ? mapRowToSnapshot(data) : null;
+    if (snapshot) {
+      clearLocalBias();
+    }
+
+    return snapshot;
+  }, [
+    dayKey,
+    schemaStatus.table,
+    schemaMessage,
+    markSchemaStatus,
+    loadBiasFromLocal,
+    clearLocalBias,
+  ]);
 
   const fetchFromView = useCallback(async (): Promise<BiasStateResponse> => {
     if (schemaStatus.view === 'missing') {
@@ -166,8 +276,20 @@ export function useBiasState() {
 
     markSchemaStatus('view', 'available');
 
-    return data ? mapRowToSnapshot(data) : null;
-  }, [dayKey, fetchFromTable, schemaStatus.view, schemaMessage, markSchemaStatus]);
+    const snapshot = data ? mapRowToSnapshot(data) : null;
+    if (snapshot) {
+      clearLocalBias();
+    }
+
+    return snapshot;
+  }, [
+    dayKey,
+    fetchFromTable,
+    schemaStatus.view,
+    schemaMessage,
+    markSchemaStatus,
+    clearLocalBias,
+  ]);
 
   const fetchCurrent = useCallback(async () => {
     if (!user) {
@@ -205,7 +327,11 @@ export function useBiasState() {
         }
       } else {
         markSchemaStatus('rpc', 'available');
-        setBiasState(data ? mapRowToSnapshot(data) : null);
+        const snapshot = data ? mapRowToSnapshot(data) : null;
+        if (snapshot) {
+          clearLocalBias();
+        }
+        setBiasState(snapshot);
         setLoading(false);
         return;
       }
@@ -223,7 +349,14 @@ export function useBiasState() {
       if (isMissingRelationError(postgrestError)) {
         markSchemaStatus('view', 'missing');
         markSchemaStatus('table', 'missing');
-        setSchemaMessage(biasStateMissingSchemaMessage);
+        if (schemaMessage !== localBiasFallbackMessage) {
+          setSchemaMessage(localBiasFallbackMessage);
+        }
+        const localSnapshot = loadBiasFromLocal();
+        if (localSnapshot) {
+          setBiasState(localSnapshot);
+          return;
+        }
       }
 
       console.error('Error loading bias state fallback', fallbackError);
@@ -231,7 +364,16 @@ export function useBiasState() {
     } finally {
       setLoading(false);
     }
-  }, [user, dayKey, fetchFromView, schemaStatus.rpc, schemaMessage, markSchemaStatus]);
+  }, [
+    user,
+    dayKey,
+    fetchFromView,
+    schemaStatus.rpc,
+    schemaMessage,
+    markSchemaStatus,
+    clearLocalBias,
+    loadBiasFromLocal,
+  ]);
 
   useEffect(() => {
     fetchCurrent();
@@ -239,6 +381,16 @@ export function useBiasState() {
 
   const fallbackSaveBiasState = useCallback(
     async (result: BiasQuizResult) => {
+      if (schemaStatus.table === 'missing') {
+        const snapshot = createLocalSnapshot(result);
+        persistBiasToLocal(snapshot);
+        setBiasState(snapshot);
+        if (schemaMessage !== localBiasFallbackMessage) {
+          setSchemaMessage(localBiasFallbackMessage);
+        }
+        return;
+      }
+
       const { error: deactivateError } = await supabase
         .from('bias_state')
         .update({ active: false })
@@ -247,7 +399,14 @@ export function useBiasState() {
 
       if (deactivateError) {
         if (isMissingRelationError(deactivateError)) {
-          throw new Error(biasStateMissingSchemaMessage);
+          const snapshot = createLocalSnapshot(result);
+          persistBiasToLocal(snapshot);
+          setBiasState(snapshot);
+          markSchemaStatus('table', 'missing');
+          if (schemaMessage !== localBiasFallbackMessage) {
+            setSchemaMessage(localBiasFallbackMessage);
+          }
+          return;
         }
 
         throw deactivateError;
@@ -269,15 +428,35 @@ export function useBiasState() {
 
       if (insertError) {
         if (isMissingRelationError(insertError)) {
-          throw new Error(biasStateMissingSchemaMessage);
+          const snapshot = createLocalSnapshot(result);
+          persistBiasToLocal(snapshot);
+          setBiasState(snapshot);
+          markSchemaStatus('table', 'missing');
+          if (schemaMessage !== localBiasFallbackMessage) {
+            setSchemaMessage(localBiasFallbackMessage);
+          }
+          return;
         }
 
         throw insertError;
       }
 
-      setBiasState(inserted ? mapRowToSnapshot(inserted) : null);
+      const snapshot = inserted ? mapRowToSnapshot(inserted) : null;
+      if (snapshot) {
+        clearLocalBias();
+      }
+      setBiasState(snapshot);
     },
-    [dayKey, user?.id]
+    [
+      dayKey,
+      user?.id,
+      schemaStatus.table,
+      createLocalSnapshot,
+      persistBiasToLocal,
+      schemaMessage,
+      markSchemaStatus,
+      clearLocalBias,
+    ]
   );
 
   const saveBiasState = useCallback(
@@ -317,7 +496,7 @@ export function useBiasState() {
                   : null;
 
               if (isMissingRelationError(postgrestError)) {
-                throw new Error(biasStateMissingSchemaMessage);
+                throw new Error(localBiasFallbackMessage);
               }
 
               throw fallbackError;
@@ -328,12 +507,16 @@ export function useBiasState() {
           throw error;
         }
 
-        setBiasState(data ? mapRowToSnapshot(data) : null);
+        const snapshot = data ? mapRowToSnapshot(data) : null;
+        if (snapshot) {
+          clearLocalBias();
+        }
+        setBiasState(snapshot);
       } finally {
         setSaving(false);
       }
     },
-    [user, dayKey, fallbackSaveBiasState, markSchemaStatus, schemaMessage]
+    [user, dayKey, fallbackSaveBiasState, markSchemaStatus, schemaMessage, clearLocalBias]
   );
 
   return {
