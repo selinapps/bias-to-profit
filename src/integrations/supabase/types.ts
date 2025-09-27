@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      bias_state: {
+        Row: {
+          active: boolean
+          bias: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
+          confidence: 'LOW' | 'MEDIUM' | 'HIGH' | null
+          day_key: string
+          id: string
+          market_state: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
+          selected_at: string
+          selected_by: string | null
+          tags: Json | null
+        }
+        Insert: {
+          active?: boolean
+          bias: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
+          confidence?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+          day_key: string
+          id?: string
+          market_state?: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
+          selected_at?: string
+          selected_by?: string | null
+          tags?: Json | null
+        }
+        Update: {
+          active?: boolean
+          bias?: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
+          confidence?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+          day_key?: string
+          id?: string
+          market_state?: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
+          selected_at?: string
+          selected_by?: string | null
+          tags?: Json | null
+        }
+        Relationships: []
+      }
       daily_stats: {
         Row: {
           avg_r: number | null
@@ -155,7 +191,10 @@ export type Database = {
       trades: {
         Row: {
           aggression: string[] | null
+          bias_snapshot: Json
           asset: string
+          checklist: Json
+          checklist_complete: boolean
           created_at: string
           direction: string
           duration_minutes: number | null
@@ -177,6 +216,7 @@ export type Database = {
           r_multiple: number | null
           risk_amount: number
           risk_tier: string
+          session: string | null
           scenarios: string[] | null
           screenshot_url: string | null
           status: string | null
@@ -188,6 +228,9 @@ export type Database = {
         Insert: {
           aggression?: string[] | null
           asset: string
+          bias_snapshot: Json
+          checklist: Json
+          checklist_complete?: boolean
           created_at?: string
           direction: string
           duration_minutes?: number | null
@@ -209,6 +252,7 @@ export type Database = {
           r_multiple?: number | null
           risk_amount: number
           risk_tier: string
+          session?: string | null
           scenarios?: string[] | null
           screenshot_url?: string | null
           status?: string | null
@@ -220,6 +264,9 @@ export type Database = {
         Update: {
           aggression?: string[] | null
           asset?: string
+          bias_snapshot?: Json
+          checklist?: Json
+          checklist_complete?: boolean
           created_at?: string
           direction?: string
           duration_minutes?: number | null
@@ -241,6 +288,7 @@ export type Database = {
           r_multiple?: number | null
           risk_amount?: number
           risk_tier?: string
+          session?: string | null
           scenarios?: string[] | null
           screenshot_url?: string | null
           status?: string | null
@@ -306,7 +354,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_current_bias: {
+        Row: {
+          bias: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
+          confidence: 'LOW' | 'MEDIUM' | 'HIGH' | null
+          day_key: string
+          id: string
+          market_state: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
+          selected_at: string
+          tags: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       compute_daily_stats: {

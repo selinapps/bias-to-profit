@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, Clock, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { isMeanReversionModel, isTrendModel } from '@/lib/executionModels';
 
 type Trade = Database['public']['Tables']['trades']['Row'];
 
@@ -63,8 +64,8 @@ export function TradeHeatmap({ trades }: TradeHeatmapProps) {
 
   // Model performance comparison
   const modelStats = {
-    trend: trades.filter(t => t.model === 'trend' && t.status === 'closed'),
-    mean_reversion: trades.filter(t => t.model === 'mean_reversion' && t.status === 'closed')
+    trend: trades.filter(t => t.status === 'closed' && isTrendModel(t.model)),
+    mean_reversion: trades.filter(t => t.status === 'closed' && isMeanReversionModel(t.model))
   };
 
   const modelPerformance = Object.entries(modelStats).map(([model, modelTrades]) => {

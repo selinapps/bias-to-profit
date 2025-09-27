@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,12 @@ import { HypothesisMode } from './HypothesisMode';
 import { TradeHeatmap } from './TradeHeatmap';
 import { format } from 'date-fns';
 import { TRADING_SESSIONS, getActiveSession, type TradingSession } from '@/lib/tradingSessions';
+import { BiasStateCard } from './BiasStateCard';
+import { BiasQuizModal } from './BiasQuizModal';
+import { useBiasState } from '@/hooks/useBiasState';
+import type { BiasQuizResult } from '@/types/bias';
+import { useToast } from '@/hooks/use-toast';
+import { isMeanReversionModel, isTrendModel } from '@/lib/executionModels';
 
 const EST_TIME_ZONE = 'America/New_York';
 const MINUTES_PER_DAY = 1440;
@@ -68,6 +74,9 @@ export function TradingDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentSession, setCurrentSession] = useState<TradingSession | null>(getActiveSession());
   const [isSessionCardExpanded, setIsSessionCardExpanded] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const { biasState, loading: biasLoading, saveBiasState } = useBiasState();
+  const { toast } = useToast();
 
   // Update time every minute
   useEffect(() => {
@@ -95,8 +104,8 @@ export function TradingDashboard() {
   const winRate = todayTrades.length > 0 ? (todayWins / todayTrades.length) * 100 : 0;
 
   // Calculate model performance
-  const trendTrades = closedTrades.filter(trade => trade.model === 'trend');
-  const mrTrades = closedTrades.filter(trade => trade.model === 'mean_reversion');
+  const trendTrades = closedTrades.filter(trade => isTrendModel(trade.model));
+  const mrTrades = closedTrades.filter(trade => isMeanReversionModel(trade.model));
   
   const trendWins = trendTrades.filter(trade => (trade.pnl || 0) > 0).length;
   const mrWins = mrTrades.filter(trade => (trade.pnl || 0) > 0).length;
@@ -138,6 +147,14 @@ export function TradingDashboard() {
 
   const weekendStatus = getWeekendClosureStatus(currentTime);
   const displaySession = weekendStatus.isClosed ? null : currentSession;
+
+  const handleQuizComplete = async (result: BiasQuizResult) => {
+    await saveBiasState(result);
+    toast({
+      title: 'Bias updated',
+      description: 'Execution context saved for today.',
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,11 +220,18 @@ export function TradingDashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        {/* Current Session & Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-trading-card border-trading-border">
-            <CardHeader className="pb-0">
-              <button
+        <div className="space-y-4">
+          <BiasStateCard
+            value={biasState ?? undefined}
+            onEdit={() => setIsQuizOpen(true)}
+            loading={biasLoading}
+          />
+
+          {/* Current Session & Quick Stats */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader className="pb-0">
+                <button
                 type="button"
                 onClick={() => setIsSessionCardExpanded(prev => !prev)}
                 className="flex w-full items-center justify-between gap-2 text-left"
@@ -287,11 +311,11 @@ export function TradingDashboard() {
                 </div>
               )}
             </CardContent>
-          </Card>
+            </Card>
 
-          <Card className="bg-trading-card border-trading-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-trading-muted">Today's Performance</CardTitle>
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-trading-muted">Today's Performance</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
@@ -313,9 +337,9 @@ export function TradingDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-trading-card border-trading-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-trading-muted">Trading Status</CardTitle>
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-trading-muted">Trading Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -337,8 +361,8 @@ export function TradingDashboard() {
                 )}
               </div>
             </CardContent>
-          </Card>
-        </div>
+            </Card>
+          </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="dashboard" className="space-y-6">
@@ -485,6 +509,7 @@ export function TradingDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      </div>
 
       {/* Floating Add Button */}
       <Button
@@ -496,10 +521,18 @@ export function TradingDashboard() {
         <Plus className="h-6 w-6" />
       </Button>
 
+      <BiasQuizModal
+        open={isQuizOpen}
+        onOpenChange={setIsQuizOpen}
+        onComplete={handleQuizComplete}
+      />
+
       {/* Add Trade Bottom Sheet */}
-      <AddTradeBottomSheet 
-        isOpen={showAddTrade} 
-        onClose={() => setShowAddTrade(false)} 
+      <AddTradeBottomSheet
+        isOpen={showAddTrade}
+        onClose={() => setShowAddTrade(false)}
+        biasState={biasState}
+        onRequestBiasEdit={() => setIsQuizOpen(true)}
       />
     </div>
   );
