@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Flask,
+  FlaskConical,
   Plus,
   TrendingUp,
   TrendingDown,
@@ -187,7 +187,7 @@ export function HypothesisMode() {
       <Card className="bg-trading-card border-trading-border">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Flask className="h-5 w-5 text-trading-accent" />
+            <FlaskConical className="h-5 w-5 text-trading-accent" />
             Hypothesis Testing
           </CardTitle>
           <Button onClick={() => setShowCreateForm(true)} size="sm">
@@ -368,7 +368,7 @@ export function HypothesisMode() {
       {hypotheses.length === 0 && (
         <Card className="bg-trading-card border-trading-border">
           <CardContent className="text-center py-12">
-            <Flask className="h-12 w-12 text-trading-muted mx-auto mb-4" />
+            <FlaskConical className="h-12 w-12 text-trading-muted mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No Hypotheses Yet</h3>
             <p className="text-trading-muted mb-4">
               Create your first hypothesis to start forward testing new strategies
