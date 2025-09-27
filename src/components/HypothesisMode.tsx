@@ -7,11 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Beaker, 
-  Plus, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  Flask,
+  Plus,
+  TrendingUp,
+  TrendingDown,
   BarChart3,
   CheckCircle,
   PauseCircle,
@@ -368,7 +368,7 @@ export function HypothesisMode() {
       {hypotheses.length === 0 && (
         <Card className="bg-trading-card border-trading-border">
           <CardContent className="text-center py-12">
-            <Beaker className="h-12 w-12 text-trading-muted mx-auto mb-4" />
+            <Flask className="h-12 w-12 text-trading-muted mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No Hypotheses Yet</h3>
             <p className="text-trading-muted mb-4">
               Create your first hypothesis to start forward testing new strategies
