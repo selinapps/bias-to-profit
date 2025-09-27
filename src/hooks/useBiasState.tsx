@@ -57,6 +57,7 @@ const isMissingRelationError = (error: PostgrestError | null): boolean => {
 
   if (
     normalizedCode === 'PGRST205' ||
+    normalizedCode === 'PGRST204' ||
     normalizedCode === 'PGRST101' ||
     normalizedCode === 'PGRST201' ||
     normalizedCode === '42P01'
@@ -68,7 +69,9 @@ const isMissingRelationError = (error: PostgrestError | null): boolean => {
   return (
     message.includes('could not find the table') ||
     message.includes('could not find the view') ||
-    message.includes('relation does not exist')
+    message.includes('relation does not exist') ||
+    message.includes('column does not exist') ||
+    (message.includes('could not find the') && message.includes('column'))
   );
 };
 
