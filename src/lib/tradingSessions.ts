@@ -15,7 +15,7 @@ export const TRADING_SESSIONS: TradingSession[] = [
     start: { hour: 20, minute: 0 },
     end: { hour: 4, minute: 0 },
     localTime: '3:00 AM - 11:00 AM (+03)',
-    description: 'Consolidation period',
+    description: 'Often consolidates; market sets the stage for London.',
     color: 'bg-purple-500/20 text-purple-300 border-purple-400/50'
   },
   {
@@ -24,7 +24,7 @@ export const TRADING_SESSIONS: TradingSession[] = [
     start: { hour: 2, minute: 0 },
     end: { hour: 5, minute: 0 },
     localTime: '9:00 AM - 12:00 PM (+03)',
-    description: 'High volatility - London open',
+    description: 'Breakouts from Asia; day’s bias often formed.',
     color: 'bg-red-500/20 text-red-300 border-red-400/50'
   },
   {
@@ -33,25 +33,25 @@ export const TRADING_SESSIONS: TradingSession[] = [
     start: { hour: 7, minute: 0 },
     end: { hour: 8, minute: 0 },
     localTime: '2:00 PM - 3:00 PM (+03)',
-    description: 'Lower volatility',
+    description: 'Low volatility pause; market drifts or ranges.',
     color: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50'
   },
   {
     id: 'london_ny_overlap',
-    name: 'London vs. New York',
+    name: 'London–New York Overlap',
     start: { hour: 8, minute: 0 },
     end: { hour: 12, minute: 0 },
     localTime: '3:00 PM - 7:00 PM (+03)',
-    description: 'Key trading window - Major overlap',
+    description: 'Most liquid & volatile; strong trends or news moves.',
     color: 'bg-blue-500/20 text-blue-300 border-blue-400/50'
   },
   {
     id: 'silver_bullet',
-    name: 'Silver Bullet Hours',
+    name: 'Silver Bullet Hour',
     start: { hour: 10, minute: 0 },
     end: { hour: 11, minute: 0 },
     localTime: '5:00 PM - 6:00 PM (+03)',
-    description: 'Reversal window',
+    description: 'Reversal setups common; watch for exhaustion.',
     color: 'bg-green-500/20 text-green-300 border-green-400/50'
   },
   {
@@ -60,7 +60,7 @@ export const TRADING_SESSIONS: TradingSession[] = [
     start: { hour: 8, minute: 0 },
     end: { hour: 17, minute: 0 },
     localTime: '3:00 PM - 12:00 AM (+03)',
-    description: 'Major U.S. trading hours',
+    description: 'High liquidity early; slows into evening consolidation.',
     color: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/50'
   }
 ];
