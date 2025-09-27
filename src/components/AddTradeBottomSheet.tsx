@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,19 +8,23 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AlertTriangle, Camera, TrendingUp, TrendingDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTrades } from '@/hooks/useTrades';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { getActiveSession, type TradingSession } from '@/lib/tradingSessions';
+import { BiasStateCard } from './BiasStateCard';
+import type { BiasStateSnapshot } from '@/types/bias';
+import { MODELS_BY_STATE, getExecutionModelChecklist, getExecutionModelLabel, type ExecutionModel } from '@/lib/executionModels';
 
 interface AddTradeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
+  biasState?: BiasStateSnapshot | null;
+  onRequestBiasEdit?: () => void;
 }
-
-const MODELS = ['trend', 'mean_reversion'] as const;
 const LOCATIONS = ['LVN', 'POC', 'OB', 'FVG', 'IFVG', 'Breaker'] as const;
 const AGGRESSION_TYPES = ['Big Print', 'Imbalance', 'Delta Push', 'Absorption', 'Exhaustion'] as const;
 const SCENARIOS = ['Move to BE', 'BE Hit', 'Partial @X', 'Full TP', 'Manual Exit', 'Re-entry', 'News', 'Slippage'] as const;
@@ -34,7 +38,7 @@ const RISK_TIERS = {
   c: 25
 };
 
-export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProps) {
+export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasEdit }: AddTradeBottomSheetProps) {
   const { user } = useAuth();
   const { addTrade, canAddTrade, dailyLosses } = useTrades();
   const { toast } = useToast();
@@ -44,7 +48,7 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
 
   // Form state
   const [asset, setAsset] = useState<string>('EURUSD');
-  const [model, setModel] = useState<'trend' | 'mean_reversion'>('trend');
+  const [model, setModel] = useState<ExecutionModel | ''>('');
   const [direction, setDirection] = useState<'long' | 'short'>('long');
   const [locations, setLocations] = useState<string[]>([]);
   const [aggression, setAggression] = useState<string[]>([]);
@@ -52,6 +56,7 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
   const [scenarios, setScenarios] = useState<string[]>([]);
   const [externals, setExternals] = useState<string[]>([]);
   const [mistakeTags, setMistakeTags] = useState<string[]>([]);
+  const [checklistItems, setChecklistItems] = useState<{ text: string; checked: boolean }[]>([]);
   
   // Price levels
   const [entryPrice, setEntryPrice] = useState<string>('');
@@ -87,13 +92,22 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
   const pnl = entryNum > 0 && exitNum > 0 ?
     directionalDiff / entryNum * riskAmount : 0;
 
-  // Check if form is valid
-  const isFormValid = entryPrice && stopLoss && asset && locations.length > 0 && aggression.length > 0;
+  const allowedModels = useMemo(() => {
+    if (!biasState || biasState.bias === 'NONE' || !biasState.market_state) {
+      return [] as ExecutionModel[];
+    }
+    return MODELS_BY_STATE[biasState.market_state] ?? [];
+  }, [biasState]);
+
+  const checklistComplete = checklistItems.length > 0 && checklistItems.every(item => item.checked);
+  const canUseExecutionModel = Boolean(biasState && biasState.bias !== 'NONE' && biasState.market_state);
+  const baseFormValid = Boolean(entryPrice && stopLoss && asset && locations.length > 0 && aggression.length > 0);
+  const canConfirmEntry = baseFormValid && canUseExecutionModel && Boolean(model) && checklistComplete;
 
   // Reset form
   const resetForm = () => {
     setAsset('EURUSD');
-    setModel('trend');
+    setModel('');
     setDirection('long');
     setLocations([]);
     setAggression([]);
@@ -101,6 +115,7 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
     setScenarios([]);
     setExternals([]);
     setMistakeTags([]);
+    setChecklistItems([]);
     setEntryPrice('');
     setStopLoss('');
     setExitPrice('');
@@ -125,7 +140,7 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
       return;
     }
 
-    if (!isFormValid) {
+    if (!baseFormValid) {
       toast({
         title: "Invalid Form",
         description: "Please fill in all required fields",
@@ -134,9 +149,42 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
       return;
     }
 
+    if (!canUseExecutionModel || !biasState) {
+      toast({
+        title: "Set bias first",
+        description: "Select a bias and market state before logging a trade.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!model) {
+      toast({
+        title: "Select an execution model",
+        description: "Choose a model that matches your current bias.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!checklistComplete) {
+      toast({
+        title: "Checklist incomplete",
+        description: "Confirm each checklist item before entering.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      const checklistPayload = checklistItems.map(item => ({ text: item.text, checked: item.checked }));
+      const biasSnapshot = {
+        ...biasState,
+        session: currentSession?.name ?? null
+      };
+
       await addTrade({
         asset,
         model,
@@ -150,6 +198,7 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
         exit_price: exitPrice ? parseFloat(exitPrice) : null,
         entry_time: entryTime.toISOString(),
         trading_session: currentSession?.name || null,
+        session: currentSession?.name || null,
         scenarios,
         emotions,
         externals,
@@ -157,7 +206,10 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
         screenshot_url: screenshotUrl || null,
         notes: notes || null,
         is_experimental: isExperimental,
-        override_reason: overrideReason || null
+        override_reason: overrideReason || null,
+        bias_snapshot: biasSnapshot,
+        checklist: checklistPayload,
+        checklist_complete: checklistComplete
       });
 
       toast({
@@ -188,6 +240,51 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
       setter([...list, item]);
     }
   };
+
+  const toggleChecklist = (index: number) => {
+    setChecklistItems(items =>
+      items.map((item, idx) =>
+        idx === index ? { ...item, checked: !item.checked } : item
+      )
+    );
+  };
+
+  useEffect(() => {
+    if (!model) {
+      setChecklistItems([]);
+      return;
+    }
+
+    const template = getExecutionModelChecklist(model).map(text => ({ text, checked: false }));
+    setChecklistItems(template);
+  }, [model]);
+
+  const previousBiasId = useRef<string | null>(null);
+  useEffect(() => {
+    const prevId = previousBiasId.current;
+    const allowed = canUseExecutionModel ? allowedModels : [];
+
+    if (model && (!canUseExecutionModel || !allowed.includes(model))) {
+      if (prevId && biasState?.id && biasState.id !== prevId) {
+        toast({
+          title: 'Context changed',
+          description: 'Execution model reset to match new bias and market state.',
+          variant: 'default'
+        });
+      } else if (prevId && !biasState) {
+        toast({
+          title: 'Context cleared',
+          description: 'Set a bias before adding a trade.',
+          variant: 'default'
+        });
+      }
+
+      setModel('');
+      setChecklistItems([]);
+    }
+
+    previousBiasId.current = biasState?.id ?? null;
+  }, [biasState, model, allowedModels, canUseExecutionModel, toast]);
 
   useEffect(() => {
     if (isOpen) {
@@ -232,29 +329,35 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
                 <p className="text-xs text-trading-muted">EST: {formattedEstTime}</p>
               </div>
             </Card>
-            <Card className="bg-muted/10 border-trading-border">
-              <div className="p-4 space-y-2">
-                <p className="text-xs uppercase tracking-wide text-trading-muted">Current trading session</p>
+          <Card className="bg-muted/10 border-trading-border">
+            <div className="space-y-3 p-4">
+              <BiasStateCard
+                value={biasState ?? undefined}
+                onEdit={() => onRequestBiasEdit?.()}
+                isCompact
+              />
+              <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-3 text-xs">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-trading-muted">Session Snapshot</p>
                 {currentSession ? (
-                  <div className="flex flex-col gap-1">
+                  <div className="mt-1 space-y-1 text-slate-200">
                     <div className="flex items-center gap-2">
                       <span className="relative inline-flex h-2.5 w-2.5">
                         <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
                         <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
                       </span>
-                      <span className="font-semibold text-foreground">{currentSession.name}</span>
+                      <span className="text-sm font-semibold">{currentSession.name}</span>
                     </div>
                     <p className="text-xs text-trading-muted">{currentSession.localTime}</p>
-                    <p className="text-xs text-muted-foreground">{currentSession.description}</p>
+                    {currentSession.description && (
+                      <p className="text-xs text-muted-foreground">{currentSession.description}</p>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-xs text-trading-muted">
-                    <span className="h-2.5 w-2.5 rounded-full bg-muted" />
-                    No active session detected
-                  </div>
+                  <p className="mt-1 text-xs text-trading-muted">No active session detected</p>
                 )}
               </div>
-            </Card>
+            </div>
+          </Card>
           </div>
 
           {/* Stop Rule Warning */}
@@ -323,23 +426,60 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
             </div>
           </div>
 
-          {/* Model Selection */}
+          {/* Execution Model */}
           <div>
-            <Label>Trading Model</Label>
-            <div className="flex gap-2 mt-1">
-              {MODELS.map(m => (
-                <Button
-                  key={m}
-                  type="button"
-                  variant={model === m ? 'default' : 'outline'}
-                  className="flex-1 h-12 capitalize"
-                  onClick={() => setModel(m)}
-                >
-                  {m.replace('_', ' ')}
-                </Button>
-              ))}
-            </div>
+            <Label>Execution Model</Label>
+            <Select
+              value={model}
+              onValueChange={value => setModel(value as ExecutionModel)}
+              disabled={!canUseExecutionModel || allowedModels.length === 0}
+            >
+              <SelectTrigger className="mt-1 h-12 rounded-xl border border-slate-700 bg-slate-900/60 text-sm">
+                <SelectValue
+                  placeholder={
+                    !canUseExecutionModel
+                      ? 'Set bias/state to unlock models'
+                      : allowedModels.length === 0
+                        ? 'No models available'
+                        : 'Choose execution model'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent className="bg-trading-card text-sm">
+                {allowedModels.map(m => (
+                  <SelectItem key={m} value={m} className="py-2">
+                    {getExecutionModelLabel(m)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!canUseExecutionModel && (
+              <p className="mt-1 text-xs text-destructive">
+                Set a directional bias and market state to access execution models.
+              </p>
+            )}
           </div>
+
+          {model && checklistItems.length > 0 && (
+            <div className="rounded-2xl border border-slate-700/50 bg-slate-900/50 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Entry Checklist</span>
+                <span className="text-xs text-slate-400">{checklistItems.filter(item => item.checked).length}/{checklistItems.length}</span>
+              </div>
+              <div className="mt-3 space-y-2">
+                {checklistItems.map((item, index) => (
+                  <label key={item.text} className="flex items-start gap-3 text-sm text-slate-200">
+                    <Checkbox
+                      checked={item.checked}
+                      onCheckedChange={() => toggleChecklist(index)}
+                      className="mt-0.5"
+                    />
+                    <span>{item.text}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Location (Multi-select) */}
           <div>
@@ -562,11 +702,11 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
         <div className="sticky bottom-0 bg-trading-card border-t border-trading-border p-4">
           <Button
             onClick={handleSubmit}
-            disabled={!isFormValid || submitting}
+            disabled={!canConfirmEntry || submitting}
             className="w-full h-14 text-lg font-semibold"
             size="lg"
           >
-            {submitting ? 'Adding Trade...' : 'Add Trade'}
+            {submitting ? 'Saving...' : 'Confirm Entry'}
           </Button>
         </div>
       </SheetContent>
