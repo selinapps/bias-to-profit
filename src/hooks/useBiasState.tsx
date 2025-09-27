@@ -50,6 +50,17 @@ const isMissingFunctionError = (error: PostgrestError | null): boolean => {
   );
 };
 
+const isSchemaCacheColumnError = (error: PostgrestError | null): boolean => {
+  if (!error) return false;
+
+  const message = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  if (!message.includes('schema cache')) {
+    return false;
+  }
+
+  return message.includes('could not find the') && message.includes('column');
+};
+
 const isMissingRelationError = (error: PostgrestError | null): boolean => {
   if (!error) return false;
 
@@ -57,6 +68,7 @@ const isMissingRelationError = (error: PostgrestError | null): boolean => {
 
   if (
     normalizedCode === 'PGRST205' ||
+    normalizedCode === 'PGRST204' ||
     normalizedCode === 'PGRST101' ||
     normalizedCode === 'PGRST201' ||
     normalizedCode === '42P01'
@@ -68,7 +80,8 @@ const isMissingRelationError = (error: PostgrestError | null): boolean => {
   return (
     message.includes('could not find the table') ||
     message.includes('could not find the view') ||
-    message.includes('relation does not exist')
+    message.includes('relation does not exist') ||
+    isSchemaCacheColumnError(error)
   );
 };
 
