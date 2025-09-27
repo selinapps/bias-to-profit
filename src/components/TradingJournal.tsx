@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clock, Download, FileText, RotateCcw, TrendingUp, TrendingDown, Minus, Shield, Globe, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TRADING_SESSIONS, getActiveSession, type TradingSession } from '@/lib/tradingSessions';
 
 // Trading models and rules
 const EXECUTION_MODELS = {
@@ -74,63 +75,6 @@ const ASSETS = [
   'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'ES', 'NQ', '6E', 'XAUUSD', 'BTCUSD'
 ];
 
-// Trading Sessions (EST time zones)
-const TRADING_SESSIONS = [
-  {
-    id: 'asian_range',
-    name: 'Asian Range',
-    start: { hour: 20, minute: 0 }, // 8:00 PM EST
-    end: { hour: 4, minute: 0 }, // 4:00 AM EST (next day)
-    localTime: '3:00 AM - 11:00 AM (+03)',
-    color: 'bg-purple-500/20 text-purple-300 border-purple-400/50',
-    description: 'Consolidation period'
-  },
-  {
-    id: 'london_killzone',
-    name: 'London Killzone',
-    start: { hour: 2, minute: 0 }, // 2:00 AM EST
-    end: { hour: 5, minute: 0 }, // 5:00 AM EST
-    localTime: '9:00 AM - 12:00 PM (+03)',
-    color: 'bg-red-500/20 text-red-300 border-red-400/50',
-    description: 'High volatility - London open'
-  },
-  {
-    id: 'london_lunch',
-    name: 'London Lunch',
-    start: { hour: 7, minute: 0 }, // 7:00 AM EST
-    end: { hour: 8, minute: 0 }, // 8:00 AM EST
-    localTime: '2:00 PM - 3:00 PM (+03)',
-    color: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50',
-    description: 'Lower volatility'
-  },
-  {
-    id: 'london_ny_overlap',
-    name: 'London vs. New York',
-    start: { hour: 8, minute: 0 }, // 8:00 AM EST
-    end: { hour: 12, minute: 0 }, // 12:00 PM EST
-    localTime: '3:00 PM - 7:00 PM (+03)',
-    color: 'bg-blue-500/20 text-blue-300 border-blue-400/50',
-    description: 'Key trading window - Major overlap'
-  },
-  {
-    id: 'silver_bullet',
-    name: 'Silver Bullet Hours',
-    start: { hour: 10, minute: 0 }, // 10:00 AM EST
-    end: { hour: 11, minute: 0 }, // 11:00 AM EST
-    localTime: '5:00 PM - 6:00 PM (+03)',
-    color: 'bg-green-500/20 text-green-300 border-green-400/50',
-    description: 'Reversal window'
-  },
-  {
-    id: 'ny_session',
-    name: 'New York Session',
-    start: { hour: 8, minute: 0 }, // 8:00 AM EST
-    end: { hour: 17, minute: 0 }, // 5:00 PM EST
-    localTime: '3:00 PM - 12:00 AM (+03)',
-    color: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/50',
-    description: 'Major U.S. trading hours'
-  }
-];
 
 interface Trade {
   id: string;
@@ -219,31 +163,13 @@ export default function TradingJournal() {
   
   // Time and session
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [currentSession, setCurrentSession] = useState<typeof TRADING_SESSIONS[0] | null>(null);
-  
+  const [currentSession, setCurrentSession] = useState<TradingSession | null>(null);
+
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
       setCurrentTime(now);
-      
-      // Detect current trading session
-      const est = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-      const currentHour = est.getHours();
-      const currentMinute = est.getMinutes();
-      
-      const activeSession = TRADING_SESSIONS.find(session => {
-        const startMinutes = session.start.hour * 60 + session.start.minute;
-        const endMinutes = session.end.hour * 60 + session.end.minute;
-        const currentMinutes = currentHour * 60 + currentMinute;
-        
-        // Handle overnight sessions (like Asian Range)
-        if (startMinutes > endMinutes) {
-          return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
-        }
-        return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-      });
-      
-      setCurrentSession(activeSession || null);
+      setCurrentSession(getActiveSession(now));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
