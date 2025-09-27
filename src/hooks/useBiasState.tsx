@@ -38,12 +38,68 @@ const isMissingFunctionError = (error: PostgrestError | null): boolean => {
   return message.includes('could not find the function');
 };
 
+const isMissingRelationError = (error: PostgrestError | null): boolean => {
+  if (!error) return false;
+
+  if (error.code === 'PGRST205') return true;
+
+  const message = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  return message.includes('could not find the table') || message.includes('could not find the view');
+};
+
+const biasStateMissingSchemaMessage =
+  'Bias state storage is not available. Please run the latest Supabase migrations to enable bias tracking.';
+
 export function useBiasState() {
   const { user } = useAuth();
   const [biasState, setBiasState] = useState<BiasStateResponse>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const dayKey = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
+  const fetchFromTable = useCallback(async (): Promise<BiasStateResponse> => {
+    const { data, error } = await supabase
+      .from('bias_state')
+      .select('*')
+      .eq('day_key', dayKey)
+      .eq('active', true)
+      .order('selected_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      if (isMissingRelationError(error)) {
+        console.error(biasStateMissingSchemaMessage, error);
+        return null;
+      }
+
+      throw error;
+    }
+
+    return data ? mapRowToSnapshot(data) : null;
+  }, [dayKey]);
+
+  const fetchFromView = useCallback(async (): Promise<BiasStateResponse> => {
+    const { data, error } = await supabase
+      .from('v_current_bias')
+      .select('*')
+      .eq('day_key', dayKey)
+      .maybeSingle();
+
+    if (error) {
+      if (isMissingRelationError(error)) {
+        console.warn(
+          'v_current_bias view missing. Falling back to direct table query. Run the latest Supabase migrations to enable optimized bias queries.'
+        );
+
+        return fetchFromTable();
+      }
+
+      throw error;
+    }
+
+    return data ? mapRowToSnapshot(data) : null;
+  }, [dayKey, fetchFromTable]);
 
   const fetchCurrent = useCallback(async () => {
     if (!user) {
@@ -62,20 +118,12 @@ export function useBiasState() {
           'get_current_bias function missing. Falling back to view query. Run the latest Supabase migrations to enable RPC support.'
         );
 
-        const {
-          data: fallbackData,
-          error: fallbackError,
-        } = await supabase
-          .from('v_current_bias')
-          .select('*')
-          .eq('day_key', dayKey)
-          .maybeSingle();
-
-        if (fallbackError) {
+        try {
+          const fallbackSnapshot = await fetchFromView();
+          setBiasState(fallbackSnapshot);
+        } catch (fallbackError) {
           console.error('Error loading bias state fallback', fallbackError);
           setBiasState(null);
-        } else {
-          setBiasState(fallbackData ? mapRowToSnapshot(fallbackData) : null);
         }
       } else {
         console.error('Error loading bias state', error);
@@ -86,7 +134,7 @@ export function useBiasState() {
     }
 
     setLoading(false);
-  }, [user, dayKey]);
+  }, [user, dayKey, fetchFromView]);
 
   useEffect(() => {
     fetchCurrent();
@@ -101,6 +149,10 @@ export function useBiasState() {
         .eq('active', true);
 
       if (deactivateError) {
+        if (isMissingRelationError(deactivateError)) {
+          throw new Error(biasStateMissingSchemaMessage);
+        }
+
         throw deactivateError;
       }
 
@@ -119,6 +171,10 @@ export function useBiasState() {
         .single();
 
       if (insertError) {
+        if (isMissingRelationError(insertError)) {
+          throw new Error(biasStateMissingSchemaMessage);
+        }
+
         throw insertError;
       }
 
@@ -148,7 +204,20 @@ export function useBiasState() {
               'set_bias_state function missing. Falling back to direct table mutation. Run the latest Supabase migrations to enable RPC support.'
             );
 
-            await fallbackSaveBiasState(result);
+            try {
+              await fallbackSaveBiasState(result);
+            } catch (fallbackError) {
+              const postgrestError =
+                fallbackError && typeof fallbackError === 'object' && 'code' in fallbackError
+                  ? (fallbackError as PostgrestError)
+                  : null;
+
+              if (isMissingRelationError(postgrestError)) {
+                throw new Error(biasStateMissingSchemaMessage);
+              }
+
+              throw fallbackError;
+            }
             return;
           }
 
