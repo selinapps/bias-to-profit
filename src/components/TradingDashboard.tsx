@@ -3,16 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  BarChart3, 
-  Clock, 
-  Target, 
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  Clock,
+  Target,
   AlertTriangle,
   Download,
   Plus,
-  LogOut
+  LogOut,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useTrades } from '@/hooks/useTrades';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,12 +25,49 @@ import { TradeHeatmap } from './TradeHeatmap';
 import { format } from 'date-fns';
 import { TRADING_SESSIONS, getActiveSession, type TradingSession } from '@/lib/tradingSessions';
 
+const EST_TIME_ZONE = 'America/New_York';
+const MINUTES_PER_DAY = 1440;
+const WEEKEND_START_MINUTE = 5 * MINUTES_PER_DAY + 17 * 60;
+const WEEKEND_END_MINUTE = 7 * MINUTES_PER_DAY + 17 * 60;
+
+const getWeekendClosureStatus = (date: Date) => {
+  const estDate = new Date(date.toLocaleString('en-US', { timeZone: EST_TIME_ZONE }));
+  const day = estDate.getDay();
+  const minutes = estDate.getHours() * 60 + estDate.getMinutes();
+
+  let adjustedMinuteOfWeek = day * MINUTES_PER_DAY + minutes;
+  if (day === 0) {
+    adjustedMinuteOfWeek += 7 * MINUTES_PER_DAY;
+  }
+
+  const isClosed =
+    adjustedMinuteOfWeek >= WEEKEND_START_MINUTE &&
+    adjustedMinuteOfWeek < WEEKEND_END_MINUTE;
+
+  if (!isClosed) {
+    return { isClosed, countdown: '' };
+  }
+
+  const minutesUntilReopen = WEEKEND_END_MINUTE - adjustedMinuteOfWeek;
+  const days = Math.floor(minutesUntilReopen / MINUTES_PER_DAY);
+  const hours = Math.floor((minutesUntilReopen % MINUTES_PER_DAY) / 60);
+  const minutesRemaining = minutesUntilReopen % 60;
+
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutesRemaining > 0 || parts.length === 0) parts.push(`${minutesRemaining}m`);
+
+  return { isClosed, countdown: parts.join(' ') };
+};
+
 export function TradingDashboard() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { trades, openTrades, closedTrades, canAddTrade, dailyLosses } = useTrades();
   const [showAddTrade, setShowAddTrade] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentSession, setCurrentSession] = useState<TradingSession | null>(getActiveSession());
+  const [isSessionCardExpanded, setIsSessionCardExpanded] = useState(false);
 
   // Update time every minute
   useEffect(() => {
@@ -97,6 +136,9 @@ export function TradingDashboard() {
     URL.revokeObjectURL(url);
   };
 
+  const weekendStatus = getWeekendClosureStatus(currentTime);
+  const displaySession = weekendStatus.isClosed ? null : currentSession;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -113,15 +155,33 @@ export function TradingDashboard() {
                   <p className="text-sm text-trading-muted">
                     {format(currentTime, 'EEEE, MMMM d, yyyy • HH:mm')}
                   </p>
-                  <div className="mt-1 flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    {currentSession ? (
-                      <span className="text-trading-muted">
-                        {currentSession.name}
-                        <span className="hidden sm:inline"> • {currentSession.localTime}</span>
-                      </span>
+                  <div className="mt-1 space-y-1 text-xs sm:text-sm">
+                    {weekendStatus.isClosed ? (
+                      <div className="flex items-center gap-2 text-destructive">
+                        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                        <span>
+                          Market closed for the weekend — reopens in {weekendStatus.countdown}.
+                        </span>
+                      </div>
                     ) : (
-                      <span className="text-trading-muted">No active session</span>
+                      <>
+                        <div className="flex items-center gap-2 text-trading-muted">
+                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                          {displaySession ? (
+                            <span>
+                              {displaySession.name}
+                              <span className="hidden sm:inline"> • {displaySession.localTime}</span>
+                            </span>
+                          ) : (
+                            <span>No active session</span>
+                          )}
+                        </div>
+                        {displaySession?.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {displaySession.description}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -146,37 +206,86 @@ export function TradingDashboard() {
         {/* Current Session & Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="bg-trading-card border-trading-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-trading-muted">Active Sessions</CardTitle>
+            <CardHeader className="pb-0">
+              <button
+                type="button"
+                onClick={() => setIsSessionCardExpanded(prev => !prev)}
+                className="flex w-full items-center justify-between gap-2 text-left"
+                aria-expanded={isSessionCardExpanded}
+              >
+                <div>
+                  <CardTitle className="text-sm text-trading-muted">Active Sessions</CardTitle>
+                  <p className="text-xs text-trading-muted/80">
+                    {isSessionCardExpanded ? 'Hide session overview' : 'Tap to view all session windows'}
+                  </p>
+                </div>
+                <span className="rounded-md border border-trading-border p-1 text-trading-muted">
+                  {isSessionCardExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </span>
+              </button>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {TRADING_SESSIONS.map(session => {
-                  const isActive = currentSession?.id === session.id;
-                  return (
-                    <div
-                      key={session.id}
-                      className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs sm:text-sm transition-colors ${
-                        isActive
-                          ? session.color ?? 'bg-emerald-500/10 text-emerald-200 border-emerald-400/50'
-                          : 'border-trading-border text-trading-muted'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`inline-flex h-2 w-2 rounded-full ${
-                            isActive ? 'bg-emerald-400' : 'bg-muted'
-                          }`}
-                        />
-                        <span className="font-medium">{session.name}</span>
+            <CardContent className="pt-4">
+              {isSessionCardExpanded ? (
+                <div className="space-y-3">
+                  {TRADING_SESSIONS.map(session => {
+                    const isActive = !weekendStatus.isClosed && displaySession?.id === session.id;
+                    return (
+                      <div
+                        key={session.id}
+                        className={`rounded-md border px-3 py-2 text-xs sm:text-sm transition-colors ${
+                          isActive
+                            ? session.color ?? 'bg-emerald-500/10 text-emerald-200 border-emerald-400/50'
+                            : 'border-trading-border text-trading-muted'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex h-2 w-2 rounded-full ${
+                                isActive ? 'bg-emerald-400' : 'bg-muted'
+                              }`}
+                            />
+                            <span className="font-medium">{session.name}</span>
+                          </div>
+                          <span className={`text-xs ${isActive ? 'text-foreground/80' : 'text-trading-muted'}`}>
+                            {session.localTime}
+                          </span>
+                        </div>
+                        <p className={`mt-1 text-xs ${isActive ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                          {session.description}
+                        </p>
                       </div>
-                      <span className={`text-xs ${isActive ? 'text-foreground/80' : 'text-trading-muted'}`}>
-                        {session.localTime}
-                      </span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {displaySession ? (
+                    <div className="rounded-md border border-trading-border px-3 py-2 text-xs sm:text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                          <span className="font-medium text-foreground">{displaySession.name}</span>
+                        </div>
+                        <span className="text-xs text-trading-muted">{displaySession.localTime}</span>
+                      </div>
+                      {displaySession.description && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {displaySession.description}
+                        </p>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
+                  ) : (
+                    <div className="rounded-md border border-dashed border-trading-border px-3 py-4 text-center text-xs text-trading-muted">
+                      No active session — tap to view the full schedule.
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
