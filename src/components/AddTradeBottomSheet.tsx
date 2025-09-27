@@ -77,10 +77,10 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
   const exitNum = parseFloat(exitPrice) || 0;
   
   const stopDistance = Math.abs(entryNum - stopNum);
-  const rMultiple = stopDistance > 0 && exitNum > 0 ? 
-    Math.abs(exitNum - entryNum) / stopDistance * (direction === 'long' ? 1 : -1) : 0;
-  const pnl = entryNum > 0 && exitNum > 0 ? 
-    (direction === 'long' ? exitNum - entryNum : entryNum - exitNum) / entryNum * riskAmount : 0;
+  const directionalDiff = direction === 'long' ? exitNum - entryNum : entryNum - exitNum;
+  const rMultiple = stopDistance > 0 && exitNum > 0 ? directionalDiff / stopDistance : 0;
+  const pnl = entryNum > 0 && exitNum > 0 ?
+    directionalDiff / entryNum * riskAmount : 0;
 
   // Check if form is valid
   const isFormValid = entryPrice && stopLoss && asset && locations.length > 0 && aggression.length > 0;
