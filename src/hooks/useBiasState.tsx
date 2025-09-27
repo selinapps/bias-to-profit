@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 import type { BiasQuizResult, BiasStateSnapshot } from '@/types/bias';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 type BiasViewRow = Database['public']['Views']['v_current_bias']['Row'];
 type BiasTableRow = Database['public']['Tables']['bias_state']['Row'];
@@ -28,6 +29,15 @@ const mapRowToSnapshot = (row: BiasViewRow | BiasTableRow): BiasStateSnapshot =>
   selected_at: row.selected_at,
 });
 
+const isMissingFunctionError = (error: PostgrestError | null): boolean => {
+  if (!error) return false;
+
+  if (error.code === 'PGRST202') return true;
+
+  const message = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  return message.includes('could not find the function');
+};
+
 export function useBiasState() {
   const { user } = useAuth();
   const [biasState, setBiasState] = useState<BiasStateResponse>(null);
@@ -47,7 +57,7 @@ export function useBiasState() {
     });
 
     if (error) {
-      if (error.code === 'PGRST202') {
+      if (isMissingFunctionError(error)) {
         console.warn(
           'get_current_bias function missing. Falling back to view query. Run the latest Supabase migrations to enable RPC support.'
         );
@@ -82,6 +92,41 @@ export function useBiasState() {
     fetchCurrent();
   }, [fetchCurrent]);
 
+  const fallbackSaveBiasState = useCallback(
+    async (result: BiasQuizResult) => {
+      const { error: deactivateError } = await supabase
+        .from('bias_state')
+        .update({ active: false })
+        .eq('day_key', dayKey)
+        .eq('active', true);
+
+      if (deactivateError) {
+        throw deactivateError;
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from('bias_state')
+        .insert({
+          day_key: dayKey,
+          bias: result.bias,
+          market_state: result.market_state ?? null,
+          confidence: result.confidence ?? null,
+          tags: result.tags.length ? result.tags : null,
+          active: true,
+          selected_by: user?.id ?? null,
+        })
+        .select('*')
+        .single();
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      setBiasState(inserted ? mapRowToSnapshot(inserted) : null);
+    },
+    [dayKey, user?.id]
+  );
+
   const saveBiasState = useCallback(
     async (result: BiasQuizResult) => {
       if (!user) throw new Error('User not authenticated');
@@ -98,10 +143,13 @@ export function useBiasState() {
         });
 
         if (error) {
-          if (error.code === 'PGRST202') {
-            throw new Error(
-              'set_bias_state function is missing. Please run the latest Supabase migrations to enable saving bias selections.'
+          if (isMissingFunctionError(error)) {
+            console.warn(
+              'set_bias_state function missing. Falling back to direct table mutation. Run the latest Supabase migrations to enable RPC support.'
             );
+
+            await fallbackSaveBiasState(result);
+            return;
           }
 
           throw error;
@@ -112,7 +160,7 @@ export function useBiasState() {
         setSaving(false);
       }
     },
-    [user, dayKey]
+    [user, dayKey, fallbackSaveBiasState]
   );
 
   return {
