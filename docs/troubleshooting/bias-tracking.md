@@ -1,7 +1,7 @@
 # Bias tracking Supabase schema
 
 The trading dashboard reads and writes the current bias through Supabase. All of the SQL objects it depends on
-(functions, views, tables) live in the migrations contained in `supabase/migrations/`.
+(functions, views, tables, and RPC helpers) live in the migrations contained in `supabase/migrations/`.
 
 When those migrations have not been applied you will see a yellow banner in the app that reads:
 
@@ -24,7 +24,8 @@ enable the feature:
    ```
    This command re-applies every SQL migration in `supabase/migrations/` against the linked database, including
    [`20241010123000_bias_tracking_storage.sql`](../../supabase/migrations/20241010123000_bias_tracking_storage.sql)
-   which provisions the bias storage table, unique index, and row-level security policies.
+   and [`20251001100000_bias_state_refresh.sql`](../../supabase/migrations/20251001100000_bias_state_refresh.sql)
+   which provision the bias storage table, helper view, RPC functions, unique index, and row-level security policies.
 4. Regenerate the generated types if you are running locally:
    ```bash
    supabase gen types typescript --project-id "$(supabase status -o json | jq -r '.project.id')" --schema public > src/integrations/supabase/types.ts
@@ -43,12 +44,14 @@ Want to run the SQL by hand? The migration mentioned above contains the followin
 
 - Ensure the `bias_enum` and `market_state_enum` enums exist.
 - Create the `public.bias_state` table with the columns used by the app (day key, bias enums, optional tags, etc.).
+- Create the `public.v_current_bias` view so the UI can fall back to a deterministic query if the RPC is missing.
+- Create the `public.get_current_bias` RPC and grant execute permissions to both `anon` and `authenticated` roles.
 - Enable row-level security and add permissive policies so authenticated users can read and persist the shared bias state.
 
 You can run that file manually with either approach:
 
 ```bash
-# Apply the SQL locally with the Supabase CLI
+# Apply the SQL locally with the Supabase CLI (uses the migrations above)
 supabase db push
 
 # ...or connect with psql and run the file manually
@@ -63,6 +66,14 @@ After the migration succeeds, verify the schema:
 
 -- Check the RLS policies
 SELECT policyname, permissive, roles, cmd FROM pg_policies WHERE tablename = 'bias_state';
+
+-- Confirm the helper view exists
+SELECT table_name FROM information_schema.views
+WHERE table_schema = 'public' AND table_name = 'v_current_bias';
+
+-- Confirm the RPC is registered
+SELECT routine_name FROM information_schema.routines
+WHERE routine_schema = 'public' AND routine_name = 'get_current_bias';
 
 -- Optional: confirm you can read/write a row
 SELECT * FROM public.bias_state LIMIT 1;
