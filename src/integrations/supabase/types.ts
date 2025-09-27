@@ -14,13 +14,305 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_stats: {
+        Row: {
+          avg_r: number | null
+          best_hour: number | null
+          best_trade_r: number | null
+          consecutive_losses: number | null
+          created_at: string
+          date: string
+          day_disabled: boolean | null
+          house_money_active: boolean | null
+          id: string
+          losing_trades: number | null
+          mean_reversion_trades: number | null
+          mean_reversion_win_rate: number | null
+          total_pnl: number | null
+          total_r: number | null
+          total_trades: number | null
+          trend_trades: number | null
+          trend_win_rate: number | null
+          updated_at: string
+          user_id: string
+          win_rate: number | null
+          winning_trades: number | null
+          worst_hour: number | null
+          worst_trade_r: number | null
+        }
+        Insert: {
+          avg_r?: number | null
+          best_hour?: number | null
+          best_trade_r?: number | null
+          consecutive_losses?: number | null
+          created_at?: string
+          date: string
+          day_disabled?: boolean | null
+          house_money_active?: boolean | null
+          id?: string
+          losing_trades?: number | null
+          mean_reversion_trades?: number | null
+          mean_reversion_win_rate?: number | null
+          total_pnl?: number | null
+          total_r?: number | null
+          total_trades?: number | null
+          trend_trades?: number | null
+          trend_win_rate?: number | null
+          updated_at?: string
+          user_id: string
+          win_rate?: number | null
+          winning_trades?: number | null
+          worst_hour?: number | null
+          worst_trade_r?: number | null
+        }
+        Update: {
+          avg_r?: number | null
+          best_hour?: number | null
+          best_trade_r?: number | null
+          consecutive_losses?: number | null
+          created_at?: string
+          date?: string
+          day_disabled?: boolean | null
+          house_money_active?: boolean | null
+          id?: string
+          losing_trades?: number | null
+          mean_reversion_trades?: number | null
+          mean_reversion_win_rate?: number | null
+          total_pnl?: number | null
+          total_r?: number | null
+          total_trades?: number | null
+          trend_trades?: number | null
+          trend_win_rate?: number | null
+          updated_at?: string
+          user_id?: string
+          win_rate?: number | null
+          winning_trades?: number | null
+          worst_hour?: number | null
+          worst_trade_r?: number | null
+        }
+        Relationships: []
+      }
+      hypotheses: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          risk_settings: Json | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          risk_settings?: Json | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          risk_settings?: Json | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          aggression: string[] | null
+          asset: string
+          created_at: string
+          direction: string
+          duration_minutes: number | null
+          emotions: Json | null
+          entry_price: number
+          entry_time: string
+          exit_price: number | null
+          exit_time: string | null
+          externals: string[] | null
+          hypothesis_id: string | null
+          id: string
+          is_experimental: boolean | null
+          locations: string[] | null
+          mistake_tags: string[] | null
+          model: string
+          notes: string | null
+          override_reason: string | null
+          pnl: number | null
+          r_multiple: number | null
+          risk_amount: number
+          risk_tier: string
+          scenarios: string[] | null
+          screenshot_url: string | null
+          status: string | null
+          stop_loss: number
+          trading_session: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aggression?: string[] | null
+          asset: string
+          created_at?: string
+          direction: string
+          duration_minutes?: number | null
+          emotions?: Json | null
+          entry_price: number
+          entry_time?: string
+          exit_price?: number | null
+          exit_time?: string | null
+          externals?: string[] | null
+          hypothesis_id?: string | null
+          id?: string
+          is_experimental?: boolean | null
+          locations?: string[] | null
+          mistake_tags?: string[] | null
+          model: string
+          notes?: string | null
+          override_reason?: string | null
+          pnl?: number | null
+          r_multiple?: number | null
+          risk_amount: number
+          risk_tier: string
+          scenarios?: string[] | null
+          screenshot_url?: string | null
+          status?: string | null
+          stop_loss: number
+          trading_session?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aggression?: string[] | null
+          asset?: string
+          created_at?: string
+          direction?: string
+          duration_minutes?: number | null
+          emotions?: Json | null
+          entry_price?: number
+          entry_time?: string
+          exit_price?: number | null
+          exit_time?: string | null
+          externals?: string[] | null
+          hypothesis_id?: string | null
+          id?: string
+          is_experimental?: boolean | null
+          locations?: string[] | null
+          mistake_tags?: string[] | null
+          model?: string
+          notes?: string | null
+          override_reason?: string | null
+          pnl?: number | null
+          r_multiple?: number | null
+          risk_amount?: number
+          risk_tier?: string
+          scenarios?: string[] | null
+          screenshot_url?: string | null
+          status?: string | null
+          stop_loss?: number
+          trading_session?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trades_hypothesis_id_fkey"
+            columns: ["hypothesis_id"]
+            isOneToOne: false
+            referencedRelation: "hypotheses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          daily_wrap_time: string | null
+          edge_reminders: Json | null
+          id: string
+          last_aggression: string[] | null
+          last_locations: string[] | null
+          last_model: string | null
+          last_risk_tier: string | null
+          notifications_enabled: boolean | null
+          offline_mode: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_wrap_time?: string | null
+          edge_reminders?: Json | null
+          id?: string
+          last_aggression?: string[] | null
+          last_locations?: string[] | null
+          last_model?: string | null
+          last_risk_tier?: string | null
+          notifications_enabled?: boolean | null
+          offline_mode?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_wrap_time?: string | null
+          edge_reminders?: Json | null
+          id?: string
+          last_aggression?: string[] | null
+          last_locations?: string[] | null
+          last_model?: string | null
+          last_risk_tier?: string | null
+          notifications_enabled?: boolean | null
+          offline_mode?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      compute_daily_stats: {
+        Args: { target_date: string; target_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
