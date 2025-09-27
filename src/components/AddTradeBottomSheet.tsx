@@ -12,6 +12,8 @@ import { AlertTriangle, Camera, TrendingUp, TrendingDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTrades } from '@/hooks/useTrades';
 import { useAuth } from '@/hooks/useAuth';
+import { format } from 'date-fns';
+import { getActiveSession, type TradingSession } from '@/lib/tradingSessions';
 
 interface AddTradeBottomSheetProps {
   isOpen: boolean;
@@ -36,6 +38,9 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
   const { user } = useAuth();
   const { addTrade, canAddTrade, dailyLosses } = useTrades();
   const { toast } = useToast();
+
+  const [entryTime, setEntryTime] = useState(new Date());
+  const [currentSession, setCurrentSession] = useState<TradingSession | null>(getActiveSession());
 
   // Form state
   const [asset, setAsset] = useState<string>('EURUSD');
@@ -105,6 +110,9 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
     setIsExperimental(false);
     setOverrideReason('');
     setShowOverride(false);
+    const now = new Date();
+    setEntryTime(now);
+    setCurrentSession(getActiveSession(now));
   };
 
   // Handle form submission
@@ -140,6 +148,8 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
         entry_price: parseFloat(entryPrice),
         stop_loss: parseFloat(stopLoss),
         exit_price: exitPrice ? parseFloat(exitPrice) : null,
+        entry_time: entryTime.toISOString(),
+        trading_session: currentSession?.name || null,
         scenarios,
         emotions,
         externals,
@@ -179,6 +189,27 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      setEntryTime(now);
+      setCurrentSession(getActiveSession(now));
+    }
+  }, [isOpen]);
+
+  const estFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+
+  const formattedLocalTime = format(entryTime, 'MMM d, yyyy • HH:mm');
+  const formattedEstTime = estFormatter.format(entryTime);
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-trading-card border-trading-border">
@@ -193,6 +224,39 @@ export function AddTradeBottomSheet({ isOpen, onClose }: AddTradeBottomSheetProp
         </SheetHeader>
 
         <div className="space-y-6 py-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="bg-muted/10 border-trading-border">
+              <div className="p-4 space-y-1">
+                <p className="text-xs uppercase tracking-wide text-trading-muted">Detected entry time</p>
+                <p className="text-lg font-semibold text-foreground">{formattedLocalTime}</p>
+                <p className="text-xs text-trading-muted">EST: {formattedEstTime}</p>
+              </div>
+            </Card>
+            <Card className="bg-muted/10 border-trading-border">
+              <div className="p-4 space-y-2">
+                <p className="text-xs uppercase tracking-wide text-trading-muted">Current trading session</p>
+                {currentSession ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="relative inline-flex h-2.5 w-2.5">
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                      </span>
+                      <span className="font-semibold text-foreground">{currentSession.name}</span>
+                    </div>
+                    <p className="text-xs text-trading-muted">{currentSession.localTime}</p>
+                    <p className="text-xs text-muted-foreground">{currentSession.description}</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-trading-muted">
+                    <span className="h-2.5 w-2.5 rounded-full bg-muted" />
+                    No active session detected
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+
           {/* Stop Rule Warning */}
           {!canAddTrade && (
             <Card className="border-destructive bg-destructive/10 p-4">

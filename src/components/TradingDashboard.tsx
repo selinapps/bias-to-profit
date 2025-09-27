@@ -21,25 +21,26 @@ import { DailyWrap } from './DailyWrap';
 import { HypothesisMode } from './HypothesisMode';
 import { TradeHeatmap } from './TradeHeatmap';
 import { format } from 'date-fns';
-
-const TRADING_SESSIONS = [
-  { name: 'Asian Range', time: '3:00 AM - 11:00 AM', active: false },
-  { name: 'London Killzone', time: '9:00 AM - 12:00 PM', active: false },
-  { name: 'London Lunch', time: '2:00 PM - 3:00 PM', active: false },
-  { name: 'London vs NY', time: '3:00 PM - 7:00 PM', active: true },
-  { name: 'Silver Bullet', time: '5:00 PM - 6:00 PM', active: false },
-  { name: 'New York Session', time: '3:00 PM - 12:00 AM', active: true }
-];
+import { TRADING_SESSIONS, getActiveSession, type TradingSession } from '@/lib/tradingSessions';
 
 export function TradingDashboard() {
   const { user, signOut } = useAuth();
   const { trades, openTrades, closedTrades, canAddTrade, dailyLosses } = useTrades();
   const [showAddTrade, setShowAddTrade] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentSession, setCurrentSession] = useState<TradingSession | null>(getActiveSession());
 
   // Update time every minute
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now);
+      setCurrentSession(getActiveSession(now));
+    };
+
+    updateTime();
+
+    const timer = setInterval(updateTime, 60000);
     return () => clearInterval(timer);
   }, []);
 
@@ -112,6 +113,17 @@ export function TradingDashboard() {
                   <p className="text-sm text-trading-muted">
                     {format(currentTime, 'EEEE, MMMM d, yyyy • HH:mm')}
                   </p>
+                  <div className="mt-1 flex items-center gap-2 text-xs sm:text-sm">
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    {currentSession ? (
+                      <span className="text-trading-muted">
+                        {currentSession.name}
+                        <span className="hidden sm:inline"> • {currentSession.localTime}</span>
+                      </span>
+                    ) : (
+                      <span className="text-trading-muted">No active session</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -139,11 +151,31 @@ export function TradingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {TRADING_SESSIONS.filter(s => s.active).map(session => (
-                  <Badge key={session.name} variant="default" className="mr-2">
-                    {session.name}
-                  </Badge>
-                ))}
+                {TRADING_SESSIONS.map(session => {
+                  const isActive = currentSession?.id === session.id;
+                  return (
+                    <div
+                      key={session.id}
+                      className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs sm:text-sm transition-colors ${
+                        isActive
+                          ? session.color ?? 'bg-emerald-500/10 text-emerald-200 border-emerald-400/50'
+                          : 'border-trading-border text-trading-muted'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex h-2 w-2 rounded-full ${
+                            isActive ? 'bg-emerald-400' : 'bg-muted'
+                          }`}
+                        />
+                        <span className="font-medium">{session.name}</span>
+                      </div>
+                      <span className={`text-xs ${isActive ? 'text-foreground/80' : 'text-trading-muted'}`}>
+                        {session.localTime}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
