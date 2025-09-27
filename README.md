@@ -60,6 +60,22 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Bias tracking & Supabase setup
+
+Bias tracking in the trading dashboard depends on Supabase tables, views, and RPC functions that ship with this
+repository. If you open the app and see a yellow banner that reads “Bias tracking configuration missing – Bias state
+storage is not available. Please run the latest Supabase migrations to enable bias tracking.” it simply means those
+Supabase migrations have not been applied yet.
+
+To fix the warning:
+
+1. Install the [Supabase CLI](https://supabase.com/docs/reference/cli/usage) (once per machine).
+2. Start your local Supabase stack or link a remote project: `supabase start`
+3. Apply the bundled migrations: `supabase db reset`
+4. Refresh the dashboard – the warning disappears once the schema exists.
+
+More detail lives in [`docs/troubleshooting/bias-tracking.md`](docs/troubleshooting/bias-tracking.md).
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/d50e12b5-8df8-4c0c-a24b-c1a69cb79a1d) and click on Share -> Publish.
