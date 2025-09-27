@@ -75,7 +75,7 @@ export function TradingDashboard() {
   const [currentSession, setCurrentSession] = useState<TradingSession | null>(getActiveSession());
   const [isSessionCardExpanded, setIsSessionCardExpanded] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const { biasState, loading: biasLoading, saveBiasState } = useBiasState();
+  const { biasState, loading: biasLoading, saveBiasState, schemaMessage } = useBiasState();
   const { toast } = useToast();
 
   // Update time every minute
@@ -221,11 +221,25 @@ export function TradingDashboard() {
 
       <div className="container mx-auto px-4 py-6">
         <div className="space-y-4">
-          <BiasStateCard
-            value={biasState ?? undefined}
-            onEdit={() => setIsQuizOpen(true)}
-            loading={biasLoading}
-          />
+          <div className="space-y-3">
+            <BiasStateCard
+              value={biasState ?? undefined}
+              onEdit={() => setIsQuizOpen(true)}
+              loading={biasLoading}
+            />
+
+            {schemaMessage && (
+              <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+                <span className="mt-0.5 rounded-full bg-amber-500/20 p-1 text-amber-300">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                </span>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-amber-100">Bias tracking configuration missing</p>
+                  <p className="text-xs text-amber-200/90">{schemaMessage}</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Current Session & Quick Stats */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
