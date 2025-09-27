@@ -42,11 +42,9 @@ export function useBiasState() {
     }
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('v_current_bias')
-      .select('*')
-      .eq('day_key', dayKey)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc('get_current_bias', {
+      target_day: dayKey,
+    });
 
     if (error) {
       console.error('Error loading bias state', error);
@@ -69,37 +67,19 @@ export function useBiasState() {
       setSaving(true);
 
       try {
-        const { error: deactivateError } = await supabase
-          .from('bias_state')
-          .update({ active: false })
-          .eq('day_key', dayKey)
-          .eq('active', true);
-
-        if (deactivateError) {
-          throw deactivateError;
-        }
-
-        const insertPayload: Database['public']['Tables']['bias_state']['Insert'] = {
-          day_key: dayKey,
-          bias: result.bias,
-          market_state: result.market_state ?? null,
-          confidence: result.confidence ?? null,
-          tags: result.tags,
-          selected_by: user.id,
-          active: true,
-        };
-
-        const { data, error } = await supabase
-          .from('bias_state')
-          .insert(insertPayload)
-          .select('*')
-          .single();
+        const { data, error } = await supabase.rpc('set_bias_state', {
+          target_day: dayKey,
+          target_bias: result.bias,
+          target_market_state: result.market_state ?? null,
+          target_confidence: result.confidence ?? null,
+          target_tags: result.tags.length ? result.tags : null,
+        });
 
         if (error) {
           throw error;
         }
 
-        setBiasState(mapRowToSnapshot(data));
+        setBiasState(data ? mapRowToSnapshot(data) : null);
       } finally {
         setSaving(false);
       }

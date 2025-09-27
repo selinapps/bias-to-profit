@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "lodash/_root.js": path.resolve(__dirname, "./src/shims/lodashRoot.js"),
     },
   },
 }));
