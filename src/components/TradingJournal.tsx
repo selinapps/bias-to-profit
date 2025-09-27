@@ -500,9 +500,9 @@ ${closedTrades.map(trade =>
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-trading-border bg-background/80 backdrop-blur-md">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-bold tracking-tight">Edge Day – Mechanical Trading Journal</h1>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <h1 className="text-lg font-bold tracking-tight sm:text-xl">Edge Day – Mechanical Trading Journal</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <Badge variant="outline" className="bg-trading-card border-trading-border">
               <Clock className="mr-1 h-3 w-3" />
               {currentTime.toLocaleTimeString()}
@@ -525,19 +525,19 @@ ${closedTrades.map(trade =>
                 Day Disabled
               </Badge>
             )}
-            <Button variant="terminal" size="sm" onClick={() => exportReport('md')}>
+            <Button variant="terminal" size="sm" onClick={() => exportReport('md')} className="w-full sm:w-auto">
               <FileText className="mr-1 h-3 w-3" />
               Export MD
             </Button>
-            <Button variant="terminal" size="sm" onClick={() => exportReport('csv')}>
+            <Button variant="terminal" size="sm" onClick={() => exportReport('csv')} className="w-full sm:w-auto">
               <Download className="mr-1 h-3 w-3" />
               CSV
             </Button>
-            <Button variant="terminal" size="sm" onClick={() => exportReport('json')}>
+            <Button variant="terminal" size="sm" onClick={() => exportReport('json')} className="w-full sm:w-auto">
               <Download className="mr-1 h-3 w-3" />
               JSON
             </Button>
-            <Button variant="danger" size="sm" onClick={resetDay}>
+            <Button variant="danger" size="sm" onClick={resetDay} className="w-full sm:w-auto">
               <RotateCcw className="mr-1 h-3 w-3" />
               Reset Day
             </Button>
