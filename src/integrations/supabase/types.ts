@@ -14,39 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      bias_state: {
+      bias: {
         Row: {
-          active: boolean
-          bias: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
-          confidence: 'LOW' | 'MEDIUM' | 'HIGH' | null
-          day_key: string
+          created_at: string | null
           id: string
-          market_state: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
-          selected_at: string
-          selected_by: string | null
-          tags: Json | null
+          level: Database["public"]["Enums"]["bias_level"]
+          source: string | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
-          active?: boolean
-          bias: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
-          confidence?: 'LOW' | 'MEDIUM' | 'HIGH' | null
-          day_key: string
+          created_at?: string | null
           id?: string
-          market_state?: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
-          selected_at?: string
-          selected_by?: string | null
-          tags?: Json | null
+          level?: Database["public"]["Enums"]["bias_level"]
+          source?: string | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          active?: boolean
-          bias?: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
-          confidence?: 'LOW' | 'MEDIUM' | 'HIGH' | null
-          day_key?: string
+          created_at?: string | null
           id?: string
-          market_state?: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
-          selected_at?: string
-          selected_by?: string | null
-          tags?: Json | null
+          level?: Database["public"]["Enums"]["bias_level"]
+          source?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bias_state: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          day_key: string
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          day_key: string
+          id?: never
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          day_key?: string
+          id?: never
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -191,10 +206,7 @@ export type Database = {
       trades: {
         Row: {
           aggression: string[] | null
-          bias_snapshot: Json
           asset: string
-          checklist: Json
-          checklist_complete: boolean
           created_at: string
           direction: string
           duration_minutes: number | null
@@ -216,7 +228,6 @@ export type Database = {
           r_multiple: number | null
           risk_amount: number
           risk_tier: string
-          session: string | null
           scenarios: string[] | null
           screenshot_url: string | null
           status: string | null
@@ -228,9 +239,6 @@ export type Database = {
         Insert: {
           aggression?: string[] | null
           asset: string
-          bias_snapshot: Json
-          checklist: Json
-          checklist_complete?: boolean
           created_at?: string
           direction: string
           duration_minutes?: number | null
@@ -252,7 +260,6 @@ export type Database = {
           r_multiple?: number | null
           risk_amount: number
           risk_tier: string
-          session?: string | null
           scenarios?: string[] | null
           screenshot_url?: string | null
           status?: string | null
@@ -264,9 +271,6 @@ export type Database = {
         Update: {
           aggression?: string[] | null
           asset?: string
-          bias_snapshot?: Json
-          checklist?: Json
-          checklist_complete?: boolean
           created_at?: string
           direction?: string
           duration_minutes?: number | null
@@ -288,7 +292,6 @@ export type Database = {
           r_multiple?: number | null
           risk_amount?: number
           risk_tier?: string
-          session?: string | null
           scenarios?: string[] | null
           screenshot_url?: string | null
           status?: string | null
@@ -356,13 +359,19 @@ export type Database = {
     Views: {
       v_current_bias: {
         Row: {
-          bias: 'OOB_LONG' | 'OOB_SHORT' | 'MR_LONG' | 'MR_SHORT' | 'NONE'
-          confidence: 'LOW' | 'MEDIUM' | 'HIGH' | null
-          day_key: string
-          id: string
-          market_state: 'OUT_OF_BALANCE' | 'IN_BALANCE' | null
-          selected_at: string
-          tags: Json | null
+          active: boolean | null
+          created_at: string | null
+          day_key: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          day_key?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          day_key?: string | null
         }
         Relationships: []
       }
@@ -373,22 +382,26 @@ export type Database = {
         Returns: Json
       }
       get_current_bias: {
-        Args: { target_day: string }
-        Returns: Database['public']['Tables']['bias_state']['Row'] | null
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active: boolean
+          created_at: string
+          day_key: string
+        }[]
       }
       set_bias_state: {
         Args: {
-          target_day: string
-          target_bias: Database['public']['Tables']['bias_state']['Row']['bias']
-          target_market_state?: Database['public']['Tables']['bias_state']['Row']['market_state'] | null
-          target_confidence?: Database['public']['Tables']['bias_state']['Row']['confidence'] | null
-          target_tags?: string[] | null
+          target_bias?: string
+          target_confidence?: number
+          target_day?: string
+          target_market_state?: string
+          target_tags?: string[]
         }
-        Returns: Database['public']['Tables']['bias_state']['Row']
+        Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      bias_level: "low" | "medium" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -515,6 +528,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      bias_level: ["low", "medium", "high"],
+    },
   },
 } as const
