@@ -492,7 +492,7 @@ export function useBiasState() {
       setSaving(true);
 
       try {
-        const { error } = await supabase.rpc('set_bias_state', {
+        const { data, error } = await supabase.rpc('set_bias_state', {
           target_day: dayKey,
           target_bias: result.bias,
           target_market_state: result.market_state ?? null,
