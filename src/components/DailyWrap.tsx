@@ -63,22 +63,29 @@ export function DailyWrap() {
 
   // Hour performance
   const hourPerformance = todayTrades.reduce((acc, trade) => {
-    const hour = new Date(trade.entry_time).getHours();
+    const timestamp = trade.exit_time || trade.entry_time;
+    if (!timestamp) return acc;
+
+    const hour = new Date(timestamp).getHours();
     if (!acc[hour]) acc[hour] = { trades: 0, pnl: 0 };
     acc[hour].trades++;
     acc[hour].pnl += trade.pnl || 0;
     return acc;
   }, {} as Record<number, { trades: number; pnl: number }>);
 
-  const bestHour = Object.entries(hourPerformance).reduce(
-    (best, [hour, data]) => !best || data.pnl > best.data.pnl ? { hour: parseInt(hour), data } : best,
-    null as any
-  );
+  const bestHour = Object.entries(hourPerformance).reduce<{ hour: number; data: { trades: number; pnl: number } } | null>((best, [hour, data]) => {
+    if (!best || data.pnl > best.data.pnl || (data.pnl === best.data.pnl && data.trades > best.data.trades)) {
+      return { hour: parseInt(hour, 10), data };
+    }
+    return best;
+  }, null);
 
-  const worstHour = Object.entries(hourPerformance).reduce(
-    (worst, [hour, data]) => !worst || data.pnl < worst.data.pnl ? { hour: parseInt(hour), data } : worst,
-    null as any
-  );
+  const worstHour = Object.entries(hourPerformance).reduce<{ hour: number; data: { trades: number; pnl: number } } | null>((worst, [hour, data]) => {
+    if (!worst || data.pnl < worst.data.pnl || (data.pnl === worst.data.pnl && data.trades > worst.data.trades)) {
+      return { hour: parseInt(hour, 10), data };
+    }
+    return worst;
+  }, null);
 
   // Mistake analysis
   const allMistakes = todayTrades.flatMap(trade => trade.mistake_tags || []);
