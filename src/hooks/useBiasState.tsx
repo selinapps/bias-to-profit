@@ -501,6 +501,15 @@ export function useBiasState() {
         });
 
         if (error) {
+          console.error('RPC Error Details:', error);
+          console.log('Parameters sent:', {
+            target_day: dayKey,
+            target_bias: result.bias,
+            target_market_state: result.market_state ?? null,
+            target_confidence: result.confidence ?? null,
+            target_tags: result.tags.length ? result.tags : null,
+          });
+
           if (isMissingFunctionError(error) || isMismatchedFunctionSignatureError(error)) {
             console.warn(
               'set_bias_state function is unavailable or has an outdated signature. Falling back to direct table mutation. Run the latest Supabase migrations to enable bias tracking.'
