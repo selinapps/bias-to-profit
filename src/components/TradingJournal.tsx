@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Clock, Download, FileText, RotateCcw, TrendingUp, TrendingDown, Minus, Shield, Globe, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TRADING_SESSIONS, getActiveSession, type TradingSession } from '@/lib/tradingSessions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { deriveActionHints, generateOrderFlowSnapshot, getAggressionBadge, type ActionHintKey, type OrderFlowSnapshot, type ActionHintEmphasis } from '@/lib/orderFlowHints';
 
 // Trading models and rules
 const EXECUTION_MODELS = {
@@ -60,16 +63,34 @@ const TRADING_RULES: Record<string, string[]> = {
   ]
 };
 
-const SCENARIOS = [
-  { id: 'move_be', title: '⚡ Move to Breakeven', desc: 'Move stop to entry price', requiresExit: false },
-  { id: 'partial_25', title: '📊 Partial 25%', desc: 'Take 25% off at current price', requiresExit: true },
-  { id: 'partial_50', title: '📊 Partial 50%', desc: 'Take 50% off at current price', requiresExit: true },
-  { id: 'partial_80', title: '📊 Partial 80%', desc: 'Take majority off, let runner go', requiresExit: true },
-  { id: 'full_exit', title: '✅ Full Exit', desc: 'Close entire position at current price', requiresExit: true, closeTrade: true },
+type Scenario = {
+  id: string;
+  title: string;
+  desc: string;
+  requiresExit: boolean;
+  closeTrade?: boolean;
+  hintKey?: ActionHintKey;
+};
+
+const SCENARIOS: Scenario[] = [
+  { id: 'move_be', title: '⚡ Move to Breakeven', desc: 'Move stop to entry price', requiresExit: false, hintKey: 'move_be' },
+  { id: 'trail_stop', title: '🛡️ Aggression Trail', desc: 'Slide stop behind the last aggression node', requiresExit: false, hintKey: 'trail_stop' },
+  { id: 'partial_25', title: '📊 Partial 25%', desc: 'Take 25% off at current price', requiresExit: true, hintKey: 'partial' },
+  { id: 'partial_50', title: '📊 Partial 50%', desc: 'Take 50% off at current price', requiresExit: true, hintKey: 'partial' },
+  { id: 'partial_80', title: '📊 Partial 80%', desc: 'Take majority off, let runner go', requiresExit: true, hintKey: 'partial' },
+  { id: 'poc_exit', title: '🎯 POC / Fair Value', desc: 'Exit into balance magnet', requiresExit: true, closeTrade: true, hintKey: 'poc_tp' },
+  { id: 'save_delta', title: '💾 Save Delta Profit', desc: 'Bank gains before aggression fails', requiresExit: true, closeTrade: true, hintKey: 'save_delta' },
+  { id: 'full_exit', title: '✅ Full Exit', desc: 'Close entire position at current price', requiresExit: true, closeTrade: true, hintKey: 'full_exit' },
   { id: 'stopped', title: '❌ Stopped Out', desc: 'Position hit stop loss', requiresExit: true, closeTrade: true },
-  { id: 'target_hit', title: '🎯 Target Hit', desc: 'Position reached target', requiresExit: true, closeTrade: true },
   { id: 'manual_close', title: '🚪 Manual Close', desc: 'Manual exit based on conditions', requiresExit: true, closeTrade: true }
 ];
+
+const SCENARIO_EMPHASIS_STYLES: Record<ActionHintEmphasis, string> = {
+  neutral: 'border-trading-border bg-secondary/20',
+  positive: 'border-trading-accent/60 bg-secondary/30 shadow-[0_0_0_1px_rgba(129,140,248,0.2)]',
+  warning: 'border-yellow-500/60 bg-yellow-500/10 shadow-[0_0_0_1px_rgba(234,179,8,0.25)]',
+  danger: 'border-red-500/70 bg-red-500/10 shadow-[0_0_0_1px_rgba(248,113,113,0.3)]',
+};
 
 const ASSETS = [
   'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'ES', 'NQ', '6E', 'XAUUSD', 'BTCUSD'
@@ -147,6 +168,7 @@ export default function TradingJournal() {
   const [exitPrice, setExitPrice] = useState('');
   const [exitReason, setExitReason] = useState('Target Hit');
   const [selectedScenario, setSelectedScenario] = useState('');
+  const [orderFlowSnapshots, setOrderFlowSnapshots] = useState<Record<string, OrderFlowSnapshot>>({});
   
   // Entry checklist and rules tracking
   const [entryChecklist, setEntryChecklist] = useState<Record<string, boolean>>({});
@@ -297,7 +319,39 @@ export default function TradingJournal() {
   };
   
   const { pips, riskReward } = calculateRiskMetrics();
-  
+
+  // Simulated order flow snapshots per open trade
+  useEffect(() => {
+    if (openTrades.length === 0) {
+      setOrderFlowSnapshots({});
+      return;
+    }
+
+    const updateSnapshots = () => {
+      const now = Date.now();
+      setOrderFlowSnapshots(prev => {
+        const next: Record<string, OrderFlowSnapshot> = {};
+        openTrades.forEach(trade => {
+          next[trade.id] = generateOrderFlowSnapshot(trade, now);
+        });
+        return next;
+      });
+    };
+
+    updateSnapshots();
+    const interval = setInterval(updateSnapshots, 6000);
+    return () => clearInterval(interval);
+  }, [openTrades]);
+
+  const guardrailActive = dailyStats.isDayDisabled;
+  const currentSnapshot = currentTrade ? orderFlowSnapshots[currentTrade.id] : undefined;
+  const scenarioHints = useMemo(() => {
+    if (!currentTrade) return undefined;
+    return deriveActionHints(currentTrade, currentSnapshot, { guardrailActive });
+  }, [currentTrade, currentSnapshot, guardrailActive]);
+  const currentAggressionBadge = currentSnapshot ? getAggressionBadge(currentSnapshot) : undefined;
+  const guardrailHint = scenarioHints?.guardrail;
+
   // Add new trade
   const addTrade = () => {
     if (!isFormValid) return;
@@ -369,10 +423,30 @@ export default function TradingJournal() {
       const updatedTrade = { ...currentTrade, stop: currentTrade.entry };
       setOpenTrades(prev => prev.map(t => t.id === currentTrade.id ? updatedTrade : t));
       setCurrentTrade(updatedTrade);
-      
+
       toast({
         title: "Stop Moved to Breakeven",
         description: `${currentTrade.asset} stop moved to entry price.`,
+      });
+    } else if (scenarioId === 'trail_stop') {
+      const snapshot = orderFlowSnapshots[currentTrade.id];
+      if (!snapshot?.trailStopPrice) {
+        toast({
+          title: "No Aggression Anchor",
+          description: "Live order flow has not printed a clear aggression node to trail behind yet.",
+        });
+        return;
+      }
+
+      const updatedTrade = { ...currentTrade, stop: snapshot.trailStopPrice };
+      setOpenTrades(prev => prev.map(t => t.id === currentTrade.id ? updatedTrade : t));
+      setCurrentTrade(updatedTrade);
+
+      toast({
+        title: "Stop Trailed",
+        description: snapshot.strongImbalanceNode
+          ? `Stop slid behind imbalance ${snapshot.strongImbalanceNode}`
+          : 'Stop trailed behind latest aggression node.',
       });
     }
   };
@@ -522,7 +596,7 @@ ${closedTrades.map(trade =>
             {dailyStats.isDayDisabled && (
               <Badge className="bg-red-500/20 text-red-300 border-red-400/50">
                 <AlertTriangle className="mr-1 h-3 w-3" />
-                Day Disabled
+                Session Guardrail
               </Badge>
             )}
             <Button variant="terminal" size="sm" onClick={() => exportReport('md')}>
@@ -616,10 +690,10 @@ ${closedTrades.map(trade =>
                 <div className="mt-3 p-3 bg-red-500/10 border border-red-400/50 rounded-lg">
                   <div className="flex items-center gap-2 text-red-300">
                     <AlertTriangle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Day Disabled</span>
+                    <span className="text-sm font-medium">Session Guardrail</span>
                   </div>
                   <p className="text-xs text-red-300/80 mt-1">
-                    3 losses reached. No more trading today.
+                    Rule hit: 3 losses today—pause trading.
                   </p>
                 </div>
               )}
@@ -899,13 +973,13 @@ ${closedTrades.map(trade =>
                 </div>
 
                 <div className="md:col-span-3 flex gap-3">
-                  <Button 
-                    variant="trading" 
-                    onClick={addTrade} 
+                  <Button
+                    variant="trading"
+                    onClick={addTrade}
                     disabled={!isFormValid}
                     className="flex-1"
                   >
-                    {dailyStats.isDayDisabled ? 'Day Disabled' : 'Add Trade'}
+                    {dailyStats.isDayDisabled ? 'Guardrail Active' : 'Add Trade'}
                   </Button>
                   <Button variant="terminal" onClick={() => {
                     setTradeForm({
@@ -950,31 +1024,44 @@ ${closedTrades.map(trade =>
                       </tr>
                     </thead>
                     <tbody>
-                      {openTrades.map(trade => (
-                        <tr key={trade.id} className="border-b border-trading-border/50 hover:bg-secondary/30">
-                          <td className="p-2">{new Date(trade.timestamp).toLocaleTimeString()}</td>
-                          <td className="p-2 font-medium">{trade.asset}</td>
-                          <td className="p-2">
-                            <Badge variant={trade.side === 'Long' ? 'default' : 'secondary'} className="text-xs">
-                              {trade.side === 'Long' ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
-                              {trade.side}
-                            </Badge>
-                          </td>
-                          <td className="p-2">{trade.model}</td>
-                          <td className="p-2 text-right font-mono">{trade.entry}</td>
-                          <td className="p-2 text-right font-mono">{trade.stop}</td>
-                          <td className="p-2 text-right font-mono">{formatCurrency(trade.risk)}</td>
-                          <td className="p-2 text-center">
-                            <Button 
-                              variant="terminal" 
-                              size="sm" 
-                              onClick={() => manageTrade(trade)}
-                            >
-                              Manage
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
+                      {openTrades.map(trade => {
+                        const snapshot = orderFlowSnapshots[trade.id];
+                        const aggressionBadge = getAggressionBadge(snapshot);
+                        return (
+                          <tr key={trade.id} className="border-b border-trading-border/50 hover:bg-secondary/30">
+                            <td className="p-2">{new Date(trade.timestamp).toLocaleTimeString()}</td>
+                            <td className="p-2 font-medium">
+                              <div className="flex items-center gap-2">
+                                <span>{trade.asset}</span>
+                                {aggressionBadge && (
+                                  <Badge variant="outline" className={cn('text-[10px] uppercase tracking-wide', aggressionBadge.className)}>
+                                    {aggressionBadge.shortLabel}
+                                  </Badge>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <Badge variant={trade.side === 'Long' ? 'default' : 'secondary'} className="text-xs">
+                                {trade.side === 'Long' ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
+                                {trade.side}
+                              </Badge>
+                            </td>
+                            <td className="p-2">{trade.model}</td>
+                            <td className="p-2 text-right font-mono">{trade.entry}</td>
+                            <td className="p-2 text-right font-mono">{trade.stop}</td>
+                            <td className="p-2 text-right font-mono">{formatCurrency(trade.risk)}</td>
+                            <td className="p-2 text-center">
+                              <Button
+                                variant="terminal"
+                                size="sm"
+                                onClick={() => manageTrade(trade)}
+                              >
+                                Manage
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1064,10 +1151,17 @@ ${closedTrades.map(trade =>
       {showTradeSheet && currentTrade && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-card border-trading-border shadow-accent">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-trading-accent">
-                Manage Trade - {currentTrade.asset} {currentTrade.side}
-              </CardTitle>
+            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+                <CardTitle className="text-trading-accent">
+                  Manage Trade - {currentTrade.asset} {currentTrade.side}
+                </CardTitle>
+                {currentAggressionBadge && (
+                  <Badge variant="outline" className={cn('text-xs', currentAggressionBadge.className)}>
+                    {currentAggressionBadge.label}
+                  </Badge>
+                )}
+              </div>
               <Button variant="ghost" size="sm" onClick={() => setShowTradeSheet(false)}>
                 ×
               </Button>
@@ -1091,6 +1185,13 @@ ${closedTrades.map(trade =>
                   <div className="font-mono font-semibold">{formatCurrency(currentTrade.risk)}</div>
                 </div>
               </div>
+
+              {guardrailHint?.isActive && (
+                <div className="p-3 rounded-lg border border-red-500/50 bg-red-500/10 text-xs text-red-200">
+                  <div className="font-semibold">{guardrailHint.message}</div>
+                  <div className="mt-1 text-[11px] text-red-200/80">{guardrailHint.signalLine}</div>
+                </div>
+              )}
 
               {/* Rules Tracking in Trade Management */}
               {currentTrade.model && TRADING_RULES[currentTrade.model] && (
@@ -1123,22 +1224,54 @@ ${closedTrades.map(trade =>
 
               <div>
                 <h3 className="text-sm font-medium mb-3 text-trading-accent uppercase tracking-wide">Trade Scenarios</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {SCENARIOS.map(scenario => (
-                    <button
-                      key={scenario.id}
-                      onClick={() => executeScenario(scenario.id)}
-                      className={`p-4 rounded-lg border text-left transition-all hover:border-trading-accent hover:bg-secondary/50 ${
-                        selectedScenario === scenario.id 
-                          ? 'border-trading-success bg-success/10' 
-                          : 'border-trading-border bg-secondary/20'
-                      }`}
-                    >
-                      <div className="font-semibold text-sm mb-1">{scenario.title}</div>
-                      <div className="text-xs text-trading-muted">{scenario.desc}</div>
-                    </button>
-                  ))}
-                </div>
+                <TooltipProvider delayDuration={0}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {SCENARIOS.map(scenario => {
+                      const hint = scenario.hintKey && scenarioHints ? scenarioHints[scenario.hintKey] : undefined;
+                      const emphasis = (hint && hint.isActive ? hint.emphasis : 'neutral') as ActionHintEmphasis;
+                      const buttonClasses = cn(
+                        'p-4 rounded-lg border text-left transition-all hover:border-trading-accent hover:bg-secondary/40 focus:outline-none focus:ring-2 focus:ring-trading-accent/30',
+                        selectedScenario === scenario.id
+                          ? 'border-trading-success bg-success/10 shadow-[0_0_0_1px_rgba(34,197,94,0.35)]'
+                          : SCENARIO_EMPHASIS_STYLES[emphasis],
+                      );
+                      const helperTextClass = hint?.isActive
+                        ? 'text-[11px] leading-snug text-foreground'
+                        : 'text-[11px] leading-snug text-trading-muted';
+
+                      return (
+                        <Tooltip key={scenario.id}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => executeScenario(scenario.id)}
+                              className={buttonClasses}
+                            >
+                              <div className="font-semibold text-sm mb-1">{scenario.title}</div>
+                              {hint ? (
+                                <div className={helperTextClass}>
+                                  {hint.message}
+                                  <span className="mt-1 block text-[10px] text-trading-muted/80">{hint.signalLine}</span>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-trading-muted">{scenario.desc}</div>
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-card border-trading-border max-w-xs">
+                            {hint ? (
+                              <div>
+                                <p className="text-xs font-semibold text-foreground">{hint.message}</p>
+                                <p className="text-[11px] text-trading-muted mt-1">{hint.signalLine}</p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-trading-muted">{scenario.desc}</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </TooltipProvider>
               </div>
 
               {selectedScenario && SCENARIOS.find(s => s.id === selectedScenario)?.requiresExit && (
