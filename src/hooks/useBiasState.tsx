@@ -229,7 +229,7 @@ export function useBiasState() {
       .select('*')
       .eq('active', true)
       .eq('day_key', dayKey)
-      .order('created_at', { ascending: false })
+      .order('selected_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -463,7 +463,7 @@ export function useBiasState() {
         .select('*')
         .eq('day_key', dayKey)
         .eq('active', true)
-        .order('created_at', { ascending: false })
+        .order('selected_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
