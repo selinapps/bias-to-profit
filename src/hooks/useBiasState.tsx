@@ -492,7 +492,7 @@ export function useBiasState() {
       setSaving(true);
 
       try {
-        const { data, error } = await supabase.rpc('set_bias_state', {
+        const { data, error } = await supabase.rpc('set_daily_bias_state', {
           target_day: dayKey,
           target_bias: result.bias,
           target_market_state: result.market_state ?? null,
@@ -512,7 +512,7 @@ export function useBiasState() {
 
           if (isMissingFunctionError(error) || isMismatchedFunctionSignatureError(error)) {
             console.warn(
-              'set_bias_state function is unavailable or has an outdated signature. Falling back to direct table mutation. Run the latest Supabase migrations to enable bias tracking.'
+              'set_daily_bias_state function is unavailable or has an outdated signature. Falling back to direct table mutation. Run the latest Supabase migrations to enable bias tracking.'
             );
 
             markSchemaStatus('rpc', 'missing');

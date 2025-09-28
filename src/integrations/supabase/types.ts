@@ -415,7 +415,7 @@ export type Database = {
         Args: { target_day: string }
         Returns: Database["public"]["Tables"]["bias_state"]["Row"] | null
       }
-      set_bias_state: {
+      set_daily_bias_state: {
         Args: {
           target_bias: Database["public"]["Enums"]["bias_enum"]
           target_confidence?: string
