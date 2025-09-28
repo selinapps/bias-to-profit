@@ -467,9 +467,11 @@ export function useBiasState() {
         .limit(1)
         .maybeSingle();
 
-      const snapshot = newRecord ? mapRowToSnapshot(newRecord) : null;
+      let snapshot = newRecord ? mapRowToSnapshot(newRecord) : null;
       if (snapshot) {
         clearLocalBias();
+      } else {
+        snapshot = createLocalSnapshot(result);
       }
       setBiasState(snapshot);
     },
@@ -542,16 +544,26 @@ export function useBiasState() {
           throw error;
         }
 
-        const snapshot = data ? mapRowToSnapshot(data) : null;
+        let snapshot = data ? mapRowToSnapshot(data) : null;
         if (snapshot) {
           clearLocalBias();
+        } else {
+          snapshot = createLocalSnapshot(result);
         }
         setBiasState(snapshot);
       } finally {
         setSaving(false);
       }
     },
-    [user, dayKey, fallbackSaveBiasState, markSchemaStatus, schemaMessage, clearLocalBias]
+    [
+      user,
+      dayKey,
+      fallbackSaveBiasState,
+      markSchemaStatus,
+      schemaMessage,
+      clearLocalBias,
+      createLocalSnapshot,
+    ]
   );
 
   return {
