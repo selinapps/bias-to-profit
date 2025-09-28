@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.set_bias_state(
   target_day date DEFAULT CURRENT_DATE,
   target_bias text DEFAULT NULL,
   target_market_state text DEFAULT NULL,
-  target_confidence integer DEFAULT NULL,
+  target_confidence text DEFAULT NULL,
   target_tags text[] DEFAULT NULL
 )
 RETURNS void
