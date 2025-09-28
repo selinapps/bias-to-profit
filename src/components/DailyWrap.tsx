@@ -42,15 +42,24 @@ export function DailyWrap() {
   const winRate = todayTrades.length > 0 ? (wins / todayTrades.length) * 100 : 0;
   const avgR = todayTrades.length > 0 ? totalR / todayTrades.length : 0;
 
-  // Best and worst trades
-  const bestTrade = todayTrades.reduce((best, trade) => 
-    !best || (trade.r_multiple || 0) > (best.r_multiple || 0) ? trade : best, 
-    null as any
-  );
-  const worstTrade = todayTrades.reduce((worst, trade) => 
-    !worst || (trade.r_multiple || 0) < (worst.r_multiple || 0) ? trade : worst, 
-    null as any
-  );
+  const winningTrades = todayTrades.filter(trade => (trade.r_multiple || 0) > 0);
+  const losingTrades = todayTrades.filter(trade => (trade.r_multiple || 0) < 0);
+
+  const bestTrade = winningTrades.reduce<typeof todayTrades[number] | null>((best, trade) => {
+    if (!best) return trade;
+    return (trade.r_multiple || 0) > (best.r_multiple || 0) ? trade : best;
+  }, null);
+
+  const worstTrade = losingTrades.reduce<typeof todayTrades[number] | null>((worst, trade) => {
+    if (!worst) return trade;
+    return (trade.r_multiple || 0) < (worst.r_multiple || 0) ? trade : worst;
+  }, null);
+
+  const formatRMultiple = (value?: number | null) => {
+    if (typeof value !== 'number') return '0.00R';
+    const sign = value > 0 ? '+' : '';
+    return `${sign}${value.toFixed(2)}R`;
+  };
 
   // Hour performance
   const hourPerformance = todayTrades.reduce((acc, trade) => {
@@ -245,7 +254,7 @@ export function DailyWrap() {
                     <div className="text-sm text-trading-muted">
                       {format(new Date(bestTrade.entry_time), 'HH:mm')}
                     </div>
-                    <div className="text-success font-bold">+{bestTrade.r_multiple?.toFixed(2)}R</div>
+                    <div className="text-success font-bold">{formatRMultiple(bestTrade.r_multiple)}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -262,7 +271,7 @@ export function DailyWrap() {
                     <div className="text-sm text-trading-muted">
                       {format(new Date(worstTrade.entry_time), 'HH:mm')}
                     </div>
-                    <div className="text-destructive font-bold">{worstTrade.r_multiple?.toFixed(2)}R</div>
+                    <div className="text-destructive font-bold">{formatRMultiple(worstTrade.r_multiple)}</div>
                   </div>
                 </CardContent>
               </Card>
