@@ -50,6 +50,19 @@ const isMissingFunctionError = (error: PostgrestError | null): boolean => {
   );
 };
 
+const isMismatchedFunctionSignatureError = (error: PostgrestError | null): boolean => {
+  if (!error) return false;
+
+  const normalizedCode = error.code?.trim().toUpperCase();
+
+  if (normalizedCode === '22P02') {
+    return true;
+  }
+
+  const message = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  return message.includes('invalid input syntax') || message.includes('function return type mismatch');
+};
+
 const isMissingRelationError = (error: PostgrestError | null): boolean => {
   if (!error) return false;
 
@@ -488,15 +501,15 @@ export function useBiasState() {
         });
 
         if (error) {
-          if (isMissingFunctionError(error)) {
+          if (isMissingFunctionError(error) || isMismatchedFunctionSignatureError(error)) {
             console.warn(
-              'set_bias_state function missing. Falling back to direct table mutation. Run the latest Supabase migrations to enable RPC support.'
+              'set_bias_state function is unavailable or has an outdated signature. Falling back to direct table mutation. Run the latest Supabase migrations to enable bias tracking.'
             );
 
             markSchemaStatus('rpc', 'missing');
             if (!schemaMessage) {
               setSchemaMessage(
-                'Bias RPC functions are unavailable. Please run the latest Supabase migrations to enable bias tracking.'
+                'Bias RPC functions are unavailable or out of date. Please run the latest Supabase migrations to enable bias tracking.'
               );
             }
 
