@@ -43,43 +43,37 @@ export type Database = {
       }
       bias_state: {
         Row: {
-          active: boolean | null
-          bias: string | null
-          confidence: number | null
-          created_at: string | null
+          active: boolean
+          bias: Database["public"]["Enums"]["bias_enum"]
+          confidence: string | null
           day_key: string
-          id: number
-          market_state: string | null
-          selected_at: string | null
+          id: string
+          market_state: Database["public"]["Enums"]["market_state_enum"] | null
+          selected_at: string
           selected_by: string | null
-          tags: string[] | null
-          updated_at: string | null
+          tags: Json | null
         }
         Insert: {
-          active?: boolean | null
-          bias?: string | null
-          confidence?: number | null
-          created_at?: string | null
+          active?: boolean
+          bias: Database["public"]["Enums"]["bias_enum"]
+          confidence?: string | null
           day_key: string
-          id?: never
-          market_state?: string | null
-          selected_at?: string | null
+          id?: string
+          market_state?: Database["public"]["Enums"]["market_state_enum"] | null
+          selected_at?: string
           selected_by?: string | null
-          tags?: string[] | null
-          updated_at?: string | null
+          tags?: Json | null
         }
         Update: {
-          active?: boolean | null
-          bias?: string | null
-          confidence?: number | null
-          created_at?: string | null
+          active?: boolean
+          bias?: Database["public"]["Enums"]["bias_enum"]
+          confidence?: string | null
           day_key?: string
-          id?: never
-          market_state?: string | null
-          selected_at?: string | null
+          id?: string
+          market_state?: Database["public"]["Enums"]["market_state_enum"] | null
+          selected_at?: string
           selected_by?: string | null
-          tags?: string[] | null
-          updated_at?: string | null
+          tags?: Json | null
         }
         Relationships: []
       }
@@ -378,18 +372,36 @@ export type Database = {
       v_current_bias: {
         Row: {
           active: boolean | null
-          created_at: string | null
+          bias: Database["public"]["Enums"]["bias_enum"] | null
+          confidence: string | null
           day_key: string | null
+          id: string | null
+          market_state: Database["public"]["Enums"]["market_state_enum"] | null
+          selected_at: string | null
+          selected_by: string | null
+          tags: Json | null
         }
         Insert: {
           active?: boolean | null
-          created_at?: string | null
+          bias?: Database["public"]["Enums"]["bias_enum"] | null
+          confidence?: string | null
           day_key?: string | null
+          id?: string | null
+          market_state?: Database["public"]["Enums"]["market_state_enum"] | null
+          selected_at?: string | null
+          selected_by?: string | null
+          tags?: Json | null
         }
         Update: {
           active?: boolean | null
-          created_at?: string | null
+          bias?: Database["public"]["Enums"]["bias_enum"] | null
+          confidence?: string | null
           day_key?: string | null
+          id?: string | null
+          market_state?: Database["public"]["Enums"]["market_state_enum"] | null
+          selected_at?: string | null
+          selected_by?: string | null
+          tags?: Json | null
         }
         Relationships: []
       }
@@ -400,26 +412,24 @@ export type Database = {
         Returns: Json
       }
       get_current_bias: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          active: boolean
-          created_at: string
-          day_key: string
-        }[]
+        Args: { target_day: string }
+        Returns: Database["public"]["Tables"]["bias_state"]["Row"] | null
       }
       set_bias_state: {
         Args: {
-          target_bias?: string
-          target_confidence?: number
-          target_day?: string
-          target_market_state?: string
+          target_bias: Database["public"]["Enums"]["bias_enum"]
+          target_confidence?: string
+          target_day: string
+          target_market_state?: Database["public"]["Enums"]["market_state_enum"]
           target_tags?: string[]
         }
-        Returns: undefined
+        Returns: Database["public"]["Tables"]["bias_state"]["Row"]
       }
     }
     Enums: {
+      bias_enum: "OOB_LONG" | "OOB_SHORT" | "MR_LONG" | "MR_SHORT" | "NONE"
       bias_level: "low" | "medium" | "high"
+      market_state_enum: "OUT_OF_BALANCE" | "IN_BALANCE"
     }
     CompositeTypes: {
       [_ in never]: never
