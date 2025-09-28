@@ -44,23 +44,41 @@ export type Database = {
       bias_state: {
         Row: {
           active: boolean | null
+          bias: string | null
+          confidence: number | null
           created_at: string | null
           day_key: string
           id: number
+          market_state: string | null
+          selected_at: string | null
+          selected_by: string | null
+          tags: string[] | null
           updated_at: string | null
         }
         Insert: {
           active?: boolean | null
+          bias?: string | null
+          confidence?: number | null
           created_at?: string | null
           day_key: string
           id?: never
+          market_state?: string | null
+          selected_at?: string | null
+          selected_by?: string | null
+          tags?: string[] | null
           updated_at?: string | null
         }
         Update: {
           active?: boolean | null
+          bias?: string | null
+          confidence?: number | null
           created_at?: string | null
           day_key?: string
           id?: never
+          market_state?: string | null
+          selected_at?: string | null
+          selected_by?: string | null
+          tags?: string[] | null
           updated_at?: string | null
         }
         Relationships: []

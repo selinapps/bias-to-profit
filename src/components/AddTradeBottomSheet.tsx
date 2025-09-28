@@ -185,7 +185,7 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
         session: currentSession?.name ?? null
       };
 
-      await addTrade({
+        await addTrade({
         asset,
         model,
         direction,
@@ -198,7 +198,6 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
         exit_price: exitPrice ? parseFloat(exitPrice) : null,
         entry_time: entryTime.toISOString(),
         trading_session: currentSession?.name || null,
-        session: currentSession?.name || null,
         scenarios,
         emotions,
         externals,
@@ -206,10 +205,7 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
         screenshot_url: screenshotUrl || null,
         notes: notes || null,
         is_experimental: isExperimental,
-        override_reason: overrideReason || null,
-        bias_snapshot: biasSnapshot,
-        checklist: checklistPayload,
-        checklist_complete: checklistComplete
+        override_reason: overrideReason || null
       });
 
       toast({

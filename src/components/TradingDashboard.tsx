@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { TRADING_SESSIONS, getActiveSession, type TradingSession } from '@/lib/tradingSessions';
 import { BiasStateCard } from './BiasStateCard';
 import { BiasQuizModal } from './BiasQuizModal';
+import { TradeCard } from './TradeCard';
 import { useBiasState } from '@/hooks/useBiasState';
 import type { BiasQuizResult } from '@/types/bias';
 import { useToast } from '@/hooks/use-toast';
@@ -459,25 +460,15 @@ export function TradingDashboard() {
             {openTrades.length > 0 && (
               <Card className="bg-trading-card border-trading-border">
                 <CardHeader>
-                  <CardTitle>Open Trades ({openTrades.length})</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-trading-accent" />
+                    Open Trades ({openTrades.length})
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {openTrades.map(trade => (
-                      <div key={trade.id} className="flex items-center justify-between p-3 bg-background rounded-lg border border-trading-border">
-                        <div>
-                          <div className="font-medium">{trade.asset}</div>
-                          <div className="text-sm text-trading-muted">
-                            {trade.direction.toUpperCase()} • Entry: {trade.entry_price} • Stop: {trade.stop_loss}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm text-trading-muted">Risk: ${trade.risk_amount}</div>
-                          <Badge variant={trade.direction === 'long' ? 'default' : 'secondary'}>
-                            {trade.direction.toUpperCase()}
-                          </Badge>
-                        </div>
-                      </div>
+                      <TradeCard key={trade.id} trade={trade} isOpen={true} />
                     ))}
                   </div>
                 </CardContent>
@@ -492,22 +483,7 @@ export function TradingDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {closedTrades.slice(0, 10).map(trade => (
-                    <div key={trade.id} className="flex items-center justify-between p-3 bg-background rounded-lg border border-trading-border">
-                      <div>
-                        <div className="font-medium">{trade.asset}</div>
-                        <div className="text-sm text-trading-muted">
-                          {format(new Date(trade.entry_time), 'MMM d, HH:mm')} • {trade.direction.toUpperCase()}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-bold ${(trade.pnl || 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
-                          ${trade.pnl?.toFixed(2) || '0.00'}
-                        </div>
-                        <div className="text-sm text-trading-accent">
-                          {trade.r_multiple?.toFixed(2) || '0.00'}R
-                        </div>
-                      </div>
-                    </div>
+                    <TradeCard key={trade.id} trade={trade} isOpen={false} />
                   ))}
                 </div>
               </CardContent>

@@ -23,14 +23,14 @@ const mapTags = (value: unknown): string[] | null => {
   return null;
 };
 
-const mapRowToSnapshot = (row: BiasViewRow | BiasTableRow): BiasStateSnapshot => ({
-  id: 'id' in row ? row.id : undefined,
-  day_key: 'day_key' in row ? row.day_key : undefined,
-  bias: row.bias,
-  market_state: row.market_state,
-  confidence: row.confidence,
+const mapRowToSnapshot = (row: any): BiasStateSnapshot => ({
+  id: row.id ? String(row.id) : undefined,
+  day_key: row.day_key || undefined,
+  bias: row.bias || 'NONE',
+  market_state: row.market_state || null,
+  confidence: row.confidence || null,
   tags: mapTags(row.tags ?? null),
-  selected_at: row.selected_at,
+  selected_at: row.selected_at || row.created_at,
 });
 
 const isMissingFunctionError = (error: PostgrestError | null): boolean => {
@@ -213,10 +213,10 @@ export function useBiasState() {
 
     const { data, error } = await supabase
       .from('bias_state')
-      .select('id, day_key, bias, market_state, confidence, tags, selected_at, active')
+      .select('*')
       .eq('active', true)
       .eq('day_key', dayKey)
-      .order('selected_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -417,7 +417,7 @@ export function useBiasState() {
         throw deactivateError;
       }
 
-      const { data: inserted, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('bias_state')
         .insert({
           day_key: dayKey,
@@ -427,9 +427,7 @@ export function useBiasState() {
           tags: result.tags.length ? result.tags : null,
           active: true,
           selected_by: user?.id ?? null,
-        })
-        .select('*')
-        .single();
+        });
 
       if (insertError) {
         if (isMissingRelationError(insertError)) {
@@ -446,7 +444,17 @@ export function useBiasState() {
         throw insertError;
       }
 
-      const snapshot = inserted ? mapRowToSnapshot(inserted) : null;
+      // Fetch the newly created record
+      const { data: newRecord } = await supabase
+        .from('bias_state')
+        .select('*')
+        .eq('day_key', dayKey)
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const snapshot = newRecord ? mapRowToSnapshot(newRecord) : null;
       if (snapshot) {
         clearLocalBias();
       }
@@ -471,7 +479,7 @@ export function useBiasState() {
       setSaving(true);
 
       try {
-        const { data, error } = await supabase.rpc('set_bias_state', {
+        const { error } = await supabase.rpc('set_bias_state', {
           target_day: dayKey,
           target_bias: result.bias,
           target_market_state: result.market_state ?? null,
