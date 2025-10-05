@@ -1,0 +1,141 @@
+/* Import mobile-specific styles */
+@import './mobile.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Trading Terminal Design System - Dark Theme (Default) */
+    --background: 220 25% 6%;  /* Deep navy background */
+    --foreground: 228 20% 95%; /* Light blue-white text */
+
+    --card: 221 25% 8%;        /* Slightly lighter cards */
+    --card-foreground: 228 20% 95%;
+
+    --popover: 221 25% 8%;
+    --popover-foreground: 228 20% 95%;
+
+    --primary: 212 100% 70%;   /* Bright trading blue */
+    --primary-foreground: 220 25% 6%;
+
+    --secondary: 221 20% 12%;  /* Darker secondary */
+    --secondary-foreground: 228 20% 95%;
+
+    --muted: 221 20% 12%;
+    --muted-foreground: 218 15% 65%; /* Blue-gray muted */
+
+    --accent: 212 100% 70%;    /* Trading accent blue */
+    --accent-foreground: 220 25% 6%;
+
+    --destructive: 0 84% 60%;  /* Trading red */
+    --destructive-foreground: 228 20% 95%;
+
+    --success: 150 60% 60%;    /* Trading green */
+    --success-foreground: 220 25% 6%;
+
+    --warning: 45 93% 70%;     /* Trading yellow */
+    --warning-foreground: 220 25% 6%;
+
+    --border: 220 20% 18%;     /* Subtle borders */
+    --input: 221 25% 8%;
+    --ring: 212 100% 70%;
+
+    --radius: 0.75rem;
+
+    /* Trading specific colors */
+    --trading-bg: 220 25% 6%;
+    --trading-card: 221 25% 8%;
+    --trading-border: 220 20% 18%;
+    --trading-accent: 212 100% 70%;
+    --trading-muted: 218 15% 65%;
+    --trading-success: 150 60% 60%;
+    --trading-danger: 0 84% 60%;
+    --trading-warning: 45 93% 70%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(212 100% 70%), hsl(212 100% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(150 60% 60%), hsl(150 60% 55%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(0 84% 55%));
+    --gradient-card: linear-gradient(135deg, hsl(221 25% 8%), hsl(221 25% 9%));
+
+    /* Shadows */
+    --shadow-trading: 0 4px 20px hsl(220 25% 3% / 0.4);
+    --shadow-accent: 0 0 30px hsl(212 100% 70% / 0.15);
+
+    /* Animations */
+    --transition-trading: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Light Theme */
+  .light {
+    --background: 0 0% 100%;   /* Pure white background */
+    --foreground: 220 25% 6%;  /* Dark navy text */
+
+    --card: 0 0% 98%;          /* Very light gray cards */
+    --card-foreground: 220 25% 6%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 220 25% 6%;
+
+    --primary: 212 100% 50%;   /* Slightly darker blue for light theme */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 95%;  /* Light gray secondary */
+    --secondary-foreground: 220 25% 6%;
+
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 15% 35%; /* Darker muted text */
+
+    --accent: 212 100% 50%;    /* Matching accent */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 50%;  /* Slightly darker red */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 150 60% 50%;    /* Slightly darker green */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 93% 50%;     /* Slightly darker yellow */
+    --warning-foreground: 220 25% 6%;
+
+    --border: 220 20% 85%;    /* Light borders */
+    --input: 0 0% 98%;
+    --ring: 212 100% 50%;
+
+    /* Trading specific colors for light theme */
+    --trading-bg: 0 0% 100%;
+    --trading-card: 0 0% 98%;
+    --trading-border: 220 20% 85%;
+    --trading-accent: 212 100% 50%;
+    --trading-muted: 220 15% 35%;
+    --trading-success: 150 60% 50%;
+    --trading-danger: 0 84% 50%;
+    --trading-warning: 45 93% 50%;
+
+    /* Light theme gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(212 100% 50%), hsl(212 100% 45%));
+    --gradient-success: linear-gradient(135deg, hsl(150 60% 50%), hsl(150 60% 45%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 50%), hsl(0 84% 45%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 96%));
+
+    /* Light theme shadows */
+    --shadow-trading: 0 4px 20px hsl(0 0% 0% / 0.1);
+    --shadow-accent: 0 0 30px hsl(212 100% 50% / 0.2);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

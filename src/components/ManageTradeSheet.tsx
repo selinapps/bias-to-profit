@@ -1,0 +1,666 @@
+import { useState, useEffect, useRef } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Target, 
+  Shield, 
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Lightbulb,
+  BookOpen,
+  ThumbsUp,
+  ThumbsDown,
+  Brain,
+  Zap,
+  Camera,
+  Upload,
+  Image as ImageIcon,
+  Clock
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/hooks/useSettings';
+import { getPipValueConfig } from '@/lib/tradingCalculations';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { logger } from '@/lib/logger';
+
+type Trade = Database['public']['Tables']['trades']['Row'];
+
+interface ManageTradeSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  trade: Trade | null;
+  onCloseTrade: (tradeId: string, exitPrice: number, lessons: string, mistakeTags: string[], goodActions: string[], screenshotUrl?: string, exitTime?: string, manualPnL?: number) => Promise<void>;
+  isMobile?: boolean;
+  onRefresh?: () => void;
+}
+
+const COMMON_MISTAKES = [
+  '❌ Entered too early',
+  '❌ Ignored stop loss',
+  '❌ Overtrade after loss',
+  '❌ Emotional decision',
+  '❌ Missed confirmation',
+  '❌ Wrong session',
+  '❌ Against bias',
+  '❌ Poor risk management',
+  '❌ FOMO entry',
+  '❌ Revenge trading',
+];
+
+const GOOD_ACTIONS = [
+  '✅ Followed plan',
+  '✅ Respected stop',
+  '✅ Good entry timing',
+  '✅ Proper risk sizing',
+  '✅ Waited confirmation',
+  '✅ Emotional control',
+  '✅ Session aligned',
+  '✅ Bias aligned',
+  '✅ Scaled properly',
+  '✅ Trailed stop well',
+];
+
+export function ManageTradeSheet({ 
+  isOpen, 
+  onClose, 
+  trade, 
+  onCloseTrade,
+  isMobile = false,
+  onRefresh
+}: ManageTradeSheetProps) {
+  const [exitPrice, setExitPrice] = useState('');
+  const [lessons, setLessons] = useState('');
+  const [selectedMistakes, setSelectedMistakes] = useState<string[]>([]);
+  const [selectedGoodActions, setSelectedGoodActions] = useState<string[]>([]);
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [manualPnL, setManualPnL] = useState<string>('');
+  const [useManualPnL, setUseManualPnL] = useState(false);
+  const [exitTime, setExitTime] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const { settings } = useSettings();
+
+  // Merge custom tags with defaults
+  const customMistakeTags = settings.custom_mistake_tags || [];
+  const customGoodActionTags = settings.custom_good_actions || [];
+  
+  const mistakeTags = [...COMMON_MISTAKES, ...customMistakeTags];
+  const goodActionTags = [...GOOD_ACTIONS, ...customGoodActionTags];
+
+  // Reset state when trade changes
+  useEffect(() => {
+    if (trade) {
+      setExitPrice('');
+      setLessons('');
+      setSelectedMistakes([]);
+      setSelectedGoodActions([]);
+      setScreenshot(null);
+      setScreenshotPreview(null);
+      setManualPnL('');
+      setUseManualPnL(false);
+      setExitTime('');
+    }
+  }, [trade?.id]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setScreenshot(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadScreenshot = async (): Promise<string | null> => {
+    if (!screenshot || !trade) return null;
+
+    setIsUploading(true);
+    try {
+      const fileExt = screenshot.name.split('.').pop();
+      const fileName = `${trade.id}_${Date.now()}.${fileExt}`;
+      const filePath = `trade-screenshots/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('trade-images')
+        .upload(filePath, screenshot);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('trade-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      logger.error('Error uploading screenshot:', error);
+      toast({
+        title: "Upload failed",
+        description: "Could not upload screenshot. Continuing without it.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  if (!trade) return null;
+
+  // Calculate live P&L using fixed calculation logic
+  const currentPrice = parseFloat(exitPrice) || 0;
+  const entryPrice = Number(trade.entry_price);
+  const stopPrice = Number(trade.stop_loss);
+  const lotSize = Number(trade.lot_size) || 1.0;
+  
+  // Calculate P&L using fixed logic (inline calculation)
+  const calculatePnL = (entry: number, exit: number, direction: 'long' | 'short', lot: number, asset: string) => {
+    if (entry <= 0 || exit <= 0 || lot <= 0) return { grossPnL: 0, commission: 0, netPnL: 0 };
+
+    // Calculate price difference based on direction
+    const priceDiff = direction === 'long' ? exit - entry : entry - exit;
+
+    // Get pip configuration for asset (use centralized logic)
+    const { pipMultiplier, pipValuePerLot } = getPipValueConfig(asset);
+
+    // Calculate pips from price difference (CORRECT FORMULA)
+    const pips = Math.abs(priceDiff) / pipMultiplier;
+
+    // Calculate gross P&L: pips * pip value * lot size
+    const grossPnL = pips * pipValuePerLot * lot;
+
+    // Calculate commission
+    const commission = lot * 7.5;
+
+    // Net P&L after commission
+    const netPnL = Number((grossPnL - commission).toFixed(2));
+    
+    return { grossPnL, commission, netPnL };
+  };
+  
+  const pnlResult = entryPrice > 0 && currentPrice > 0 
+    ? calculatePnL(entryPrice, currentPrice, trade.direction, lotSize, trade.asset || 'EURUSD')
+    : { grossPnL: 0, commission: 0, netPnL: 0 };
+  
+  const { grossPnL, commission, calculatedPnL } = {
+    grossPnL: pnlResult.grossPnL,
+    commission: pnlResult.commission,
+    calculatedPnL: pnlResult.netPnL
+  };
+  
+  // Calculate R-Multiple using CORRECT logic: P&L / Risk Amount
+  const calculateRMultiple = (pnl: number, riskAmount: number) => {
+    if (riskAmount <= 0) return 0;
+    return Number((pnl / riskAmount).toFixed(3));
+  };
+  
+  const riskAmount = (trade as any).risk_amount || 500; // Default to $500 if not set
+  const rMultiple = calculateRMultiple(calculatedPnL, riskAmount);
+  
+  // Use manual P&L if enabled, otherwise use calculated
+  const estimatedPnL = useManualPnL ? parseFloat(manualPnL) || 0 : calculatedPnL;
+
+  const formatPrice = (price: number) => {
+    if (trade.asset?.includes('JPY')) return price.toFixed(3);
+    return price.toFixed(5);
+  };
+
+  const toggleMistake = (mistake: string) => {
+    setSelectedMistakes(prev => 
+      prev.includes(mistake) 
+        ? prev.filter(m => m !== mistake)
+        : [...prev, mistake]
+    );
+  };
+
+  const toggleGoodAction = (action: string) => {
+    setSelectedGoodActions(prev => 
+      prev.includes(action) 
+        ? prev.filter(a => a !== action)
+        : [...prev, action]
+    );
+  };
+
+  const handleClose = async () => {
+    if (!exitPrice || isClosing) return;
+
+    if (!lessons.trim() && selectedMistakes.length === 0 && selectedGoodActions.length === 0) {
+      toast({
+        title: "Reflection Required",
+        description: "Please add at least one lesson, mistake, or good action before closing.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsClosing(true);
+    try {
+      // Upload screenshot if one is selected
+      let screenshotUrl: string | undefined;
+      if (screenshot) {
+        screenshotUrl = await uploadScreenshot() || undefined;
+      }
+
+      await onCloseTrade(
+        trade.id, 
+        parseFloat(exitPrice), 
+        lessons,
+        selectedMistakes,
+        selectedGoodActions,
+        screenshotUrl,
+        exitTime || undefined,
+        useManualPnL ? parseFloat(manualPnL) || undefined : undefined
+      );
+      toast({
+        title: "Trade Closed Successfully",
+        description: "Your lessons have been saved for review.",
+      });
+      onClose();
+      
+      // Refresh the trades list to update the display immediately
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to close trade. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent 
+        side={isMobile ? "bottom" : "right"} 
+        className={`${isMobile ? 'h-[90vh] rounded-t-3xl' : 'w-full sm:max-w-lg'} 
+          bg-gradient-to-br from-background via-background to-purple-950/20 
+          border-t-4 border-t-trading-accent
+          p-0 overflow-hidden`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-trading-border bg-gradient-to-r from-purple-950/50 to-blue-950/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {trade.direction === 'long' ? (
+                  <div className="p-2 bg-success/20 rounded-lg">
+                    <TrendingUp className="h-6 w-6 text-success" />
+                  </div>
+                ) : (
+                  <div className="p-2 bg-destructive/20 rounded-lg">
+                    <TrendingDown className="h-6 w-6 text-destructive" />
+                  </div>
+                )}
+                <div>
+                  <SheetTitle className="text-2xl font-bold">{trade.asset}</SheetTitle>
+                  <SheetDescription className="text-trading-muted">
+                    {trade.direction.toUpperCase()} • {trade.model?.replace(/_/g, ' ')}
+                  </SheetDescription>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-lg px-3 py-1">
+                {trade.risk_tier.toUpperCase()}
+              </Badge>
+            </div>
+          </SheetHeader>
+
+          {/* Scrollable Content */}
+          <ScrollArea className="flex-1 px-6 py-4">
+            <div className="space-y-6">
+              {/* Trade Details */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-secondary/30 rounded-xl">
+                <div>
+                  <Label className="text-xs text-trading-muted">Entry</Label>
+                  <div className="font-mono text-lg font-bold">{formatPrice(Number(trade.entry_price))}</div>
+                </div>
+                <div>
+                  <Label className="text-xs text-trading-muted">Stop Loss</Label>
+                  <div className="font-mono text-lg font-bold text-destructive">{formatPrice(Number(trade.stop_loss))}</div>
+                </div>
+                <div>
+                  <Label className="text-xs text-trading-muted">Risk Amount</Label>
+                  <div className="font-mono text-lg font-bold text-trading-accent">${trade.risk_amount.toFixed(2)}</div>
+                </div>
+                <div>
+                  <Label className="text-xs text-trading-muted">Lot Size</Label>
+                  <div className="font-mono text-lg font-bold text-trading-accent">{(trade.lot_size || 1.0).toFixed(2)}</div>
+                  <div className="text-xs text-trading-muted">
+                    Based on ${trade.risk_amount} risk
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-trading-muted">Session</Label>
+                  <div className="text-sm font-medium">{trade.trading_session || 'N/A'}</div>
+                </div>
+              </div>
+
+              <Separator className="bg-trading-border" />
+
+              {/* Exit Price Input */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-trading-accent" />
+                  <Label className="text-lg font-semibold">Exit Price</Label>
+                </div>
+                <Input
+                  type="number"
+                  step="0.00001"
+                  inputMode="decimal"
+                  placeholder="Enter exit price..."
+                  value={exitPrice}
+                  onChange={(e) => setExitPrice(e.target.value)}
+                  className="text-2xl font-mono h-14 text-center bg-secondary/50 border-trading-accent/50 focus:border-trading-accent"
+                />
+                
+                {/* Exit Time Input */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-trading-accent" />
+                    <Label className="text-sm font-medium">Exit Time (optional)</Label>
+                  </div>
+                  <Input
+                    type="datetime-local"
+                    value={exitTime}
+                    onChange={(e) => setExitTime(e.target.value)}
+                    className="h-10 bg-secondary/50 border-trading-accent/50 focus:border-trading-accent"
+                  />
+                  {!exitTime && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const now = new Date();
+                        const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+                        setExitTime(localTime.toISOString().slice(0, 16));
+                      }}
+                      className="text-xs"
+                    >
+                      Use Current Time
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Live P&L Display */}
+                {currentPrice > 0 && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-gradient-to-br from-purple-950/30 to-blue-950/30 rounded-xl border border-trading-accent/30">
+                      <div className="text-center">
+                        <div className="text-xs text-trading-muted mb-1">Estimated P&L</div>
+                        <div className={`text-2xl font-bold ${estimatedPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          ${estimatedPnL.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-trading-muted">
+                          Gross: ${grossPnL.toFixed(2)} | Comm: -${commission.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-trading-muted mb-1">R Multiple</div>
+                        <div className="text-2xl font-bold text-trading-accent">
+                          {rMultiple.toFixed(2)}R
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Manual P&L Override */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="manual-pnl"
+                          checked={useManualPnL}
+                          onChange={(e) => setUseManualPnL(e.target.checked)}
+                          className="rounded border-trading-border"
+                        />
+                        <Label htmlFor="manual-pnl" className="text-sm text-trading-muted">
+                          Override P&L calculation
+                        </Label>
+                      </div>
+                      {useManualPnL && (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          placeholder="Enter actual P&L..."
+                          value={manualPnL}
+                          onChange={(e) => setManualPnL(e.target.value)}
+                          className="h-10 text-center font-mono bg-secondary/50 border-trading-accent/50 focus:border-trading-accent"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-trading-border" />
+
+              {/* Screenshot Upload */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-5 w-5 text-blue-400" />
+                  <Label className="text-lg font-semibold">Trade Screenshot</Label>
+                </div>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                
+                {screenshotPreview ? (
+                  <div className="relative">
+                    <img 
+                      src={screenshotPreview} 
+                      alt="Trade screenshot preview" 
+                      className="w-full h-48 object-cover rounded-lg border border-trading-border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setScreenshot(null);
+                        setScreenshotPreview(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="absolute top-2 right-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-24 border-dashed border-2 border-blue-400/50 hover:border-blue-400 hover:bg-blue-950/20"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-6 w-6 text-blue-400" />
+                      <span className="text-sm text-trading-muted">
+                        Upload screenshot (optional)
+                      </span>
+                      <span className="text-xs text-trading-muted/70">
+                        Max 5MB - JPG, PNG, GIF
+                      </span>
+                    </div>
+                  </Button>
+                )}
+              </div>
+
+              <Separator className="bg-trading-border" />
+
+              {/* Trade Lessons / Reflection */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-purple-400" />
+                  <Label className="text-lg font-semibold">Trade Reflection</Label>
+                </div>
+                <Textarea
+                  placeholder="What did you learn from this trade? What would you do differently next time?"
+                  value={lessons}
+                  onChange={(e) => setLessons(e.target.value)}
+                  className="min-h-24 bg-secondary/50 border-purple-400/50 focus:border-purple-400 resize-none"
+                />
+              </div>
+
+              <Separator className="bg-trading-border" />
+
+              {/* Quick Mistakes Tags */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ThumbsDown className="h-5 w-5 text-red-400" />
+                  <Label className="text-lg font-semibold">Mistakes (if any)</Label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {mistakeTags.map((mistake) => (
+                    <Button
+                      key={mistake}
+                      variant={selectedMistakes.includes(mistake) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleMistake(mistake)}
+                      className={`text-xs transition-all ${
+                        selectedMistakes.includes(mistake)
+                          ? 'bg-red-600 hover:bg-red-700 border-red-400'
+                          : 'hover:border-red-400 hover:bg-red-950/20'
+                      }`}
+                    >
+                      {mistake}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <Separator className="bg-trading-border" />
+
+              {/* Good Actions Tags */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ThumbsUp className="h-5 w-5 text-green-400" />
+                  <Label className="text-lg font-semibold">What Went Well</Label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {goodActionTags.map((action) => (
+                    <Button
+                      key={action}
+                      variant={selectedGoodActions.includes(action) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleGoodAction(action)}
+                      className={`text-xs transition-all ${
+                        selectedGoodActions.includes(action)
+                          ? 'bg-green-600 hover:bg-green-700 border-green-400'
+                          : 'hover:border-green-400 hover:bg-green-950/20'
+                      }`}
+                    >
+                      {action}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Summary Preview */}
+              {(lessons.trim() || selectedMistakes.length > 0 || selectedGoodActions.length > 0) && (
+                <div className="p-4 bg-gradient-to-br from-blue-950/30 to-purple-950/30 rounded-xl border border-blue-400/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="h-5 w-5 text-blue-400" />
+                    <Label className="text-sm font-semibold text-blue-300">Review Summary</Label>
+                  </div>
+                  <div className="space-y-2 text-sm text-trading-muted">
+                    {lessons.trim() && (
+                      <div>
+                        <span className="font-semibold text-purple-300">Lessons:</span> {lessons}
+                      </div>
+                    )}
+                    {selectedMistakes.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-red-300">Mistakes:</span> {selectedMistakes.join(', ')}
+                      </div>
+                    )}
+                    {selectedGoodActions.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-green-300">Good Actions:</span> {selectedGoodActions.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Spacing for mobile */}
+              <div className="h-4" />
+            </div>
+          </ScrollArea>
+
+          {/* Footer Actions */}
+          <div className="px-6 py-4 border-t border-trading-border bg-gradient-to-r from-purple-950/30 to-blue-950/30">
+            <div className="flex gap-3">
+              <Button
+                onClick={handleClose}
+                disabled={!exitPrice || isClosing}
+                className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50"
+                size="lg"
+              >
+                {isClosing ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                    Closing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    Close Trade
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="h-12 px-6 border-trading-border hover:bg-red-950/20 hover:border-red-500"
+                size="lg"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            {/* Warning if no reflection */}
+            {exitPrice && !lessons.trim() && selectedMistakes.length === 0 && selectedGoodActions.length === 0 && (
+              <div className="mt-3 flex items-start gap-2 p-3 bg-amber-950/30 border border-amber-500/30 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5" />
+                <p className="text-xs text-amber-300">
+                  Add at least one reflection to help improve your trading
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}

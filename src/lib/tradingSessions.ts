@@ -1,0 +1,109 @@
+export interface TradingSession {
+  id: string;
+  name: string;
+  start: { hour: number; minute: number };
+  end: { hour: number; minute: number };
+  localTime: string;
+  description: string;
+  color?: string;
+}
+
+export const TRADING_SESSIONS: TradingSession[] = [
+  {
+    id: 'asian_range',
+    name: 'Asian Range',
+    start: { hour: 20, minute: 0 },
+    end: { hour: 4, minute: 0 },
+    localTime: '3:00 AM - 11:00 AM (+03)',
+    description: 'Often consolidates; market sets the stage for London.',
+    color: 'bg-purple-500/20 text-purple-300 border-purple-400/50'
+  },
+  {
+    id: 'london_killzone',
+    name: 'London Killzone',
+    start: { hour: 2, minute: 0 },
+    end: { hour: 5, minute: 0 },
+    localTime: '9:00 AM - 12:00 PM (+03)',
+    description: 'Breakouts from Asia; day’s bias often formed.',
+    color: 'bg-red-500/20 text-red-300 border-red-400/50'
+  },
+  {
+    id: 'london_lunch',
+    name: 'London Lunch',
+    start: { hour: 7, minute: 0 },
+    end: { hour: 8, minute: 0 },
+    localTime: '2:00 PM - 3:00 PM (+03)',
+    description: 'Low volatility pause; market drifts or ranges.',
+    color: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50'
+  },
+  {
+    id: 'london_ny_overlap',
+    name: 'London–New York Overlap',
+    start: { hour: 8, minute: 0 },
+    end: { hour: 12, minute: 0 },
+    localTime: '3:00 PM - 7:00 PM (+03)',
+    description: 'Most liquid & volatile; strong trends or news moves.',
+    color: 'bg-blue-500/20 text-blue-300 border-blue-400/50'
+  },
+  {
+    id: 'silver_bullet',
+    name: 'Silver Bullet Hour',
+    start: { hour: 10, minute: 0 },
+    end: { hour: 11, minute: 0 },
+    localTime: '5:00 PM - 6:00 PM (+03)',
+    description: 'Reversal setups common; watch for exhaustion.',
+    color: 'bg-green-500/20 text-green-300 border-green-400/50'
+  },
+  {
+    id: 'ny_session',
+    name: 'New York Session',
+    start: { hour: 8, minute: 0 },
+    end: { hour: 17, minute: 0 },
+    localTime: '3:00 PM - 12:00 AM (+03)',
+    description: 'High liquidity early; slows into evening consolidation.',
+    color: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/50'
+  }
+];
+
+const EST_TIMEZONE = 'America/New_York';
+
+const minutesSinceMidnight = (hour: number, minute: number) => hour * 60 + minute;
+
+export const getActiveSession = (date: Date = new Date()): TradingSession | null => {
+  const estDate = new Date(date.toLocaleString('en-US', { timeZone: EST_TIMEZONE }));
+  const currentMinutes = minutesSinceMidnight(estDate.getHours(), estDate.getMinutes());
+
+  for (const session of TRADING_SESSIONS) {
+    const startMinutes = minutesSinceMidnight(session.start.hour, session.start.minute);
+    const endMinutes = minutesSinceMidnight(session.end.hour, session.end.minute);
+
+    if (startMinutes > endMinutes) {
+      if (currentMinutes >= startMinutes || currentMinutes <= endMinutes) {
+        return session;
+      }
+    } else if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+      return session;
+    }
+  }
+
+  return null;
+};
+
+// Check if market is open (even if no specific session is active)
+export const isMarketOpen = (date: Date = new Date()): boolean => {
+  const estDate = new Date(date.toLocaleString('en-US', { timeZone: EST_TIMEZONE }));
+  const currentMinutes = minutesSinceMidnight(estDate.getHours(), estDate.getMinutes());
+  
+  // Market is considered open from 8 PM Sunday to 5 PM Friday EST
+  // This covers the gap between sessions and weekend closure
+  const dayOfWeek = estDate.getDay(); // 0 = Sunday, 6 = Saturday
+  
+  // Weekend check (Saturday and Sunday after 5 PM)
+  if (dayOfWeek === 0 && currentMinutes < 20 * 60) return false; // Sunday before 8 PM
+  if (dayOfWeek === 6 && currentMinutes > 17 * 60) return false; // Saturday after 5 PM
+  if (dayOfWeek === 0 && currentMinutes >= 20 * 60) return true; // Sunday after 8 PM
+  if (dayOfWeek === 6 && currentMinutes <= 17 * 60) return true; // Saturday before 5 PM
+  if (dayOfWeek >= 1 && dayOfWeek <= 5) return true; // Monday to Friday
+  
+  return false;
+};
