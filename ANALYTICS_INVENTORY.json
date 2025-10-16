@@ -1,0 +1,344 @@
+{
+  "database_layer": {
+    "views": [
+      {
+        "name": "daily_performance_metrics",
+        "purpose": "Daily P&L, win rate, R-multiple aggregation by date",
+        "depends_on": ["trades"],
+        "status": "live",
+        "used_by": []
+      },
+      {
+        "name": "secure_daily_performance_metrics",
+        "purpose": "Same as daily_performance_metrics with RLS security",
+        "depends_on": ["trades"],
+        "status": "live",
+        "used_by": []
+      },
+      {
+        "name": "v_current_bias",
+        "purpose": "Current active bias state for user",
+        "depends_on": ["bias_state"],
+        "status": "live",
+        "used_by": ["useBiasState"]
+      },
+      {
+        "name": "v_current_session_pattern",
+        "purpose": "Current ICT session pattern with inferred scenario",
+        "depends_on": ["daily_session_patterns"],
+        "status": "live",
+        "used_by": ["useSessionPatterns"]
+      },
+      {
+        "name": "v_trade_observations",
+        "purpose": "Joins trades with post_trade_observations + auto-generated insights",
+        "depends_on": ["trades", "post_trade_observations"],
+        "status": "NEW_PHASE_2",
+        "used_by": []
+      }
+    ],
+    "functions": [
+      {
+        "name": "get_user_trade_stats",
+        "purpose": "Overall trading statistics (total_pnl, avg_r, win_rate, etc.)",
+        "args": ["p_user_id", "p_days (optional)"],
+        "returns": "trade stats object",
+        "status": "live",
+        "used_by": ["useTradesOptimized"]
+      },
+      {
+        "name": "get_daily_losses",
+        "purpose": "Count losses for stop rule enforcement",
+        "args": ["p_user_id", "p_date (optional)"],
+        "returns": "number",
+        "status": "live",
+        "used_by": ["useTradesOptimized"]
+      },
+      {
+        "name": "get_current_bias",
+        "purpose": "Get active bias for specific date",
+        "args": ["target_day"],
+        "returns": "bias_state row",
+        "status": "live",
+        "used_by": ["useBiasState", "useBiasStateForDate"]
+      },
+      {
+        "name": "set_bias_state",
+        "purpose": "Set/update bias for specific date",
+        "args": ["target_day", "target_bias", "target_confidence", "target_market_state", "target_tags"],
+        "returns": "bias_state row",
+        "status": "live",
+        "used_by": ["useBiasState"]
+      },
+      {
+        "name": "generate_daily_reflection",
+        "purpose": "Auto-generate daily reflection from trades",
+        "args": ["p_user_id", "p_reflection_date (optional)"],
+        "returns": "daily_reflection row",
+        "status": "live",
+        "used_by": ["useReflection"]
+      },
+      {
+        "name": "get_reflection_analytics",
+        "purpose": "Get reflection data over time period",
+        "args": ["p_user_id", "p_days (optional)"],
+        "returns": "reflection analytics array",
+        "status": "live",
+        "used_by": ["useReflection", "ReflectionAnalytics"]
+      },
+      {
+        "name": "infer_session_scenario",
+        "purpose": "Infer ICT scenario from session behaviors",
+        "args": ["asia_behavior", "london_behavior", "ny_behavior"],
+        "returns": "scenario + confidence + expected behaviors",
+        "status": "live",
+        "used_by": ["useSessionPatterns"]
+      },
+      {
+        "name": "calculate_r_moved",
+        "purpose": "Calculate R-multiples moved from exit point (for observations)",
+        "args": ["p_trade_id", "p_peak_price", "p_observation_type"],
+        "returns": "numeric (R value)",
+        "status": "NEW_PHASE_2",
+        "used_by": ["Server-side helper (optional)"]
+      },
+      {
+        "name": "database_health_check",
+        "purpose": "System diagnostics",
+        "args": [],
+        "returns": "health check results array",
+        "status": "live",
+        "used_by": ["Admin/debug"]
+      },
+      {
+        "name": "refresh_daily_performance_metrics",
+        "purpose": "Refresh materialized view",
+        "args": [],
+        "returns": "undefined",
+        "status": "live",
+        "used_by": ["Background jobs"]
+      }
+    ],
+    "rpc_called_but_missing": [
+      {
+        "name": "get_best_trading_hours",
+        "called_from": "useTradingAnalytics",
+        "status": "MISSING",
+        "fallback": "Client-side calculateBestHours()"
+      },
+      {
+        "name": "get_weekly_summary",
+        "called_from": "useTradingAnalytics",
+        "status": "MISSING",
+        "fallback": "Client-side calculateWeeklyPerformance()"
+      },
+      {
+        "name": "get_daily_performance",
+        "called_from": "useTradingAnalytics",
+        "status": "MISSING",
+        "fallback": "Client-side calculateDailyPerformance()"
+      },
+      {
+        "name": "get_today_performance",
+        "called_from": "useTradingStats",
+        "status": "MISSING",
+        "fallback": "Client-side calculation"
+      },
+      {
+        "name": "get_model_performance",
+        "called_from": "useTradingStats",
+        "status": "MISSING",
+        "fallback": "Client-side calculation"
+      }
+    ]
+  },
+  "frontend_layer": {
+    "hooks": [
+      {
+        "name": "useTradingAnalytics",
+        "file": "hooks/useTradingAnalytics.tsx",
+        "purpose": "Fetch best hours, weekly, daily performance",
+        "computation": "Tries RPC (fails) → Client-side fallback",
+        "status": "live"
+      },
+      {
+        "name": "useTradingStats",
+        "file": "hooks/useTradingStats.tsx",
+        "purpose": "Today's performance, model stats",
+        "computation": "Tries RPC (fails) → Client-side fallback",
+        "status": "live"
+      },
+      {
+        "name": "useTradesOptimized",
+        "file": "hooks/useTradesOptimized.tsx",
+        "purpose": "Trade CRUD, fetch all trades, daily losses",
+        "computation": "Uses get_daily_losses RPC",
+        "status": "live"
+      },
+      {
+        "name": "useReflection",
+        "file": "hooks/useReflection.tsx",
+        "purpose": "Daily reflection generation & analytics",
+        "computation": "Uses generate_daily_reflection, get_reflection_analytics RPCs",
+        "status": "live"
+      }
+    ],
+    "components": [
+      {
+        "name": "TradingAnalytics",
+        "file": "components/TradingAnalytics.tsx",
+        "type": "Dashboard",
+        "tabs": ["Best Hours", "Weekly", "Daily", "Setups", "Edge Diagnostics", "Equity"],
+        "uses_new_fields": false,
+        "status": "live",
+        "notes": "MAIN analytics dashboard - needs Phase 1/2 field integration"
+      },
+      {
+        "name": "TradeHeatmap",
+        "file": "components/TradeHeatmap.tsx",
+        "type": "Heatmap",
+        "purpose": "Visual trading activity density",
+        "status": "live"
+      },
+      {
+        "name": "TradingCalendar",
+        "file": "components/TradingCalendar.tsx",
+        "type": "Calendar",
+        "purpose": "Monthly calendar view of trades",
+        "status": "live"
+      },
+      {
+        "name": "DailyWrap",
+        "file": "components/DailyWrap.tsx",
+        "type": "Summary",
+        "purpose": "End-of-day review",
+        "status": "live"
+      },
+      {
+        "name": "DisciplineChallengeDashboard",
+        "file": "components/DisciplineChallengeDashboard.tsx",
+        "type": "Dashboard",
+        "purpose": "Gamified discipline tracking",
+        "status": "live"
+      },
+      {
+        "name": "ReflectionAnalytics",
+        "file": "components/reflection/ReflectionAnalytics.tsx",
+        "type": "Charts",
+        "purpose": "Reflection trends over time",
+        "status": "live",
+        "uses_rpc": "get_reflection_analytics"
+      }
+    ],
+    "calculation_libs": [
+      {
+        "name": "tradingCalculations",
+        "file": "lib/tradingCalculations.ts",
+        "exports": [
+          "calculatePnL",
+          "calculateRMultiple",
+          "calculateWinRate",
+          "calculateProfitFactor",
+          "calculateExpectancy",
+          "calculateAverageRMultiple",
+          "getPipValueConfig",
+          "formatPrice"
+        ],
+        "purpose": "Core trading calculation formulas",
+        "status": "live"
+      },
+      {
+        "name": "tradingAnalytics",
+        "file": "lib/tradingAnalytics.ts",
+        "exports": [
+          "calculateBestHours",
+          "calculateDailyPerformance",
+          "calculateWeeklyPerformance",
+          "getTradingStats"
+        ],
+        "purpose": "Client-side analytics aggregation",
+        "status": "live"
+      }
+    ]
+  },
+  "data_coverage": {
+    "phase_1_fields_with_viz": [
+      "pnl",
+      "r_multiple",
+      "duration_minutes",
+      "setup (via locations[0])",
+      "trading_session (old field)",
+      "mistake_tags",
+      "good_actions",
+      "emotions"
+    ],
+    "phase_1_fields_NO_viz": [
+      "efficiency",
+      "mae_r",
+      "mfe_r",
+      "confidence",
+      "discipline_tag",
+      "session (new field)",
+      "target_price",
+      "checklist_passed",
+      "moved_to_be",
+      "be_trigger_r",
+      "partial_at_2r",
+      "used_trailing_stop",
+      "orderflow_exit",
+      "exit_reason"
+    ],
+    "phase_2_fields_NO_viz": [
+      "post_trade_observations (entire table)",
+      "observation_type",
+      "price_action",
+      "r_moved",
+      "continuation/reversal patterns"
+    ]
+  },
+  "recommendations": {
+    "immediate_builds": [
+      {
+        "priority": 1,
+        "name": "Efficiency Tab",
+        "components": ["EfficiencyTrendChart", "MAE_MFE_ScatterPlot", "SetupEfficiencyTable"],
+        "data_source": "trades table (efficiency, mae_r, mfe_r fields)",
+        "computation": "client-side"
+      },
+      {
+        "priority": 2,
+        "name": "Observations Tab",
+        "components": ["ContinuationRateChart", "MissedRTimeline", "StopQualityGauge"],
+        "data_source": "post_trade_observations table",
+        "computation": "SQL queries via new hook"
+      },
+      {
+        "priority": 3,
+        "name": "Confidence Tab",
+        "components": ["ConfidenceVsPerformance", "ConfidenceDistribution"],
+        "data_source": "trades table (confidence field)",
+        "computation": "client-side"
+      },
+      {
+        "priority": 4,
+        "name": "Discipline Tab",
+        "components": ["DisciplineBreakdown", "ChecklistImpact", "FOMOAnalysis"],
+        "data_source": "trades table (discipline_tag, checklist_passed)",
+        "computation": "client-side"
+      }
+    ],
+    "updates_needed": [
+      {
+        "component": "TradingAnalytics - Setups Tab",
+        "change": "Use setup_name field instead of locations[0]",
+        "impact": "low"
+      },
+      {
+        "component": "All existing tables",
+        "change": "Show session column using new session field",
+        "impact": "low"
+      }
+    ]
+  }
+}
+
