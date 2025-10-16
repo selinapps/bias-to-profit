@@ -33,10 +33,13 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/hooks/useAuth';
 import { getPipValueConfig } from '@/lib/tradingCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { logger } from '@/lib/logger';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 
 type Trade = Database['public']['Tables']['trades']['Row'];
 
@@ -130,9 +133,19 @@ export function ManageTradeSheet({
     finalExitReason: 'manual' // manual, stop_loss, take_profit, trailing_stop, orderflow
   });
   
+  // ✅ PHASE 2: Post-Trade Observation State
+  const [showObservation, setShowObservation] = useState(false);
+  const [observationType, setObservationType] = useState<'post_stop' | 'post_target'>('post_target');
+  const [observationTime, setObservationTime] = useState<string>('1h');
+  const [priceAction, setPriceAction] = useState<string>('');
+  const [peakPrice, setPeakPrice] = useState<string>('');
+  const [observationNotes, setObservationNotes] = useState<string>('');
+  const [isSavingObservation, setIsSavingObservation] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { settings } = useSettings();
+  const { user } = useAuth();
 
   // Merge custom tags with defaults
   const customMistakeTags = (settings as any).custom_mistake_tags || [];
@@ -354,6 +367,78 @@ export function ManageTradeSheet({
       });
     } finally {
       setIsClosing(false);
+    }
+  };
+
+  // ✅ PHASE 2: Save Post-Trade Observation
+  const handleSaveObservation = async () => {
+    if (!user || !trade || !priceAction || !peakPrice) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in price action and peak price.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSavingObservation(true);
+    try {
+      const peakPriceNum = parseFloat(peakPrice);
+      const exitPriceNum = Number(trade.exit_price);
+      const riskAmount = trade.risk_amount || 500;
+      
+      // Calculate pips moved
+      const { pipMultiplier, pipValuePerLot } = getPipValueConfig(trade.asset || 'EURUSD');
+      let pips_moved = 0;
+      
+      if (trade.direction === 'long' || trade.direction === 'buy') {
+        pips_moved = (peakPriceNum - exitPriceNum) / pipMultiplier;
+      } else {
+        pips_moved = (exitPriceNum - peakPriceNum) / pipMultiplier;
+      }
+      
+      // Calculate R moved (dollar value of move / risk amount)
+      const lotSize = Number(trade.lot_size) || 1.0;
+      const dollarMove = pips_moved * pipValuePerLot * lotSize;
+      const r_moved = riskAmount > 0 ? dollarMove / riskAmount : 0;
+
+      const { error } = await supabase
+        .from('post_trade_observations')
+        .insert({
+          trade_id: trade.id,
+          user_id: user.id,
+          observation_type: observationType,
+          observation_time: observationTime,
+          price_action: priceAction,
+          peak_price: peakPriceNum,
+          pips_moved: Number(pips_moved.toFixed(2)),
+          r_moved: Number(r_moved.toFixed(3)),
+          notes: observationNotes || null,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Observation Saved",
+        description: `Post-trade observation recorded successfully. ${r_moved >= 0 ? `+${r_moved.toFixed(2)}R` : `${r_moved.toFixed(2)}R`} from exit.`,
+        variant: "default"
+      });
+
+      // Reset observation form
+      setShowObservation(false);
+      setPriceAction('');
+      setPeakPrice('');
+      setObservationNotes('');
+      
+    } catch (error: any) {
+      logger.error('Error saving observation:', error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to save observation.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingObservation(false);
     }
   };
 
@@ -937,6 +1022,200 @@ export function ManageTradeSheet({
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* ✅ PHASE 2: Post-Trade Observation Form */}
+              {trade.status === 'closed' && (
+                <div className="space-y-3">
+                  <Separator className="bg-trading-border" />
+                  
+                  <Button
+                    type="button"
+                    variant={showObservation ? "default" : "outline"}
+                    onClick={() => setShowObservation(!showObservation)}
+                    className="w-full h-12 border-cyan-400/50 hover:border-cyan-400"
+                  >
+                    <Lightbulb className="h-5 w-5 mr-2" />
+                    {showObservation ? 'Hide' : 'Add'} Post-Trade Observation
+                  </Button>
+                  
+                  {showObservation && (
+                    <Card className="p-4 bg-gradient-to-br from-cyan-950/30 to-blue-950/30 border-cyan-500/30">
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm text-cyan-200 mb-3">
+                            Track what price did after your exit to identify patterns
+                          </p>
+                        </div>
+
+                        {/* Observation Type */}
+                        <div>
+                          <Label className="text-sm font-medium text-cyan-200 mb-2 block">What happened?</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              type="button"
+                              variant={observationType === 'post_stop' ? 'default' : 'outline'}
+                              onClick={() => setObservationType('post_stop')}
+                              className={observationType === 'post_stop' ? 'bg-red-600 hover:bg-red-700' : ''}
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              After Stop Hit
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={observationType === 'post_target' ? 'default' : 'outline'}
+                              onClick={() => setObservationType('post_target')}
+                              className={observationType === 'post_target' ? 'bg-green-600 hover:bg-green-700' : ''}
+                            >
+                              <Target className="h-4 w-4 mr-2" />
+                              After Target Hit
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Observation Time */}
+                        <div>
+                          <Label className="text-sm font-medium text-cyan-200 mb-2 block">When did you check?</Label>
+                          <Select value={observationTime} onValueChange={setObservationTime}>
+                            <SelectTrigger className="h-10 bg-trading-card border-cyan-400/30">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-trading-card border-trading-border">
+                              <SelectItem value="15m">⏱️ 15 Minutes After</SelectItem>
+                              <SelectItem value="1h">⏰ 1 Hour After</SelectItem>
+                              <SelectItem value="4h">🕐 4 Hours After</SelectItem>
+                              <SelectItem value="EOD">🌅 End of Day</SelectItem>
+                              <SelectItem value="next_day">📅 Next Day</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Price Action */}
+                        <div>
+                          <Label className="text-sm font-medium text-cyan-200 mb-2 block">Price Action</Label>
+                          <Select value={priceAction} onValueChange={setPriceAction}>
+                            <SelectTrigger className="h-10 bg-trading-card border-cyan-400/30">
+                              <SelectValue placeholder="What did price do?" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-trading-card border-trading-border">
+                              <SelectItem value="continuation">
+                                ➡️ Continuation (kept moving same direction)
+                              </SelectItem>
+                              <SelectItem value="reversal">
+                                ↩️ Reversal (turned around)
+                              </SelectItem>
+                              <SelectItem value="consolidation">
+                                ↔️ Consolidation (went sideways)
+                              </SelectItem>
+                              <SelectItem value="unclear">
+                                ❓ Unclear/Choppy
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Peak Price */}
+                        <div>
+                          <Label htmlFor="peak-price" className="text-sm font-medium text-cyan-200">
+                            Peak Price Reached
+                          </Label>
+                          <Input
+                            id="peak-price"
+                            type="number"
+                            step="0.00001"
+                            inputMode="decimal"
+                            placeholder={trade.direction === 'long' ? "Highest price..." : "Lowest price..."}
+                            value={peakPrice}
+                            onChange={(e) => setPeakPrice(e.target.value)}
+                            className="h-10 mt-1 text-center font-mono bg-trading-card/80 text-foreground border-cyan-400/50 focus:border-cyan-400 placeholder:text-trading-muted"
+                          />
+                          <p className="text-xs text-trading-muted mt-1">
+                            {trade.direction === 'long' || trade.direction === 'buy' 
+                              ? 'Highest price reached after exit'
+                              : 'Lowest price reached after exit'}
+                          </p>
+                          
+                          {/* Auto-calc preview */}
+                          {peakPrice && trade.exit_price && (
+                            <div className="mt-2 p-2 bg-cyan-950/30 rounded border border-cyan-500/30 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-cyan-300">Pips from exit:</span>
+                                <span className="text-cyan-200 font-mono">
+                                  {(() => {
+                                    const { pipMultiplier } = getPipValueConfig(trade.asset || 'EURUSD');
+                                    const exitPriceNum = Number(trade.exit_price);
+                                    const peakPriceNum = parseFloat(peakPrice);
+                                    let pips = 0;
+                                    if (trade.direction === 'long' || trade.direction === 'buy') {
+                                      pips = (peakPriceNum - exitPriceNum) / pipMultiplier;
+                                    } else {
+                                      pips = (exitPriceNum - peakPriceNum) / pipMultiplier;
+                                    }
+                                    return `${pips >= 0 ? '+' : ''}${pips.toFixed(1)} pips`;
+                                  })()}
+                                </span>
+                              </div>
+                              <div className="flex justify-between mt-1">
+                                <span className="text-cyan-300">R from exit:</span>
+                                <span className="text-cyan-200 font-mono font-bold">
+                                  {(() => {
+                                    const { pipMultiplier, pipValuePerLot } = getPipValueConfig(trade.asset || 'EURUSD');
+                                    const exitPriceNum = Number(trade.exit_price);
+                                    const peakPriceNum = parseFloat(peakPrice);
+                                    const lotSize = Number(trade.lot_size) || 1.0;
+                                    const riskAmount = trade.risk_amount || 500;
+                                    let pips = 0;
+                                    if (trade.direction === 'long' || trade.direction === 'buy') {
+                                      pips = (peakPriceNum - exitPriceNum) / pipMultiplier;
+                                    } else {
+                                      pips = (exitPriceNum - peakPriceNum) / pipMultiplier;
+                                    }
+                                    const dollarMove = pips * pipValuePerLot * lotSize;
+                                    const rMoved = riskAmount > 0 ? dollarMove / riskAmount : 0;
+                                    return `${rMoved >= 0 ? '+' : ''}${rMoved.toFixed(2)}R`;
+                                  })()}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                          <Label htmlFor="obs-notes" className="text-sm font-medium text-cyan-200">
+                            Notes (optional)
+                          </Label>
+                          <Textarea
+                            id="obs-notes"
+                            placeholder="Any additional context..."
+                            value={observationNotes}
+                            onChange={(e) => setObservationNotes(e.target.value)}
+                            className="mt-1 h-20 bg-trading-card/80 text-foreground border-cyan-400/50 focus:border-cyan-400 resize-none placeholder:text-trading-muted"
+                          />
+                        </div>
+
+                        {/* Save Button */}
+                        <Button
+                          onClick={handleSaveObservation}
+                          disabled={!priceAction || !peakPrice || isSavingObservation}
+                          className="w-full h-10 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50"
+                        >
+                          {isSavingObservation ? (
+                            <span className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                              Saving...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Save Observation
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
                 </div>
               )}
 

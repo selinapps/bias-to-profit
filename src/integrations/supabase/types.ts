@@ -362,6 +362,67 @@ export type Database = {
         }
         Relationships: []
       }
+      post_trade_observations: {
+        Row: {
+          id: string
+          trade_id: string
+          user_id: string
+          observation_type: string // 'post_stop' | 'post_target'
+          observation_time: string // '15m', '1h', '4h', 'EOD', 'next_day'
+          observed_at: string | null
+          price_action: string | null // 'continuation' | 'reversal' | 'consolidation' | 'unclear'
+          peak_price: number | null
+          pips_moved: number | null
+          r_moved: number | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          trade_id: string
+          user_id: string
+          observation_type: string
+          observation_time: string
+          observed_at?: string | null
+          price_action?: string | null
+          peak_price?: number | null
+          pips_moved?: number | null
+          r_moved?: number | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          trade_id?: string
+          user_id?: string
+          observation_type?: string
+          observation_time?: string
+          observed_at?: string | null
+          price_action?: string | null
+          peak_price?: number | null
+          pips_moved?: number | null
+          r_moved?: number | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_trade_observations_trade_id_fkey"
+            columns: ["trade_id"]
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_trade_observations_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       daily_reflection: {
         Row: {
           id: string
