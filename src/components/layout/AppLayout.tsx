@@ -3,13 +3,24 @@ import { cn } from '@/lib/utils';
 import { SettingsModal } from '@/components/SettingsModal';
 import { isMarketOpen } from '@/lib/tradingSessions';
 import { useSettings } from '@/hooks/useSettings';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { 
   BarChart3, 
   Activity, 
   Brain, 
   Zap,
   Trophy,
-  Eye
+  Eye,
+  MoreVertical,
+  Download,
+  FileText,
+  FileJson
 } from 'lucide-react';
 
 // Simple navigation items - same as footer
@@ -171,6 +182,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Export functions
+  const handleExport = (format: 'md' | 'csv' | 'json') => {
+    const date = new Date().toLocaleDateString();
+    const message = `Exporting ${format.toUpperCase()} format...`;
+    console.log(message);
+    // You can add toast notification here if needed
+    alert(`${format.toUpperCase()} export functionality coming soon!`);
+  };
+
   // Update time every minute
   useEffect(() => {
     const updateTime = () => {
@@ -230,17 +250,29 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                       {isMarketOpen(currentTime) ? 'Market Open' : 'Market Closed'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button className="px-3 py-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
-                      Export MD
-                    </button>
-                    <button className="px-3 py-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
-                      CSV
-                    </button>
-                    <button className="px-3 py-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
-                      JSON
-                    </button>
-                  </div>
+                  {/* Actions Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreVertical className="h-4 w-4 mr-2" />
+                        Actions
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => handleExport('md')}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Export Markdown
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleExport('csv')}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleExport('json')}>
+                        <FileJson className="h-4 w-4 mr-2" />
+                        Export JSON
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               )}
             </div>
