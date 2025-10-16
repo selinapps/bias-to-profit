@@ -206,17 +206,16 @@ export default function ImprovedTradingDashboard({
 
   // Calculate setup performance with memoization (replacing old model performance)
   const setupPerformance = useMemo(() => {
-    // Group trades by setup name (stored in model field)
+    // Group trades by setup name (stored in locations array - first element)
     const setupGroups: Record<string, any[]> = {};
     closedTrades.forEach(trade => {
-      // Clean up legacy model names and use proper setup names
-      let setupName = trade.model || 'Unknown';
-      
-      // Map legacy database values to readable names
-      if (setupName === 'trend' || setupName === 'Trend') {
-        setupName = 'Trend Setup (Legacy)';
-      } else if (setupName === 'mean_reversion' || setupName === 'MeanReversion' || setupName === 'Mean Reversion') {
-        setupName = 'Mean Reversion Setup (Legacy)';
+      // Get setup name from locations array (where actual setup name is stored)
+      let setupName = 'Unknown';
+      if (Array.isArray(trade.locations) && trade.locations.length > 0) {
+        setupName = String(trade.locations[0]);
+      } else if (trade.notes) {
+        // Fallback to notes if locations is empty
+        setupName = trade.notes;
       }
       
       if (!setupGroups[setupName]) {

@@ -191,10 +191,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
       resetForm();
       onClose();
       
-      // Refresh the trades list to show the new trade immediately
-      if (refreshTrades) {
-        refreshTrades();
-      }
+      // Note: No manual refresh needed - addTrade handles optimistic updates and auto-refresh
     } catch (error: any) {
       console.error('Error adding trade:', error);
       console.error('Error details:', {

@@ -448,10 +448,7 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
       resetForm();
       onClose();
       
-      // Refresh the trades list to show the new trade immediately
-      if (refreshTrades) {
-        refreshTrades();
-      }
+      // Note: No manual refresh needed - addTrade handles optimistic updates and auto-refresh
     } catch (error: any) {
       logger.error('Error adding trade:', error);
       console.error('Full error details:', {
