@@ -17,6 +17,7 @@ import {
 } from '@/lib/orderFlowHints';
 import { ManageTradeSheet } from './ManageTradeSheet';
 import { supabase } from '@/integrations/supabase/client';
+import { getPipValueConfig } from '@/lib/tradingCalculations';
 
 type Trade = Database['public']['Tables']['trades']['Row'];
 
@@ -84,12 +85,26 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
     tradeManagement?: any
   ) => {
     // ✅ Calculate efficiency if MAE/MFE provided
+    // First calculate the actual P&L that will be saved
+    const lotSize = trade.lot_size || 1.0;
+    const asset = trade.asset || 'EURUSD';
+    const priceDiff = trade.direction === 'long' 
+      ? exitPrice - trade.entry_price
+      : trade.entry_price - exitPrice;
+    const { pipValuePerLot, pipMultiplier } = getPipValueConfig(asset);
+    const pips = priceDiff / pipMultiplier;
+    const grossProfit = pips * pipValuePerLot * lotSize;
+    const commission = lotSize * 7.5;
+    const calculatedPnL = grossProfit - commission;
+    
+    // Use manual P&L if provided, otherwise use calculated
+    const finalPnL = manualPnL !== undefined ? manualPnL : calculatedPnL;
+    
     let efficiency = null;
     if (tradeManagement?.mfeR && tradeManagement.mfeR > 0) {
       const riskAmount = trade.risk_amount || 500;
-      const pnl = manualPnL || 0; // Use manual P&L if provided
-      const rMultiple = riskAmount > 0 ? pnl / riskAmount : 0;
-      efficiency = Math.min(1.0, rMultiple / tradeManagement.mfeR);
+      const rMultiple = riskAmount > 0 ? finalPnL / riskAmount : 0;
+      efficiency = Math.min(1.0, Math.abs(rMultiple / tradeManagement.mfeR));
     }
 
     // First update the trade with lessons, tags, screenshot, exit time, and NEW SCHEMA fields
