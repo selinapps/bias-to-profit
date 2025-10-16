@@ -80,9 +80,19 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
     goodActions: string[],
     screenshotUrl?: string,
     exitTime?: string,
-    manualPnL?: number
+    manualPnL?: number,
+    tradeManagement?: any
   ) => {
-    // First update the trade with lessons, tags, screenshot, exit time, and manual P&L
+    // ✅ Calculate efficiency if MAE/MFE provided
+    let efficiency = null;
+    if (tradeManagement?.mfeR && tradeManagement.mfeR > 0) {
+      const riskAmount = trade.risk_amount || 500;
+      const pnl = manualPnL || 0; // Use manual P&L if provided
+      const rMultiple = riskAmount > 0 ? pnl / riskAmount : 0;
+      efficiency = Math.min(1.0, rMultiple / tradeManagement.mfeR);
+    }
+
+    // First update the trade with lessons, tags, screenshot, exit time, and NEW SCHEMA fields
     await supabase
       .from('trades')
       .update({
@@ -91,11 +101,21 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
         good_actions: goodActions.length > 0 ? goodActions : [],
         screenshot_url: screenshotUrl || trade.screenshot_url,
         exit_time: exitTime || null,
-        manual_pnl: manualPnL || null,
+        // ✅ NEW SCHEMA: MAE/MFE Analytics
+        mae_r: tradeManagement?.maeR || null,
+        mfe_r: tradeManagement?.mfeR || null,
+        efficiency: efficiency,
+        // ✅ NEW SCHEMA: Trade Management
+        moved_to_be: tradeManagement?.movedToBreakeven || false,
+        be_trigger_r: tradeManagement?.movedToBEAtR || null,
+        partial_at_2r: tradeManagement?.partialCloseAt2R || false,
+        used_trailing_stop: tradeManagement?.trailingStopUsed || false,
+        orderflow_exit: tradeManagement?.orderflowBasedExit || false,
+        exit_reason: tradeManagement?.finalExitReason || null,
       })
       .eq('id', tradeId);
 
-    // Then close the trade
+    // Then close the trade (this calculates P&L and R-Multiple)
     await closeTrade(tradeId, exitPrice);
     
     // Refresh the trades list to update the display

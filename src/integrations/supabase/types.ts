@@ -130,115 +130,235 @@ export type Database = {
       }
       trades: {
         Row: {
-          aggression: string[] | null
-          asset: string
-          challenge_id: string | null
-          created_at: string | null
-          direction: string
-          duration_minutes: number | null
-          emotions: Json | null
-          entry_price: number
-          entry_time: string | null
-          exit_price: number | null
-          exit_time: string | null
-          externals: string[] | null
-          good_actions: string[] | null
-          hypothesis_id: string | null
+          // Core identifiers
           id: string
-          is_experimental: boolean | null
-          locations: string[] | null
+          user_id: string
+          challenge_id: string | null
+          
+          // Core trade data (Entry stage)
+          asset: string
+          direction: string // "buy", "sell", "long", "short"
+          entry_time: string | null
+          entry_price: number
+          stop_loss: number
+          target_price: number | null // Planned target (separate from exit_price)
           lot_size: number | null
-          mistake_tags: string[] | null
-          model: string
+          risk_tier: string // "a", "b", "c"
+          risk_amount: number
+          
+          // Setup & Context (Entry stage)
+          setup_name: string | null // User-selected setup
+          session: string | null // "London", "New York", etc.
+          bias_snapshot: string | null // Manual text entry
+          
+          // Manual market context (Entry stage)
+          atr_pips: number | null
+          spread: number | null
+          slippage: number | null
+          account_equity: number | null
+          
+          // Psychology & Discipline (Entry stage)
+          confidence: number | null // 1-5 scale
+          emotions: Json | null // {calm_stressed, focus, urge_recover}
+          checklist_passed: boolean | null
+          discipline_tag: string | null // "followed_plan", "FOMO", etc.
           notes: string | null
-          override_reason: string | null
+          
+          // Exit data (Close/Manage stage)
+          exit_time: string | null
+          exit_price: number | null
           pnl: number | null
           r_multiple: number | null
-          risk_amount: number
-          risk_tier: string
-          scenarios: string[] | null
-          screenshot_url: string | null
-          status: string | null
-          stop_loss: number
+          duration_minutes: number | null
+          
+          // MAE/MFE Analytics (Manual entry on close)
+          mae_r: number | null // Max Adverse Excursion in R
+          mfe_r: number | null // Max Favorable Excursion in R
+          efficiency: number | null // Calculated: r_multiple / mfe_r
+          
+          // Trade Management (Close/Manage stage)
+          moved_to_be: boolean | null
+          be_trigger_r: number | null // At what R moved to BE
+          partial_at_2r: boolean | null
+          used_trailing_stop: boolean | null
+          orderflow_exit: boolean | null
+          exit_reason: string | null // "Target hit", "Stop hit", etc.
+          
+          // Reflection (Close/Manage stage)
           trade_lessons: string | null
-          trading_session: string | null
+          mistake_tags: string[] | null
+          good_actions: string[] | null
+          screenshot_url: string | null
+          
+          // Meta
+          status: string | null // "open", "closed"
+          is_experimental: boolean | null
+          override_reason: string | null
+          created_at: string | null
           updated_at: string | null
-          user_id: string
-          bias_snapshot: Json | null
+          
+          // DEPRECATED (kept for backward compatibility)
+          model: string // DEPRECATED: use setup_name
+          locations: string[] | null // DEPRECATED: use setup_name
+          aggression: string[] | null // DEPRECATED
+          scenarios: string[] | null // DEPRECATED
+          trading_session: string | null // DEPRECATED: use session
+          hypothesis_id: string | null // DEPRECATED
+          externals: string[] | null // DEPRECATED
         }
         Insert: {
-          aggression?: string[] | null
+          // Required fields
           asset: string
-          challenge_id?: string | null
-          created_at?: string | null
           direction: string
-          duration_minutes?: number | null
-          emotions?: Json | null
           entry_price: number
-          entry_time?: string | null
-          exit_price?: number | null
-          exit_time?: string | null
-          externals?: string[] | null
-          good_actions?: string[] | null
-          hypothesis_id?: string | null
-          id?: string
-          is_experimental?: boolean | null
-          locations?: string[] | null
-          lot_size?: number | null
-          mistake_tags?: string[] | null
-          model: string
-          notes?: string | null
-          override_reason?: string | null
-          pnl?: number | null
-          r_multiple?: number | null
+          stop_loss: number
           risk_amount: number
           risk_tier: string
-          scenarios?: string[] | null
-          screenshot_url?: string | null
-          status?: string | null
-          stop_loss: number
-          trade_lessons?: string | null
-          trading_session?: string | null
-          updated_at?: string | null
           user_id: string
-          bias_snapshot?: Json | null
-        }
-        Update: {
-          aggression?: string[] | null
-          asset?: string
-          challenge_id?: string | null
-          created_at?: string | null
-          direction?: string
-          duration_minutes?: number | null
-          emotions?: Json | null
-          entry_price?: number
-          entry_time?: string | null
-          exit_price?: number | null
-          exit_time?: string | null
-          externals?: string[] | null
-          good_actions?: string[] | null
-          hypothesis_id?: string | null
+          model: string // DEPRECATED but required by DB constraint
+          
+          // Optional core fields
           id?: string
-          is_experimental?: boolean | null
-          locations?: string[] | null
+          challenge_id?: string | null
+          entry_time?: string | null
+          target_price?: number | null
           lot_size?: number | null
-          mistake_tags?: string[] | null
-          model?: string
+          
+          // Optional setup & context
+          setup_name?: string | null
+          session?: string | null
+          bias_snapshot?: string | null
+          
+          // Optional manual market context
+          atr_pips?: number | null
+          spread?: number | null
+          slippage?: number | null
+          account_equity?: number | null
+          
+          // Optional psychology & discipline
+          confidence?: number | null
+          emotions?: Json | null
+          checklist_passed?: boolean | null
+          discipline_tag?: string | null
           notes?: string | null
-          override_reason?: string | null
+          
+          // Optional exit data
+          exit_time?: string | null
+          exit_price?: number | null
           pnl?: number | null
           r_multiple?: number | null
-          risk_amount?: number
-          risk_tier?: string
-          scenarios?: string[] | null
-          screenshot_url?: string | null
-          status?: string | null
-          stop_loss?: number
+          duration_minutes?: number | null
+          
+          // Optional MAE/MFE analytics
+          mae_r?: number | null
+          mfe_r?: number | null
+          efficiency?: number | null
+          
+          // Optional trade management
+          moved_to_be?: boolean | null
+          be_trigger_r?: number | null
+          partial_at_2r?: boolean | null
+          used_trailing_stop?: boolean | null
+          orderflow_exit?: boolean | null
+          exit_reason?: string | null
+          
+          // Optional reflection
           trade_lessons?: string | null
-          trading_session?: string | null
+          mistake_tags?: string[] | null
+          good_actions?: string[] | null
+          screenshot_url?: string | null
+          
+          // Optional meta
+          status?: string | null
+          is_experimental?: boolean | null
+          override_reason?: string | null
+          created_at?: string | null
           updated_at?: string | null
-          bias_snapshot?: Json | null
+          
+          // DEPRECATED (optional for backward compatibility)
+          locations?: string[] | null
+          aggression?: string[] | null
+          scenarios?: string[] | null
+          trading_session?: string | null
+          hypothesis_id?: string | null
+          externals?: string[] | null
+        }
+        Update: {
+          // All fields optional for updates
+          id?: string
           user_id?: string
+          challenge_id?: string | null
+          
+          // Core trade data
+          asset?: string
+          direction?: string
+          entry_time?: string | null
+          entry_price?: number
+          stop_loss?: number
+          target_price?: number | null
+          lot_size?: number | null
+          risk_tier?: string
+          risk_amount?: number
+          
+          // Setup & context
+          setup_name?: string | null
+          session?: string | null
+          bias_snapshot?: string | null
+          
+          // Manual market context
+          atr_pips?: number | null
+          spread?: number | null
+          slippage?: number | null
+          account_equity?: number | null
+          
+          // Psychology & discipline
+          confidence?: number | null
+          emotions?: Json | null
+          checklist_passed?: boolean | null
+          discipline_tag?: string | null
+          notes?: string | null
+          
+          // Exit data
+          exit_time?: string | null
+          exit_price?: number | null
+          pnl?: number | null
+          r_multiple?: number | null
+          duration_minutes?: number | null
+          
+          // MAE/MFE analytics
+          mae_r?: number | null
+          mfe_r?: number | null
+          efficiency?: number | null
+          
+          // Trade management
+          moved_to_be?: boolean | null
+          be_trigger_r?: number | null
+          partial_at_2r?: boolean | null
+          used_trailing_stop?: boolean | null
+          orderflow_exit?: boolean | null
+          exit_reason?: string | null
+          
+          // Reflection
+          trade_lessons?: string | null
+          mistake_tags?: string[] | null
+          good_actions?: string[] | null
+          screenshot_url?: string | null
+          
+          // Meta
+          status?: string | null
+          is_experimental?: boolean | null
+          override_reason?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          
+          // DEPRECATED (optional for backward compatibility)
+          model?: string
+          locations?: string[] | null
+          aggression?: string[] | null
+          scenarios?: string[] | null
+          trading_session?: string | null
+          hypothesis_id?: string | null
+          externals?: string[] | null
         }
         Relationships: []
       }

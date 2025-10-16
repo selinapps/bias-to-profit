@@ -414,29 +414,45 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
       const sessionAtTradeTime = getActiveSession(tradeDate);
 
       await addTrade({
+        // Required fields
         asset,
-        model: 'trend', // Use 'trend' as default (DB constraint only allows 'trend' or 'mean_reversion')
         direction,
-        locations: finalLocations,
-        aggression,
-        risk_tier: riskTier,
-        risk_amount: riskAmount,
         entry_price: parseFloat(entryPrice),
         stop_loss: parseFloat(stopLoss),
-        exit_price: target ? parseFloat(target) : null,
+        risk_tier: riskTier,
+        risk_amount: riskAmount,
+        model: 'trend', // Still required by DB constraint
+        
+        // NEW SCHEMA: Setup & Context
+        setup_name: setup?.name || null,         // ✅ NEW - replaces locations[0]
+        session: sessionAtTradeTime?.name || null, // ✅ NEW - replaces trading_session
+        target_price: target ? parseFloat(target) : null, // ✅ NEW - planned target (NOT exit_price)
+        
+        // Entry timing
         entry_time: entryTime.toISOString(),
-        trading_session: sessionAtTradeTime?.name || null,
-        scenarios,
+        lot_size: parseFloat(lotSize) || 1.0,
+        
+        // Psychology & Discipline
         emotions,
-        externals,
+        checklist_passed: checklistItems.length > 0 ? checklistItems.every(i => i.checked) : null, // ✅ NEW
+        
+        // Reflection
         good_actions: goodActions.length > 0 ? goodActions : null,
         mistake_tags: mistakeTagsFinal,
+        
+        // Optional fields
         screenshot_url: finalScreenshotUrl || null,
         notes: (notes || setup?.name || null),
         is_experimental: isExperimental,
         override_reason: overrideReason || null,
-        lot_size: parseFloat(lotSize) || 1.0,
-        challenge_id: selectedChallengeId
+        challenge_id: selectedChallengeId,
+        
+        // DEPRECATED - keep for backward compatibility
+        locations: finalLocations,
+        trading_session: sessionAtTradeTime?.name || null,
+        aggression,
+        scenarios,
+        externals
       });
 
       toast({

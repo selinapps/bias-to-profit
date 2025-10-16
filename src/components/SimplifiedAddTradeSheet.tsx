@@ -143,27 +143,41 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
       
       // Prepare trade data - omit challenge_id if no active challenge
       const tradeData: any = {
+        // Required fields
         asset,
-        model: 'trend', // Use 'trend' as default (DB constraint only allows 'trend' or 'mean_reversion')
         direction,
-        locations: [currentSetup?.name || 'Custom'], // Use setup name as location
-        aggression: [], // Simplified - no aggression tracking
-        risk_tier: riskTier,
-        risk_amount: riskAmount,
         entry_price: parseFloat(entryPrice),
         stop_loss: parseFloat(stopLoss),
-        exit_price: parseFloat(target),
-        entry_time: entryTime.toISOString(), // Stores full timestamp with timezone
-        trading_session: sessionAtEntry?.name || null, // ICT session name for analysis
-        scenarios: [],
-        emotions: emotions, // Use actual emotion values
-        externals: [],
-        mistake_tags: [],
-        screenshot_url: null,
+        risk_tier: riskTier,
+        risk_amount: riskAmount,
+        model: 'trend', // Still required by DB constraint
+        
+        // NEW SCHEMA: Setup & Context
+        setup_name: currentSetup?.name || null,  // ✅ NEW - replaces locations[0]
+        session: sessionAtEntry?.name || null,   // ✅ NEW - replaces trading_session
+        target_price: parseFloat(target) || null, // ✅ NEW - planned target (NOT exit_price)
+        
+        // Entry timing
+        entry_time: entryTime.toISOString(),
+        lot_size: parseFloat(lotSize) || 1.0,
+        
+        // Psychology
+        emotions: emotions,
+        checklist_passed: checklistComplete, // ✅ NEW - based on checklist completion
+        
+        // Optional fields
         notes: currentSetup?.name || null,
         is_experimental: false,
         override_reason: null,
-        lot_size: parseFloat(lotSize) || 1.0
+        
+        // DEPRECATED - keep for backward compatibility
+        locations: [currentSetup?.name || 'Custom'],
+        trading_session: sessionAtEntry?.name || null,
+        aggression: [],
+        scenarios: [],
+        externals: [],
+        mistake_tags: [],
+        screenshot_url: null
       };
 
       // Only include challenge_id if there's an active challenge

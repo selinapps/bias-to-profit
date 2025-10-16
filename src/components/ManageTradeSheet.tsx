@@ -40,11 +40,32 @@ import { logger } from '@/lib/logger';
 
 type Trade = Database['public']['Tables']['trades']['Row'];
 
+interface TradeManagementData {
+  movedToBreakeven?: boolean;
+  movedToBEAtR?: number;
+  partialCloseAt2R?: boolean;
+  orderflowBasedExit?: boolean;
+  trailingStopUsed?: boolean;
+  finalExitReason?: string;
+  maeR?: number | null;
+  mfeR?: number | null;
+}
+
 interface ManageTradeSheetProps {
   isOpen: boolean;
   onClose: () => void;
   trade: Trade | null;
-  onCloseTrade: (tradeId: string, exitPrice: number, lessons: string, mistakeTags: string[], goodActions: string[], screenshotUrl?: string, exitTime?: string, manualPnL?: number, tradeManagement?: any) => Promise<void>;
+  onCloseTrade: (
+    tradeId: string, 
+    exitPrice: number, 
+    lessons: string, 
+    mistakeTags: string[], 
+    goodActions: string[], 
+    screenshotUrl?: string, 
+    exitTime?: string, 
+    manualPnL?: number, 
+    tradeManagement?: TradeManagementData
+  ) => Promise<void>;
   isMobile?: boolean;
   onRefresh?: () => void;
 }
@@ -95,6 +116,10 @@ export function ManageTradeSheet({
   const [useManualPnL, setUseManualPnL] = useState(false);
   const [exitTime, setExitTime] = useState<string>('');
   
+  // ✅ NEW SCHEMA: MAE/MFE Analytics
+  const [maeR, setMaeR] = useState<string>('');
+  const [mfeR, setMfeR] = useState<string>('');
+  
   // Trade Management Options
   const [tradeManagement, setTradeManagement] = useState({
     movedToBreakeven: false,
@@ -128,6 +153,8 @@ export function ManageTradeSheet({
       setManualPnL('');
       setUseManualPnL(false);
       setExitTime('');
+      setMaeR('');
+      setMfeR('');
       setTradeManagement({
         movedToBreakeven: false,
         movedToBEAtR: 0,
@@ -291,6 +318,7 @@ export function ManageTradeSheet({
         screenshotUrl = await uploadScreenshot() || undefined;
       }
 
+      // ✅ NEW SCHEMA: Include MAE/MFE and trade management data
       await onCloseTrade(
         trade.id, 
         parseFloat(exitPrice), 
@@ -300,7 +328,13 @@ export function ManageTradeSheet({
         screenshotUrl,
         exitTime || undefined,
         useManualPnL ? parseFloat(manualPnL) || undefined : undefined,
-        tradeManagement
+        {
+          // Trade management
+          ...tradeManagement,
+          // ✅ NEW: MAE/MFE analytics
+          maeR: maeR ? parseFloat(maeR) : null,
+          mfeR: mfeR ? parseFloat(mfeR) : null,
+        }
       );
       toast({
         title: "Trade Closed Successfully",
@@ -549,6 +583,71 @@ export function ManageTradeSheet({
                         />
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="bg-trading-border" />
+
+              {/* ✅ NEW SCHEMA: MAE/MFE Analytics */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-orange-400" />
+                  <Label className="text-lg font-semibold">Max Excursion (R)</Label>
+                </div>
+                <p className="text-xs text-trading-muted">
+                  Track how far price moved against you (MAE) and in your favor (MFE) in R-multiples
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="mae-r" className="text-sm font-medium flex items-center gap-2">
+                      <TrendingDown className="h-4 w-4 text-red-400" />
+                      MAE (R)
+                    </Label>
+                    <Input
+                      id="mae-r"
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="e.g., -0.35"
+                      value={maeR}
+                      onChange={(e) => setMaeR(e.target.value)}
+                      className="h-10 mt-1 text-center font-mono bg-trading-card/80 text-foreground border-red-400/50 focus:border-red-400 placeholder:text-trading-muted"
+                    />
+                    <p className="text-xs text-trading-muted mt-1">Max drawdown (negative value)</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="mfe-r" className="text-sm font-medium flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      MFE (R)
+                    </Label>
+                    <Input
+                      id="mfe-r"
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="e.g., 2.8"
+                      value={mfeR}
+                      onChange={(e) => setMfeR(e.target.value)}
+                      className="h-10 mt-1 text-center font-mono bg-trading-card/80 text-foreground border-green-400/50 focus:border-green-400 placeholder:text-trading-muted"
+                    />
+                    <p className="text-xs text-trading-muted mt-1">Max profit reached (positive)</p>
+                  </div>
+                </div>
+                
+                {/* Efficiency Preview */}
+                {maeR && mfeR && parseFloat(mfeR) > 0 && rMultiple !== 0 && (
+                  <div className="p-3 bg-gradient-to-r from-orange-950/30 to-amber-950/30 rounded-lg border border-orange-400/30">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-orange-300">Efficiency:</span>
+                      <span className="text-lg font-bold text-orange-400">
+                        {Math.min(1.0, rMultiple / parseFloat(mfeR)).toFixed(2)} ({(Math.min(1.0, rMultiple / parseFloat(mfeR)) * 100).toFixed(0)}%)
+                      </span>
+                    </div>
+                    <p className="text-xs text-trading-muted mt-1">
+                      How well you captured the available R (r_multiple / mfe_r)
+                    </p>
                   </div>
                 )}
               </div>
