@@ -57,6 +57,10 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
   });
   const [showEmotions, setShowEmotions] = useState(false);
   
+  // ✅ NEW SCHEMA: Confidence & Discipline
+  const [confidence, setConfidence] = useState<number>(3); // Default to 3 (medium)
+  const [disciplineTag, setDisciplineTag] = useState<string>('');
+  
   // Loading state
   const [submitting, setSubmitting] = useState(false);
 
@@ -126,6 +130,8 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
     setLotSize('1.00');
     setRiskTier(settings.defaultRiskTier);
     setChecklistItems([]);
+    setConfidence(3);
+    setDisciplineTag('');
     const now = new Date();
     setEntryTime(now);
     setCurrentSession(getActiveSession(now));
@@ -161,9 +167,11 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
         entry_time: entryTime.toISOString(),
         lot_size: parseFloat(lotSize) || 1.0,
         
-        // Psychology
+        // Psychology & Discipline
         emotions: emotions,
         checklist_passed: checklistComplete, // ✅ NEW - based on checklist completion
+        confidence: confidence || null, // ✅ NEW - 1-5 scale
+        discipline_tag: disciplineTag || null, // ✅ NEW - discipline classification
         
         // Optional fields
         notes: currentSetup?.name || null,
@@ -511,6 +519,63 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
               </div>
             </div>
           </div>
+
+          {/* ✅ NEW SCHEMA: Confidence & Discipline */}
+          <Card className="p-4 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border-purple-500/30">
+            <div className="space-y-4">
+              {/* Confidence Slider */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium text-purple-200">Trade Confidence</Label>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="border-purple-400/50 text-purple-300 px-3">
+                      {confidence}/5
+                    </Badge>
+                    <span className="text-xs text-slate-400">
+                      {confidence === 1 && "Very Low"}
+                      {confidence === 2 && "Low"}
+                      {confidence === 3 && "Medium"}
+                      {confidence === 4 && "High"}
+                      {confidence === 5 && "Very High"}
+                    </span>
+                  </div>
+                </div>
+                <Slider
+                  value={[confidence]}
+                  onValueChange={([val]) => setConfidence(val)}
+                  min={1}
+                  max={5}
+                  step={1}
+                  className="mb-2"
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>1 - Very Low</span>
+                  <span>3 - Medium</span>
+                  <span>5 - Very High</span>
+                </div>
+              </div>
+
+              {/* Discipline Tag */}
+              <div>
+                <Label className="text-sm font-medium text-purple-200 mb-2 block">Discipline Status</Label>
+                <Select value={disciplineTag} onValueChange={setDisciplineTag}>
+                  <SelectTrigger className="h-11 bg-slate-800 border-purple-400/30">
+                    <SelectValue placeholder="Select discipline classification (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="followed_plan">✅ Followed Plan</SelectItem>
+                    <SelectItem value="fomo">😰 FOMO Entry</SelectItem>
+                    <SelectItem value="revenge">😤 Revenge Trading</SelectItem>
+                    <SelectItem value="impatient">⏱️ Impatient Entry</SelectItem>
+                    <SelectItem value="perfect_setup">🎯 Perfect Setup</SelectItem>
+                    <SelectItem value="forced">🔨 Forced Trade</SelectItem>
+                    <SelectItem value="disciplined">🧘 Fully Disciplined</SelectItem>
+                    <SelectItem value="emotional">😵 Emotional Decision</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
 
           {/* Live Calculations */}
           {entryNum > 0 && stopNum > 0 && targetNum > 0 && (
