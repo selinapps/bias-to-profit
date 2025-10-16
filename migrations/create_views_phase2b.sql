@@ -10,7 +10,10 @@
 -- ============================================================
 -- One row per trade with safe derived metrics (null-safe efficiency)
 
-CREATE OR REPLACE VIEW public.v_trades_analytics AS
+-- Drop existing view first if it exists
+DROP VIEW IF EXISTS public.v_trades_analytics CASCADE;
+
+CREATE VIEW public.v_trades_analytics AS
 SELECT
   t.*,
   -- Safe efficiency calculation (never divide by zero)
@@ -41,7 +44,10 @@ COMMENT ON VIEW public.v_trades_analytics IS 'Trades with safe calculated metric
 -- ============================================================
 -- Trades joined with observations + insight labels
 
-CREATE OR REPLACE VIEW public.v_trade_observations AS
+-- Drop existing view first to avoid column name conflicts
+DROP VIEW IF EXISTS public.v_trade_observations CASCADE;
+
+CREATE VIEW public.v_trade_observations AS
 SELECT
   -- Trade data
   t.id as trade_id,
