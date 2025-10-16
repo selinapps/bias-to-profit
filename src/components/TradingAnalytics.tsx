@@ -33,7 +33,9 @@ import {
 } from 'lucide-react';
 import { useTradingAnalytics } from '@/hooks/useTradingAnalytics';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
+import { usePostTradeAnalytics } from '@/hooks/analytics/usePostTradeAnalytics';
 import { format } from 'date-fns';
+import { useEffect } from 'react';
 
 export function TradingAnalytics() {
   const [selectedPeriod, setSelectedPeriod] = useState<'7' | '30' | '90'>('30');
@@ -47,6 +49,17 @@ export function TradingAnalytics() {
   } = useTradingAnalytics(parseInt(selectedPeriod));
   
   const { closedTrades } = useTradesOptimized();
+  
+  // ✅ PHASE 2B: Post-trade analytics
+  const postTradeAnalytics = usePostTradeAnalytics();
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  
+  // Load analytics data
+  useEffect(() => {
+    postTradeAnalytics.fetchAllAnalytics().then(data => {
+      if (data) setAnalyticsData(data);
+    });
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -185,17 +198,14 @@ export function TradingAnalytics() {
 
   // Calculate setup performance (group by setup name)
   const setupPerformance = (() => {
-    // Group trades by setup name (stored in locations array - first element)
+    // ✅ UPDATED: Use new setup_name field instead of locations[0]
     const setupGroups: Record<string, any[]> = {};
     closedTrades.forEach(trade => {
-      // Get setup name from locations array (where actual setup name is stored)
-      let setupName = 'Unknown';
-      if (Array.isArray(trade.locations) && trade.locations.length > 0) {
-        setupName = String(trade.locations[0]);
-      } else if (trade.notes) {
-        // Fallback to notes if locations is empty
-        setupName = trade.notes;
-      }
+      // Use new setup_name field with fallbacks
+      let setupName = trade.setup_name || 
+                      (Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : null) ||
+                      trade.notes ||
+                      'Unknown';
       
       if (!setupGroups[setupName]) {
         setupGroups[setupName] = [];
@@ -307,15 +317,13 @@ export function TradingAnalytics() {
 
   // Edge Diagnostics
   const edgeDiagnostics = (() => {
-    // Setup performance analysis
+    // ✅ UPDATED: Setup performance analysis using new setup_name field
     const setupPerformance = closedTrades.reduce((acc, trade) => {
-      // Get setup name from locations array (where actual setup name is stored)
-      let setup = 'Unknown';
-      if (Array.isArray(trade.locations) && trade.locations.length > 0) {
-        setup = String(trade.locations[0]);
-      } else if (trade.notes) {
-        setup = trade.notes;
-      }
+      // Use new setup_name field with fallbacks
+      let setup = trade.setup_name || 
+                  (Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : null) ||
+                  trade.notes ||
+                  'Unknown';
       
       if (!acc[setup]) {
         acc[setup] = { trades: 0, totalR: 0, wins: 0, totalPnL: 0 };
@@ -571,30 +579,46 @@ export function TradingAnalytics() {
       </div>
 
       <Tabs defaultValue="best-hours" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 grid-rows-2 sm:grid-rows-1 h-16 sm:h-10">
-          <TabsTrigger value="best-hours" className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4" />
-            <span>Hours</span>
+        <TabsList className="grid w-full grid-cols-5 sm:grid-cols-10 grid-rows-2 sm:grid-rows-1 h-16 sm:h-10 gap-1">
+          <TabsTrigger value="best-hours" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Hours</span>
           </TabsTrigger>
-          <TabsTrigger value="weekly" className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-foreground" />
-            <span>Weekly</span>
+          <TabsTrigger value="weekly" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Weekly</span>
           </TabsTrigger>
-          <TabsTrigger value="daily" className="flex items-center gap-2 text-sm">
-            <BarChart3 className="h-4 w-4" />
-            <span>Daily</span>
+          <TabsTrigger value="daily" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Daily</span>
           </TabsTrigger>
-          <TabsTrigger value="models" className="flex items-center gap-2 text-sm">
-            <Target className="h-4 w-4" />
-            <span>Setups</span>
+          <TabsTrigger value="models" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Setups</span>
           </TabsTrigger>
-          <TabsTrigger value="edge-diagnostics" className="flex items-center gap-2 text-sm">
-            <PieChart className="h-4 w-4" />
-            <span>Edge</span>
+          <TabsTrigger value="edge-diagnostics" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <PieChart className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Edge</span>
           </TabsTrigger>
-          <TabsTrigger value="equity" className="flex items-center gap-2 text-sm">
-            <LineChart className="h-4 w-4" />
-            <span>Equity</span>
+          <TabsTrigger value="equity" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <LineChart className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Equity</span>
+          </TabsTrigger>
+          <TabsTrigger value="efficiency" className="flex items-center gap-1 text-xs sm:text-sm px-2 border-l border-purple-500/30">
+            <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-orange-400" />
+            <span className="hidden sm:inline text-orange-400">Efficiency</span>
+          </TabsTrigger>
+          <TabsTrigger value="observations" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-cyan-400" />
+            <span className="hidden sm:inline text-cyan-400">Observations</span>
+          </TabsTrigger>
+          <TabsTrigger value="confidence" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400" />
+            <span className="hidden sm:inline text-purple-400">Confidence</span>
+          </TabsTrigger>
+          <TabsTrigger value="discipline" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
+            <span className="hidden sm:inline text-blue-400">Discipline</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1214,6 +1238,409 @@ export function TradingAnalytics() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ✅ PHASE 2B: TAB 7 - EFFICIENCY */}
+        <TabsContent value="efficiency" className="space-y-4">
+          <Card className="bg-trading-card border-trading-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-orange-400" />
+                Execution Efficiency
+              </CardTitle>
+              <p className="text-sm text-trading-muted">
+                How well you capture available R (r_multiple / mfe_r)
+              </p>
+            </CardHeader>
+            <CardContent>
+              {!analyticsData?.efficiencyBySetup || analyticsData.efficiencyBySetup.length === 0 ? (
+                <div className="text-center py-8 text-trading-muted">
+                  <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No efficiency data yet. Close trades with MAE/MFE to see analysis.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Efficiency by Setup Table */}
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">Setup Efficiency Ranking</h4>
+                    <div className="space-y-2">
+                      {analyticsData.efficiencyBySetup.map((setup: any, index: number) => (
+                        <div 
+                          key={setup.setup_name} 
+                          className="p-4 bg-gradient-to-r from-orange-950/20 to-amber-950/10 border border-orange-500/20 rounded-lg"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h5 className="font-semibold text-orange-200">{setup.setup_name}</h5>
+                              <p className="text-xs text-trading-muted">
+                                {setup.trade_count} trades • {setup.trades_with_efficiency} with MAE/MFE data
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-lg px-3 py-1 border-orange-400/50">
+                              {(setup.avg_efficiency * 100).toFixed(0)}%
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div className="text-center">
+                              <div className="font-bold text-orange-300">{setup.avg_efficiency?.toFixed(3) || 'N/A'}</div>
+                              <div className="text-xs text-trading-muted">Avg Efficiency</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-bold text-green-300">{setup.avg_mfe_r?.toFixed(2) || 'N/A'}R</div>
+                              <div className="text-xs text-trading-muted">Avg MFE</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-bold text-red-300">{setup.avg_mae_r?.toFixed(2) || 'N/A'}R</div>
+                              <div className="text-xs text-trading-muted">Avg MAE</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-bold text-trading-accent">{setup.avg_r_multiple?.toFixed(2) || 'N/A'}R</div>
+                              <div className="text-xs text-trading-muted">Avg R Captured</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ✅ PHASE 2B: TAB 8 - OBSERVATIONS */}
+        <TabsContent value="observations" className="space-y-4">
+          {/* Observation Summary */}
+          {analyticsData?.summary && (
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-cyan-400" />
+                  Observation Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-cyan-950/20 rounded-lg">
+                    <div className="text-2xl font-bold text-cyan-300">{analyticsData.summary.total_observations}</div>
+                    <div className="text-xs text-trading-muted">Total Observations</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-950/20 rounded-lg">
+                    <div className="text-2xl font-bold text-green-300">{analyticsData.summary.continuations}</div>
+                    <div className="text-xs text-trading-muted">Continuations</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-950/20 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-300">{analyticsData.summary.reversals}</div>
+                    <div className="text-xs text-trading-muted">Reversals</div>
+                  </div>
+                  <div className="text-center p-3 bg-orange-950/20 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-300">
+                      {analyticsData.summary.avg_r_moved >= 0 ? '+' : ''}{analyticsData.summary.avg_r_moved?.toFixed(2)}R
+                    </div>
+                    <div className="text-xs text-trading-muted">Avg R Impact</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Continuation by Setup */}
+          {analyticsData?.continuationBySetup && analyticsData.continuationBySetup.length > 0 && (
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-400" />
+                  Continuation After Target Hit
+                </CardTitle>
+                <p className="text-sm text-trading-muted">
+                  How often price continued beyond your target (missed opportunities)
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {analyticsData.continuationBySetup.map((setup: any) => (
+                    <div key={setup.setup_name} className="p-4 bg-green-950/10 border border-green-500/20 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-green-200">{setup.setup_name}</h5>
+                        <Badge className="bg-green-600">{setup.continuation_rate?.toFixed(0)}% Continue</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-green-300">+{setup.avg_extra_r?.toFixed(2)}R</div>
+                          <div className="text-xs text-trading-muted">Avg Extra R</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-cyan-300">+{setup.total_missed_r?.toFixed(2)}R</div>
+                          <div className="text-xs text-trading-muted">Total Missed</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-trading-accent">{setup.continuations}/{setup.target_hit_trades}</div>
+                          <div className="text-xs text-trading-muted">Continued Trades</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Stop Quality */}
+          {analyticsData?.reversalBySetup && analyticsData.reversalBySetup.length > 0 && (
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-400" />
+                  Stop Placement Quality
+                </CardTitle>
+                <p className="text-sm text-trading-muted">
+                  How often price reversed after hitting your stop (higher = better stop placement)
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {analyticsData.reversalBySetup.map((setup: any) => (
+                    <div key={setup.setup_name} className="p-4 bg-blue-950/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-semibold text-blue-200">{setup.setup_name}</h5>
+                        <div className="flex items-center gap-2">
+                          <Badge className={
+                            setup.stop_quality_score >= 70 ? 'bg-green-600' :
+                            setup.stop_quality_score >= 50 ? 'bg-yellow-600' :
+                            'bg-red-600'
+                          }>
+                            {setup.stop_quality_score?.toFixed(0)}% Quality
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-blue-300">{setup.reversal_rate?.toFixed(0)}%</div>
+                          <div className="text-xs text-trading-muted">Reversal Rate</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-green-300">+{setup.avg_r_saved?.toFixed(2)}R</div>
+                          <div className="text-xs text-trading-muted">Avg R Saved</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-trading-accent">{setup.reversals}/{setup.stopped_trades}</div>
+                          <div className="text-xs text-trading-muted">Reversed Stops</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recent Observations */}
+          {analyticsData?.recentObservations && analyticsData.recentObservations.length > 0 && (
+            <Card className="bg-trading-card border-trading-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-cyan-400" />
+                  Recent Observations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {analyticsData.recentObservations.slice(0, 10).map((obs: any) => (
+                    <div key={obs.observation_id} className="p-3 bg-secondary/20 border border-trading-border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">{obs.asset}</span>
+                          <Badge variant="outline" className="text-xs">{obs.setup_name}</Badge>
+                        </div>
+                        <Badge className={
+                          obs.observation_insight === 'Good Stop Placement' ? 'bg-green-600' :
+                          obs.observation_insight === 'Left R on Table' ? 'bg-orange-600' :
+                          obs.observation_insight === 'Good Exit Timing' ? 'bg-blue-600' :
+                          'bg-gray-600'
+                        }>
+                          {obs.observation_insight}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                          <span className="text-trading-muted">Action:</span>{' '}
+                          <span className="font-medium">{obs.price_action}</span>
+                        </div>
+                        <div>
+                          <span className="text-trading-muted">Time:</span>{' '}
+                          <span className="font-medium">{obs.observation_time}</span>
+                        </div>
+                        <div>
+                          <span className="text-trading-muted">R Impact:</span>{' '}
+                          <span className={`font-bold ${obs.r_moved >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {obs.r_moved >= 0 ? '+' : ''}{obs.r_moved?.toFixed(2)}R
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ✅ PHASE 2B: TAB 9 - CONFIDENCE */}
+        <TabsContent value="confidence" className="space-y-4">
+          <Card className="bg-trading-card border-trading-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-purple-400" />
+                Confidence Correlation
+              </CardTitle>
+              <p className="text-sm text-trading-muted">
+                Does higher confidence predict better results?
+              </p>
+            </CardHeader>
+            <CardContent>
+              {!analyticsData?.confidencePerf || analyticsData.confidencePerf.length === 0 ? (
+                <div className="text-center py-8 text-trading-muted">
+                  <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No confidence data yet. Set confidence level when entering trades.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {analyticsData.confidencePerf.map((conf: any) => (
+                    <div 
+                      key={conf.confidence_level}
+                      className="p-4 bg-purple-950/10 border border-purple-500/20 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-purple-600/20 flex items-center justify-center">
+                            <span className="text-2xl font-bold text-purple-300">{conf.confidence_level}</span>
+                          </div>
+                          <div>
+                            <h5 className="font-semibold text-purple-200">
+                              {conf.confidence_level === 1 && 'Very Low Confidence'}
+                              {conf.confidence_level === 2 && 'Low Confidence'}
+                              {conf.confidence_level === 3 && 'Medium Confidence'}
+                              {conf.confidence_level === 4 && 'High Confidence'}
+                              {conf.confidence_level === 5 && 'Very High Confidence'}
+                            </h5>
+                            <p className="text-xs text-trading-muted">{conf.trade_count} trades</p>
+                          </div>
+                        </div>
+                        <Badge className={
+                          conf.win_rate >= 60 ? 'bg-green-600' :
+                          conf.win_rate >= 50 ? 'bg-yellow-600' :
+                          'bg-red-600'
+                        }>
+                          {conf.win_rate?.toFixed(0)}% Win Rate
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-purple-300">{conf.avg_r_multiple?.toFixed(2)}R</div>
+                          <div className="text-xs text-trading-muted">Avg R</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-orange-300">{conf.avg_efficiency?.toFixed(3) || 'N/A'}</div>
+                          <div className="text-xs text-trading-muted">Avg Efficiency</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`font-bold ${conf.avg_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {formatCurrency(conf.avg_pnl)}
+                          </div>
+                          <div className="text-xs text-trading-muted">Avg P&L</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-trading-accent">{conf.trade_count}</div>
+                          <div className="text-xs text-trading-muted">Sample Size</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ✅ PHASE 2B: TAB 10 - DISCIPLINE */}
+        <TabsContent value="discipline" className="space-y-4">
+          <Card className="bg-trading-card border-trading-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-400" />
+                Discipline Impact Analysis
+              </CardTitle>
+              <p className="text-sm text-trading-muted">
+                Performance by discipline classification (FOMO, Followed Plan, etc.)
+              </p>
+            </CardHeader>
+            <CardContent>
+              {!analyticsData?.disciplinePerf || analyticsData.disciplinePerf.length === 0 ? (
+                <div className="text-center py-8 text-trading-muted">
+                  <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No discipline data yet. Classify your entries using discipline tags.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {analyticsData.disciplinePerf.map((disc: any) => (
+                    <div 
+                      key={disc.discipline_tag}
+                      className={`p-4 border rounded-lg ${
+                        disc.discipline_tag === 'followed_plan' || disc.discipline_tag === 'disciplined' || disc.discipline_tag === 'perfect_setup'
+                          ? 'bg-green-950/10 border-green-500/20'
+                          : disc.discipline_tag === 'fomo' || disc.discipline_tag === 'revenge' || disc.discipline_tag === 'emotional'
+                            ? 'bg-red-950/10 border-red-500/20'
+                            : 'bg-blue-950/10 border-blue-500/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h5 className="font-semibold text-foreground capitalize">
+                            {disc.discipline_tag.replace(/_/g, ' ')}
+                          </h5>
+                          <p className="text-xs text-trading-muted">{disc.trade_count} trades</p>
+                        </div>
+                        <Badge className={
+                          disc.avg_r_multiple >= 0.5 ? 'bg-green-600' :
+                          disc.avg_r_multiple >= 0 ? 'bg-yellow-600' :
+                          'bg-red-600'
+                        }>
+                          {disc.avg_r_multiple?.toFixed(2)}R Avg
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-trading-accent">{disc.win_rate?.toFixed(0)}%</div>
+                          <div className="text-xs text-trading-muted">Win Rate</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-orange-300">{disc.avg_efficiency?.toFixed(3) || 'N/A'}</div>
+                          <div className="text-xs text-trading-muted">Avg Efficiency</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`font-bold ${disc.avg_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {formatCurrency(disc.avg_pnl)}
+                          </div>
+                          <div className="text-xs text-trading-muted">Avg P&L</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-cyan-300">
+                            {disc.avg_missed_r ? `+${disc.avg_missed_r.toFixed(2)}R` : 'N/A'}
+                          </div>
+                          <div className="text-xs text-trading-muted">Avg Missed R</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-trading-accent">{disc.trade_count}</div>
+                          <div className="text-xs text-trading-muted">Sample Size</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );

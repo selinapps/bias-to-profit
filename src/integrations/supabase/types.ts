@@ -713,6 +713,72 @@ export type Database = {
       }
     }
     Views: {
+      v_trades_analytics: {
+        Row: {
+          // All fields from trades table
+          id: string
+          user_id: string
+          asset: string
+          direction: string
+          entry_price: number
+          stop_loss: number
+          exit_price: number | null
+          pnl: number | null
+          r_multiple: number | null
+          setup_name: string | null
+          session: string | null
+          efficiency: number | null
+          mae_r: number | null
+          mfe_r: number | null
+          confidence: number | null
+          discipline_tag: string | null
+          // Plus calculated fields
+          efficiency_safe: number | null
+          risk_efficiency: number | null
+          capture_percentage: number | null
+          // ... (all other trade fields available)
+          [key: string]: any // Allow other trade fields
+        }
+        Relationships: []
+      }
+      v_trade_observations: {
+        Row: {
+          trade_id: string
+          user_id: string
+          asset: string
+          setup_name: string | null
+          session: string | null
+          direction: string
+          entry_time: string | null
+          exit_time: string | null
+          entry_price: number
+          stop_loss: number
+          exit_price: number | null
+          target_price: number | null
+          pnl: number | null
+          r_multiple: number | null
+          risk_amount: number
+          exit_reason: string | null
+          moved_to_be: boolean | null
+          be_trigger_r: number | null
+          efficiency: number | null
+          mae_r: number | null
+          mfe_r: number | null
+          confidence: number | null
+          discipline_tag: string | null
+          observation_id: string | null
+          observation_type: string | null
+          observation_time: string | null
+          observed_at: string | null
+          price_action: string | null
+          peak_price: number | null
+          pips_moved: number | null
+          r_moved: number | null
+          observation_notes: string | null
+          observation_insight: string | null
+        }
+        Relationships: []
+      }
       daily_performance_metrics: {
         Row: {
           avg_pnl: number | null
@@ -959,6 +1025,106 @@ export type Database = {
           session_discipline: number
           top_mistakes: string[]
           positive_actions: string[]
+        }[]
+      }
+      get_observation_summary: {
+        Args: { p_user_id: string }
+        Returns: {
+          total_observations: number
+          trades_observed: number
+          avg_r_moved: number
+          continuations: number
+          reversals: number
+          consolidations: number
+          post_stop_count: number
+          post_target_count: number
+        }[]
+      }
+      get_continuation_by_setup: {
+        Args: { p_user_id: string }
+        Returns: {
+          setup_name: string
+          target_hit_trades: number
+          continuations: number
+          continuation_rate: number
+          avg_extra_r: number
+          total_missed_r: number
+        }[]
+      }
+      get_reversal_after_stop_by_setup: {
+        Args: { p_user_id: string }
+        Returns: {
+          setup_name: string
+          stopped_trades: number
+          reversals: number
+          reversal_rate: number
+          avg_r_saved: number
+          stop_quality_score: number
+        }[]
+      }
+      get_optimal_observation_window: {
+        Args: { p_user_id: string }
+        Returns: {
+          observation_time: string
+          observation_count: number
+          avg_r_moved: number
+          avg_continuation_r: number
+          avg_reversal_r: number
+        }[]
+      }
+      get_exit_quality_by_setup: {
+        Args: { p_user_id: string }
+        Returns: {
+          setup_name: string
+          trade_count: number
+          avg_efficiency: number
+          avg_captured_r: number
+          avg_missed_r: number
+          exit_quality_score: number
+        }[]
+      }
+      get_missed_r_timeline: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: {
+          trade_date: string
+          daily_missed_r: number
+          cumulative_missed_r: number
+          trades_with_continuation: number
+        }[]
+      }
+      get_confidence_performance: {
+        Args: { p_user_id: string }
+        Returns: {
+          confidence_level: number
+          trade_count: number
+          avg_r_multiple: number
+          avg_efficiency: number
+          win_rate: number
+          avg_pnl: number
+        }[]
+      }
+      get_discipline_performance: {
+        Args: { p_user_id: string }
+        Returns: {
+          discipline_tag: string
+          trade_count: number
+          avg_r_multiple: number
+          avg_efficiency: number
+          win_rate: number
+          avg_pnl: number
+          avg_missed_r: number
+        }[]
+      }
+      get_efficiency_by_setup: {
+        Args: { p_user_id: string }
+        Returns: {
+          setup_name: string
+          trade_count: number
+          avg_efficiency: number
+          avg_mae_r: number
+          avg_mfe_r: number
+          avg_r_multiple: number
+          trades_with_efficiency: number
         }[]
       }
     }
