@@ -31,6 +31,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
+import { useSettings } from '@/hooks/useSettings';
 import type { 
   DisciplineChallenge, 
   ChallengeProgress, 
@@ -57,6 +58,7 @@ export function DisciplineChallengeDashboard({ className }: DisciplineChallengeD
   const { user } = useAuth();
   const { toast } = useToast();
   const { trades, closedTrades } = useTradesOptimized();
+  const { settings } = useSettings();
 
   console.log('DisciplineChallengeDashboard mounted, user:', user?.id || 'no user');
   
@@ -99,9 +101,12 @@ export function DisciplineChallengeDashboard({ className }: DisciplineChallengeD
     const processAdherence = (tradesWithGoodActions / trades.length) * 100;
 
     // 2. Risk Consistency (25%) - Staying within risk parameters
+    // Use user's actual tier settings (Tier C = low, Tier A = high)
+    const minRisk = settings.customRiskAmounts.c; // Tier C (Low Risk)
+    const maxRisk = settings.customRiskAmounts.a; // Tier A (High Risk)
     const closedWithRisk = closedTrades.filter((t: any) => t.risk_amount > 0);
     const consistentRisk = closedWithRisk.filter((t: any) => 
-      t.risk_amount >= 100 && t.risk_amount <= 500 // Within challenge limits
+      t.risk_amount >= minRisk && t.risk_amount <= maxRisk
     ).length;
     const riskConsistency = closedWithRisk.length > 0 ? (consistentRisk / closedWithRisk.length) * 100 : 0;
 
@@ -869,7 +874,15 @@ export function DisciplineChallengeDashboard({ className }: DisciplineChallengeD
                   </div>
                   <div className="flex justify-between">
                     <span>Range:</span>
-                    <span className="font-semibold text-foreground">$100-$500</span>
+                    <span className="font-semibold text-foreground">
+                      ${settings.customRiskAmounts.c}-${settings.customRiskAmounts.a}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[10px]">
+                    <span>Tiers:</span>
+                    <span className="font-medium text-foreground">
+                      C: ${settings.customRiskAmounts.c} • B: ${settings.customRiskAmounts.b} • A: ${settings.customRiskAmounts.a}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -1148,7 +1161,9 @@ export function DisciplineChallengeDashboard({ className }: DisciplineChallengeD
                     <XCircle className="h-4 w-4 text-orange-400 mt-0.5" />
                     <div className="flex-1">
                       <div className="font-medium text-sm">Risk Inconsistency</div>
-                      <div className="text-xs text-trading-muted">Stick to $100-$500 risk per trade</div>
+                      <div className="text-xs text-trading-muted">
+                        Stick to ${settings.customRiskAmounts.c}-${settings.customRiskAmounts.a} (your tier range)
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1298,12 +1313,14 @@ export function DisciplineChallengeDashboard({ className }: DisciplineChallengeD
                     </div>
                     <div>
                       <h4 className="font-semibold text-emerald-300 mb-1">Risk Consistency (25%)</h4>
-                      <p className="text-sm text-trading-muted">Maintain consistent position sizing within limits</p>
+                      <p className="text-sm text-trading-muted">Maintain consistent position sizing within your tier limits</p>
                     </div>
                   </div>
                   <ul className="space-y-1 text-sm text-trading-muted">
-                    <li>✓ Risk $100-$500 per trade</li>
-                    <li>✓ No over-sizing on "sure things"</li>
+                    <li>✓ Tier A (High): ${settings.customRiskAmounts.a} per trade</li>
+                    <li>✓ Tier B (Medium): ${settings.customRiskAmounts.b} per trade</li>
+                    <li>✓ Tier C (Low): ${settings.customRiskAmounts.c} per trade</li>
+                    <li>✓ No over-sizing beyond your tiers</li>
                     <li>✓ No under-sizing due to fear</li>
                   </ul>
                 </div>
