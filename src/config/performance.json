@@ -1,0 +1,28 @@
+{
+  "cache": {
+    "trades": {
+      "duration": 300000,
+      "maxSize": 1000
+    },
+    "stats": {
+      "duration": 600000,
+      "maxSize": 100
+    }
+  },
+  "realtime": {
+    "debounceMs": 500,
+    "maxEventsPerSecond": 10
+  },
+  "database": {
+    "queryTimeout": 30000,
+    "connectionPool": {
+      "min": 2,
+      "max": 10
+    }
+  },
+  "monitoring": {
+    "enabled": false,
+    "logLevel": "warn",
+    "metricsInterval": 30000
+  }
+}

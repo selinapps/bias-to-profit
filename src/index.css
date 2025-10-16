@@ -1,0 +1,467 @@
+/* Import Google Fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Import mobile-specific styles */
+@import './mobile.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mobile-specific improvements */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: rgba(168, 85, 247, 0.1);
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Mobile: Better icon visibility */
+  @media (max-width: 768px) {
+    svg, .lucide, [class*="icon"] {
+      min-width: 20px !important;
+      min-height: 20px !important;
+      stroke-width: 2.5 !important;
+    }
+    
+    /* Larger touch-friendly buttons */
+    button, [role="button"], a[role="button"] {
+      min-height: 48px !important;
+      padding: 12px 16px !important;
+    }
+    
+    /* Better text contrast on mobile */
+    .text-muted-foreground,
+    .text-trading-muted,
+    .text-slate-400,
+    .text-slate-500 {
+      color: hsl(0 0% 75%) !important;
+    }
+    
+    /* Brighter accent colors */
+    .text-trading-accent {
+      color: hsl(270 80% 75%) !important;
+    }
+    
+    /* Better card visibility */
+    .bg-trading-card,
+    .bg-secondary {
+      background-color: hsl(220 25% 15%) !important;
+    }
+    
+    /* Stronger borders */
+    .border-trading-border,
+    .border {
+      border-color: hsl(220 20% 30%) !important;
+    }
+    
+    /* Better profit/loss colors */
+    .text-success,
+    .text-green-400 {
+      color: hsl(142 76% 65%) !important;
+    }
+    
+    .text-destructive,
+    .text-red-400 {
+      color: hsl(0 84% 70%) !important;
+    }
+  }
+  
+  /* Prevent text overflow */
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Safe area handling for mobile */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Better touch targets */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Theme-aware input styling - automatic contrast */
+  input, textarea, select {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Additional input text visibility fixes with theme awareness */
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Theme-aware input states */
+  input:focus, textarea:focus, select:focus {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Theme-aware hover states */
+  input:hover, textarea:hover, select:hover {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Fallback for inline styles - use theme variables */
+  input[style*="background"], textarea[style*="background"], select[style*="background"] {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Theme-aware overrides for containers */
+  .bg-background input, .bg-background textarea, .bg-background select {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Additional theme-aware overrides for different background classes */
+  .bg-white input, .bg-white textarea, .bg-white select {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  .bg-black input, .bg-black textarea, .bg-black select {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-color: #000000 !important;
+  }
+  
+  /* Dark theme specific overrides */
+  .dark input, .dark textarea, .dark select {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Calendar picker icon visibility fixes */
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    color: hsl(var(--foreground)) !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+  
+  /* Light theme calendar icons */
+  @media (prefers-color-scheme: light) {
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      color: #000000 !important;
+      opacity: 1 !important;
+    }
+  }
+  
+  /* Dark theme calendar icons */
+  @media (prefers-color-scheme: dark) {
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      color: #ffffff !important;
+      opacity: 1 !important;
+    }
+  }
+  
+  /* Login screen specific input fixes */
+  .mobile-card input,
+  .mobile-card textarea,
+  .mobile-card select {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Ensure login inputs are always visible with black text on white background */
+  .bg-trading-card input,
+  .bg-trading-card textarea {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Force black text in all login screen inputs */
+  .mobile-card input[type="email"],
+  .mobile-card input[type="password"],
+  .mobile-card input[type="text"] {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Additional login screen input fixes */
+  .bg-gradient-to-br input[type="email"],
+  .bg-gradient-to-br input[type="password"],
+  .bg-gradient-to-br input[type="text"] {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Override any conflicting styles in login screen */
+  #signin-email, #signin-password, #signup-email, #signup-password {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+}
+
+
+/* 2025 Design System - Material 3 Inspired */
+@layer base {
+  :root {
+    /* Design Tokens - Dark Theme (Default) */
+    /* Background Colors */
+    --color-background: hsl(220, 25%, 6%);
+    --color-surface: hsl(221, 25%, 8%);
+    --color-surface-variant: hsl(221, 25%, 10%);
+    --color-surface-container: hsl(221, 25%, 12%);
+    --color-surface-container-high: hsl(221, 25%, 14%);
+    --color-surface-container-highest: hsl(221, 25%, 16%);
+    
+    /* Text Colors */
+    --color-on-background: hsl(228, 20%, 95%);
+    --color-on-surface: hsl(228, 20%, 95%);
+    --color-on-surface-variant: hsl(218, 15%, 65%);
+    
+    /* Primary Colors */
+    --color-primary: hsl(212, 100%, 70%);
+    --color-on-primary: hsl(220, 25%, 6%);
+    --color-primary-container: hsl(212, 100%, 20%);
+    --color-on-primary-container: hsl(212, 100%, 95%);
+    
+    /* Secondary Colors */
+    --color-secondary: hsl(221, 25%, 70%);
+    --color-on-secondary: hsl(220, 25%, 6%);
+    --color-secondary-container: hsl(221, 25%, 20%);
+    --color-on-secondary-container: hsl(221, 25%, 95%);
+    
+    /* Tertiary Colors */
+    --color-tertiary: hsl(150, 60%, 70%);
+    --color-on-tertiary: hsl(220, 25%, 6%);
+    --color-tertiary-container: hsl(150, 60%, 20%);
+    --color-on-tertiary-container: hsl(150, 60%, 95%);
+    
+    /* Semantic Colors */
+    --color-error: hsl(0, 84%, 55%);
+    --color-on-error: hsl(220, 25%, 6%);
+    --color-error-container: hsl(0, 84%, 20%);
+    --color-on-error-container: hsl(0, 84%, 95%);
+    
+    --color-warning: hsl(45, 93%, 70%);
+    --color-on-warning: hsl(220, 25%, 6%);
+    --color-warning-container: hsl(45, 93%, 20%);
+    --color-on-warning-container: hsl(45, 93%, 95%);
+    
+    --color-success: hsl(150, 60%, 70%);
+    --color-on-success: hsl(220, 25%, 6%);
+    --color-success-container: hsl(150, 60%, 20%);
+    --color-on-success-container: hsl(150, 60%, 95%);
+    
+    --color-info: hsl(200, 100%, 70%);
+    --color-on-info: hsl(220, 25%, 6%);
+    --color-info-container: hsl(200, 100%, 20%);
+    --color-on-info-container: hsl(200, 100%, 95%);
+    
+    /* Outline Colors */
+    --color-outline: hsl(220, 20%, 18%);
+    --color-outline-variant: hsl(220, 20%, 15%);
+    
+    /* Shadow Colors */
+    --color-shadow: hsl(0, 0%, 0%);
+    --color-scrim: hsl(0, 0%, 0%);
+    
+    /* Inverse Colors */
+    --color-inverse-surface: hsl(228, 20%, 95%);
+    --color-inverse-on-surface: hsl(220, 25%, 6%);
+    --color-inverse-primary: hsl(212, 100%, 30%);
+    
+    /* Elevation */
+    --elevation-level-0: none;
+    --elevation-level-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --elevation-level-2: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --elevation-level-3: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --elevation-level-4: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --elevation-level-5: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    
+    /* Motion */
+    --motion-duration-fast: 120ms;
+    --motion-duration-normal: 200ms;
+    --motion-duration-slow: 240ms;
+    --motion-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+    --motion-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+    
+    /* Legacy compatibility - will be removed */
+    --background: 220 25% 6%;
+    --foreground: 228 20% 95%;
+    --card: 221 25% 8%;
+    --card-foreground: 228 20% 95%;
+    --popover: 221 25% 8%;
+    --popover-foreground: 228 20% 95%;
+    --primary: 212 100% 70%;
+    --primary-foreground: 220 25% 6%;
+    --secondary: 221 20% 12%;
+    --secondary-foreground: 228 20% 95%;
+    --muted: 221 20% 12%;
+    --muted-foreground: 218 15% 65%;
+    --accent: 212 100% 70%;
+    --accent-foreground: 220 25% 6%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 228 20% 95%;
+    --success: 150 60% 60%;
+    --success-foreground: 220 25% 6%;
+    --warning: 45 93% 70%;
+    --warning-foreground: 220 25% 6%;
+    --border: 220 20% 18%;
+    --input: 221 25% 8%;
+    --ring: 212 100% 70%;
+    --radius: 0.75rem;
+  }
+
+  /* Light Theme */
+  .light {
+    /* Background Colors */
+    --color-background: hsl(0, 0%, 100%);
+    --color-surface: hsl(0, 0%, 98%);
+    --color-surface-variant: hsl(0, 0%, 96%);
+    --color-surface-container: hsl(0, 0%, 94%);
+    --color-surface-container-high: hsl(0, 0%, 92%);
+    --color-surface-container-highest: hsl(0, 0%, 90%);
+    
+    /* Text Colors */
+    --color-on-background: hsl(220, 25%, 6%);
+    --color-on-surface: hsl(220, 25%, 6%);
+    --color-on-surface-variant: hsl(220, 15%, 35%);
+    
+    /* Primary Colors */
+    --color-primary: hsl(212, 100%, 50%);
+    --color-on-primary: hsl(0, 0%, 100%);
+    --color-primary-container: hsl(212, 100%, 95%);
+    --color-on-primary-container: hsl(212, 100%, 20%);
+    
+    /* Secondary Colors */
+    --color-secondary: hsl(221, 25%, 50%);
+    --color-on-secondary: hsl(0, 0%, 100%);
+    --color-secondary-container: hsl(221, 25%, 95%);
+    --color-on-secondary-container: hsl(221, 25%, 20%);
+    
+    /* Tertiary Colors */
+    --color-tertiary: hsl(150, 60%, 50%);
+    --color-on-tertiary: hsl(0, 0%, 100%);
+    --color-tertiary-container: hsl(150, 60%, 95%);
+    --color-on-tertiary-container: hsl(150, 60%, 20%);
+    
+    /* Semantic Colors */
+    --color-error: hsl(0, 84%, 45%);
+    --color-on-error: hsl(0, 0%, 100%);
+    --color-error-container: hsl(0, 84%, 95%);
+    --color-on-error-container: hsl(0, 84%, 20%);
+    
+    --color-warning: hsl(45, 93%, 50%);
+    --color-on-warning: hsl(220, 25%, 6%);
+    --color-warning-container: hsl(45, 93%, 95%);
+    --color-on-warning-container: hsl(45, 93%, 20%);
+    
+    --color-success: hsl(150, 60%, 50%);
+    --color-on-success: hsl(0, 0%, 100%);
+    --color-success-container: hsl(150, 60%, 95%);
+    --color-on-success-container: hsl(150, 60%, 20%);
+    
+    --color-info: hsl(200, 100%, 50%);
+    --color-on-info: hsl(0, 0%, 100%);
+    --color-info-container: hsl(200, 100%, 95%);
+    --color-on-info-container: hsl(200, 100%, 20%);
+    
+    /* Outline Colors */
+    --color-outline: hsl(220, 20%, 85%);
+    --color-outline-variant: hsl(220, 20%, 90%);
+    
+    /* Shadow Colors */
+    --color-shadow: hsl(0, 0%, 0%);
+    --color-scrim: hsl(0, 0%, 0%);
+    
+    /* Inverse Colors */
+    --color-inverse-surface: hsl(220, 25%, 6%);
+    --color-inverse-on-surface: hsl(0, 0%, 100%);
+    --color-inverse-primary: hsl(212, 100%, 80%);
+    
+    /* Elevation */
+    --elevation-level-0: none;
+    --elevation-level-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --elevation-level-2: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --elevation-level-3: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --elevation-level-4: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --elevation-level-5: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Legacy compatibility - will be removed */
+    --background: 0 0% 100%;
+    --foreground: 220 25% 6%;
+    --card: 0 0% 98%;
+    --card-foreground: 220 25% 6%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 220 25% 6%;
+    --primary: 212 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 95%;
+    --secondary-foreground: 220 25% 6%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 15% 35%;
+    --accent: 212 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 150 60% 50%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 93% 50%;
+    --warning-foreground: 220 25% 6%;
+    --border: 220 20% 85%;
+    --input: 0 0% 98%;
+    --ring: 212 100% 50%;
+  }
+
+  /* High Contrast Theme */
+  .high-contrast {
+    --color-background: hsl(0, 0%, 100%);
+    --color-surface: hsl(0, 0%, 98%);
+    --color-on-background: hsl(0, 0%, 0%);
+    --color-on-surface: hsl(0, 0%, 0%);
+    --color-primary: hsl(212, 100%, 30%);
+    --color-on-primary: hsl(0, 0%, 100%);
+    --color-error: hsl(0, 84%, 30%);
+    --color-on-error: hsl(0, 0%, 100%);
+    --color-outline: hsl(0, 0%, 20%);
+    
+    --elevation-level-1: 0 0 0 1px rgb(0 0 0);
+    --elevation-level-2: 0 0 0 2px rgb(0 0 0);
+    --elevation-level-3: 0 0 0 3px rgb(0 0 0);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

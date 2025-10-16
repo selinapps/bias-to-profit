@@ -1,0 +1,613 @@
+/* Mobile-specific styles for Bias-to-Profit Trading Journal */
+
+/* IMPROVED CONTRAST AND VISIBILITY FOR MOBILE */
+@media (max-width: 768px) {
+  /* Improve touch targets - WCAG AA Compliant */
+  .mobile-touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Larger icons for better visibility */
+  svg, .lucide {
+    min-width: 20px;
+    min-height: 20px;
+  }
+  
+  /* Improve text contrast ratios */
+  body {
+    color: hsl(0 0% 95%); /* Brighter text */
+  }
+  
+  /* Better muted text visibility */
+  .text-muted,
+  .text-trading-muted,
+  .text-on-surface-variant,
+  .text-slate-400 {
+    color: hsl(0 0% 70%) !important; /* Much brighter muted text */
+  }
+  
+  /* Improve badge contrast */
+  .badge,
+  [class*="badge"] {
+    font-weight: 600;
+    border-width: 2px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  
+  /* Better card backgrounds - less transparency */
+  .card,
+  [class*="card"] {
+    background-color: hsl(220 25% 12%) !important;
+    border-color: hsl(220 20% 25%) !important;
+  }
+  
+  /* Improve button contrast */
+  button {
+    min-height: 44px;
+    font-weight: 500;
+  }
+  
+  /* Better icon visibility */
+  .lucide {
+    stroke-width: 2.5;
+  }
+  
+  /* Optimize form inputs for mobile - THEME AWARE */
+  input[type="number"],
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px;
+    border-radius: 8px;
+    color: hsl(var(--foreground)) !important; /* Theme-aware text */
+    -webkit-text-fill-color: hsl(var(--foreground)) !important; /* Webkit override */
+    background-color: hsl(var(--background)) !important; /* Theme-aware background */
+  }
+  
+  /* Theme-aware input fields for mobile */
+  input, textarea, select {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Improve button spacing */
+  .mobile-button {
+    padding: 12px 16px;
+    font-size: 16px;
+    border-radius: 8px;
+    min-height: 44px;
+  }
+  
+  /* Optimize card layouts */
+  .mobile-card {
+    margin: 8px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  /* Improve table responsiveness */
+  .mobile-table {
+    font-size: 14px;
+    overflow-x: auto;
+  }
+  
+  /* Optimize modal for mobile */
+  .mobile-modal {
+    margin: 16px;
+    max-height: calc(100vh - 32px);
+    border-radius: 16px;
+  }
+  
+  /* Improve tab navigation */
+  .mobile-tabs {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  /* Optimize floating action button */
+  .mobile-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Improve status indicators */
+  .mobile-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+  }
+  
+  /* Optimize grid layouts */
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  /* Improve spacing for mobile */
+  .mobile-spacing {
+    padding: 16px;
+    margin: 8px;
+  }
+  
+  /* Optimize text sizes */
+  .mobile-text-sm {
+    font-size: 12px;
+  }
+  
+  .mobile-text-base {
+    font-size: 14px;
+  }
+  
+  .mobile-text-lg {
+    font-size: 16px;
+  }
+  
+  /* Improve haptic feedback areas */
+  .mobile-haptic {
+    transition: transform 0.1s ease;
+  }
+  
+  .mobile-haptic:active {
+    transform: scale(0.95);
+  }
+  
+  /* Optimize scroll areas */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Improve focus states for mobile */
+  .mobile-focus:focus {
+    outline: 2px solid hsl(212 100% 70%);
+    outline-offset: 2px;
+  }
+  
+  /* Optimize loading states */
+  .mobile-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+  
+  /* Improve error states */
+  .mobile-error {
+    padding: 16px;
+    border-radius: 8px;
+    background-color: hsl(0 84% 60% / 0.1);
+    border: 1px solid hsl(0 84% 60% / 0.3);
+  }
+  
+  /* Optimize success states */
+  .mobile-success {
+    padding: 16px;
+    border-radius: 8px;
+    background-color: hsl(150 60% 60% / 0.1);
+    border: 1px solid hsl(150 60% 60% / 0.3);
+  }
+}
+
+/* Mobile landscape optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-landscape {
+    padding: 8px;
+  }
+  
+  .mobile-landscape .mobile-card {
+    margin: 4px;
+    padding: 12px;
+  }
+  
+  .mobile-landscape .mobile-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+/* High DPI mobile displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .mobile-hd {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Mobile dark mode optimizations */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .mobile-dark {
+    background-color: hsl(220 25% 6%);
+    color: hsl(228 20% 95%);
+  }
+  
+  .mobile-dark .mobile-card {
+    background-color: hsl(221 25% 8%);
+    border-color: hsl(220 20% 18%);
+  }
+}
+
+/* Mobile accessibility improvements */
+@media (max-width: 768px) {
+  /* Improve contrast for mobile */
+  .mobile-contrast {
+    color: hsl(228 20% 95%);
+    background-color: hsl(221 25% 8%);
+  }
+  
+  /* Improve focus indicators */
+  .mobile-focus-visible:focus-visible {
+    outline: 3px solid hsl(212 100% 70%);
+    outline-offset: 2px;
+  }
+  
+  /* Improve touch feedback */
+  .mobile-touch-feedback {
+    -webkit-tap-highlight-color: hsl(212 100% 70% / 0.2);
+  }
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  /* Reduce animations on low-end devices */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-reduce-motion {
+      animation: none;
+      transition: none;
+    }
+  }
+  
+  /* Optimize for slow connections */
+  .mobile-slow-connection {
+    background-image: none;
+    background-color: hsl(221 25% 8%);
+  }
+  
+  /* Improve rendering performance */
+  .mobile-performance {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  /* Compact trade card styles */
+  .mobile-trade-card {
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+  
+  .mobile-trade-card .trade-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .mobile-trade-card .trade-metrics {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+  }
+  
+  .mobile-trade-card .trade-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  /* Compact bias state in header */
+  .mobile-bias-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .mobile-bias-pill {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+  
+  /* Improved mobile header spacing */
+  .mobile-header-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  
+  .mobile-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .mobile-stat-value {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+  
+  .mobile-stat-label {
+    font-size: 10px;
+    color: hsl(228 20% 60%);
+    margin-top: 2px;
+  }
+  
+  /* Compact mobile buttons */
+  .mobile-btn-compact {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+  
+  /* Mobile-optimized cards */
+  .mobile-card-compact {
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+  
+  .mobile-card-compact .card-header {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .mobile-card-compact .card-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  /* Mobile-optimized spacing */
+  .mobile-space-y-2 > * + * {
+    margin-top: 8px;
+  }
+  
+  .mobile-space-y-3 > * + * {
+    margin-top: 12px;
+  }
+  
+  .mobile-space-y-4 > * + * {
+    margin-top: 16px;
+  }
+  
+  /* Mobile-optimized text sizes */
+  .mobile-text-xs {
+    font-size: 10px;
+  }
+  
+  .mobile-text-sm {
+    font-size: 12px;
+  }
+  
+  .mobile-text-base {
+    font-size: 14px;
+  }
+  
+  /* Mobile-optimized gaps */
+  .mobile-gap-1 {
+    gap: 4px;
+  }
+  
+  .mobile-gap-2 {
+    gap: 8px;
+  }
+  
+  .mobile-gap-3 {
+    gap: 12px;
+  }
+  
+  .mobile-gap-4 {
+    gap: 16px;
+  }
+  
+  /* Ultra-compact mobile trade cards */
+  .mobile-trade-ultra-compact {
+    padding: 8px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+  }
+  
+  .mobile-trade-ultra-compact .trade-main-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  
+  .mobile-trade-ultra-compact .trade-asset {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  .mobile-trade-ultra-compact .trade-badges {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .mobile-trade-ultra-compact .trade-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    height: 18px;
+  }
+  
+  .mobile-trade-ultra-compact .trade-prices {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+  }
+  
+  .mobile-trade-ultra-compact .trade-pnl {
+    text-align: right;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  
+  .mobile-trade-ultra-compact .trade-meta {
+    font-size: 10px;
+    color: hsl(228 20% 60%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  /* Compact mobile header */
+  .mobile-header-compact {
+    padding: 6px 12px;
+  }
+  
+  /* Ultra-compact mobile header */
+  .mobile-header-ultra-compact {
+    padding: 4px 8px;
+  }
+  
+  .mobile-header-ultra-compact .header-main {
+    padding-bottom: 4px;
+  }
+  
+  .mobile-header-ultra-compact .header-stats {
+    padding-top: 4px;
+    margin-top: 0;
+  }
+  
+  .mobile-header-compact .header-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  
+  .mobile-header-compact .stat-item {
+    text-align: center;
+  }
+  
+  .mobile-header-compact .stat-value {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+  
+  .mobile-header-compact .stat-label {
+    font-size: 9px;
+    color: hsl(228 20% 60%);
+    margin-top: 1px;
+  }
+  
+  /* Mobile performance card compact */
+  .mobile-perf-compact {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .mobile-perf-compact .perf-grid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .mobile-perf-compact .perf-item {
+    text-align: center;
+  }
+  
+  .mobile-perf-compact .perf-label {
+    font-size: 10px;
+    color: hsl(228 20% 60%);
+    margin-bottom: 2px;
+  }
+  
+  .mobile-perf-compact .perf-value {
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+  
+  /* Mobile touch improvements */
+  .mobile-touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .mobile-touch-friendly:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Mobile scroll improvements */
+  .mobile-scroll-smooth {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+  }
+  
+  .mobile-scroll-smooth::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .mobile-scroll-smooth::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .mobile-scroll-smooth::-webkit-scrollbar-thumb {
+    background: hsl(228 20% 30%);
+    border-radius: 2px;
+  }
+  
+  /* Mobile header inline stats optimization */
+  .mobile-stats-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .mobile-stats-inline .stat-item {
+    flex-shrink: 0;
+    min-width: fit-content;
+  }
+  
+  .mobile-stats-inline .bias-pills {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  
+  .mobile-stats-inline .bias-pill {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  
+  /* Mobile header responsive text */
+  .mobile-header-responsive {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  
+  .mobile-header-responsive .stat-value {
+    font-size: 13px;
+    font-weight: 700;
+  }
+  
+  .mobile-header-responsive .stat-label {
+    font-size: 9px;
+    line-height: 1;
+    margin-top: 1px;
+  }
+}

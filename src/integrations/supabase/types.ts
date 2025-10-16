@@ -1,0 +1,949 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+  public: {
+    Tables: {
+      bias_state: {
+        Row: {
+          active: boolean | null
+          bias: string
+          confidence: string | null
+          created_at: string | null
+          day_key: string
+          id: string
+          market_state: string | null
+          selected_at: string | null
+          selected_by: string | null
+          tags: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          bias: string
+          confidence?: string | null
+          created_at?: string | null
+          day_key: string
+          id?: string
+          market_state?: string | null
+          selected_at?: string | null
+          selected_by?: string | null
+          tags?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          bias?: string
+          confidence?: string | null
+          created_at?: string | null
+          day_key?: string
+          id?: string
+          market_state?: string | null
+          selected_at?: string | null
+          selected_by?: string | null
+          tags?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      daily_session_patterns: {
+        Row: {
+          asia_behavior: Database["public"]["Enums"]["session_behavior"]
+          confidence: number | null
+          created_at: string | null
+          date: string
+          id: string
+          inferred_scenario: Database["public"]["Enums"]["session_scenario"]
+          london_behavior: Database["public"]["Enums"]["session_behavior"]
+          notes: string | null
+          ny_behavior: Database["public"]["Enums"]["session_behavior"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          asia_behavior?: Database["public"]["Enums"]["session_behavior"]
+          confidence?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          inferred_scenario?: Database["public"]["Enums"]["session_scenario"]
+          london_behavior?: Database["public"]["Enums"]["session_behavior"]
+          notes?: string | null
+          ny_behavior?: Database["public"]["Enums"]["session_behavior"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          asia_behavior?: Database["public"]["Enums"]["session_behavior"]
+          confidence?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          inferred_scenario?: Database["public"]["Enums"]["session_scenario"]
+          london_behavior?: Database["public"]["Enums"]["session_behavior"]
+          notes?: string | null
+          ny_behavior?: Database["public"]["Enums"]["session_behavior"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          id: string
+          risk_settings: Json | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          risk_settings?: Json | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          risk_settings?: Json | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          aggression: string[] | null
+          asset: string
+          challenge_id: string | null
+          created_at: string | null
+          direction: string
+          duration_minutes: number | null
+          emotions: Json | null
+          entry_price: number
+          entry_time: string | null
+          exit_price: number | null
+          exit_time: string | null
+          externals: string[] | null
+          good_actions: string[] | null
+          hypothesis_id: string | null
+          id: string
+          is_experimental: boolean | null
+          locations: string[] | null
+          lot_size: number | null
+          mistake_tags: string[] | null
+          model: string
+          notes: string | null
+          override_reason: string | null
+          pnl: number | null
+          r_multiple: number | null
+          risk_amount: number
+          risk_tier: string
+          scenarios: string[] | null
+          screenshot_url: string | null
+          status: string | null
+          stop_loss: number
+          trade_lessons: string | null
+          trading_session: string | null
+          updated_at: string | null
+          user_id: string
+          bias_snapshot: Json | null
+        }
+        Insert: {
+          aggression?: string[] | null
+          asset: string
+          challenge_id?: string | null
+          created_at?: string | null
+          direction: string
+          duration_minutes?: number | null
+          emotions?: Json | null
+          entry_price: number
+          entry_time?: string | null
+          exit_price?: number | null
+          exit_time?: string | null
+          externals?: string[] | null
+          good_actions?: string[] | null
+          hypothesis_id?: string | null
+          id?: string
+          is_experimental?: boolean | null
+          locations?: string[] | null
+          lot_size?: number | null
+          mistake_tags?: string[] | null
+          model: string
+          notes?: string | null
+          override_reason?: string | null
+          pnl?: number | null
+          r_multiple?: number | null
+          risk_amount: number
+          risk_tier: string
+          scenarios?: string[] | null
+          screenshot_url?: string | null
+          status?: string | null
+          stop_loss: number
+          trade_lessons?: string | null
+          trading_session?: string | null
+          updated_at?: string | null
+          user_id: string
+          bias_snapshot?: Json | null
+        }
+        Update: {
+          aggression?: string[] | null
+          asset?: string
+          challenge_id?: string | null
+          created_at?: string | null
+          direction?: string
+          duration_minutes?: number | null
+          emotions?: Json | null
+          entry_price?: number
+          entry_time?: string | null
+          exit_price?: number | null
+          exit_time?: string | null
+          externals?: string[] | null
+          good_actions?: string[] | null
+          hypothesis_id?: string | null
+          id?: string
+          is_experimental?: boolean | null
+          locations?: string[] | null
+          lot_size?: number | null
+          mistake_tags?: string[] | null
+          model?: string
+          notes?: string | null
+          override_reason?: string | null
+          pnl?: number | null
+          r_multiple?: number | null
+          risk_amount?: number
+          risk_tier?: string
+          scenarios?: string[] | null
+          screenshot_url?: string | null
+          status?: string | null
+          stop_loss?: number
+          trade_lessons?: string | null
+          trading_session?: string | null
+          updated_at?: string | null
+          bias_snapshot?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_reflection: {
+        Row: {
+          id: string
+          user_id: string
+          reflection_date: string
+          total_trades: number | null
+          net_r_multiple: number | null
+          net_pnl: number | null
+          avg_emotional_score: number | null
+          emotional_stability_score: number | null
+          plan_adherence_percentage: number | null
+          bias_accuracy_percentage: number | null
+          session_discipline_percentage: number | null
+          top_mistakes: string[] | null
+          improvement_areas: string[] | null
+          positive_actions: string[] | null
+          daily_notes: string | null
+          key_learnings: string | null
+          tomorrow_focus: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          reflection_date: string
+          total_trades?: number | null
+          net_r_multiple?: number | null
+          net_pnl?: number | null
+          avg_emotional_score?: number | null
+          emotional_stability_score?: number | null
+          plan_adherence_percentage?: number | null
+          bias_accuracy_percentage?: number | null
+          session_discipline_percentage?: number | null
+          top_mistakes?: string[] | null
+          improvement_areas?: string[] | null
+          positive_actions?: string[] | null
+          daily_notes?: string | null
+          key_learnings?: string | null
+          tomorrow_focus?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          reflection_date?: string
+          total_trades?: number | null
+          net_r_multiple?: number | null
+          net_pnl?: number | null
+          avg_emotional_score?: number | null
+          emotional_stability_score?: number | null
+          plan_adherence_percentage?: number | null
+          bias_accuracy_percentage?: number | null
+          session_discipline_percentage?: number | null
+          top_mistakes?: string[] | null
+          improvement_areas?: string[] | null
+          positive_actions?: string[] | null
+          daily_notes?: string | null
+          key_learnings?: string | null
+          tomorrow_focus?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      trade_reflection: {
+        Row: {
+          id: string
+          user_id: string
+          trade_id: string
+          emotional_rating: number | null
+          emotional_tags: string[] | null
+          execution_quality: number | null
+          checklist_completion_percentage: number | null
+          why_took_trade: string | null
+          execution_flaws: string | null
+          improvement_ideas: string | null
+          what_went_well: string | null
+          bias_match: boolean | null
+          session_appropriate: boolean | null
+          screenshot_analysis: string | null
+          chart_pattern_recognition: string | null
+          key_takeaways: string[] | null
+          mistakes_to_avoid: string[] | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          trade_id: string
+          emotional_rating?: number | null
+          emotional_tags?: string[] | null
+          execution_quality?: number | null
+          checklist_completion_percentage?: number | null
+          why_took_trade?: string | null
+          execution_flaws?: string | null
+          improvement_ideas?: string | null
+          what_went_well?: string | null
+          bias_match?: boolean | null
+          session_appropriate?: boolean | null
+          screenshot_analysis?: string | null
+          chart_pattern_recognition?: string | null
+          key_takeaways?: string[] | null
+          mistakes_to_avoid?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          trade_id?: string
+          emotional_rating?: number | null
+          emotional_tags?: string[] | null
+          execution_quality?: number | null
+          checklist_completion_percentage?: number | null
+          why_took_trade?: string | null
+          execution_flaws?: string | null
+          improvement_ideas?: string | null
+          what_went_well?: string | null
+          bias_match?: boolean | null
+          session_appropriate?: boolean | null
+          screenshot_analysis?: string | null
+          chart_pattern_recognition?: string | null
+          key_takeaways?: string[] | null
+          mistakes_to_avoid?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      challenge_phases: {
+        Row: {
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          phase: string
+          prop_firm: string
+          starting_balance: number
+          status: string
+          started_at: string
+          target_profit: number
+          updated_at: string | null
+          user_id: string
+          user_reported_current_balance: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          phase?: string
+          prop_firm: string
+          starting_balance: number
+          status?: string
+          started_at?: string
+          target_profit: number
+          updated_at?: string | null
+          user_id: string
+          user_reported_current_balance?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          phase?: string
+          prop_firm?: string
+          starting_balance?: number
+          status?: string
+          started_at?: string
+          target_profit?: number
+          updated_at?: string | null
+          user_id?: string
+          user_reported_current_balance?: number | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          auto_backup: boolean | null
+          auto_save: boolean | null
+          bias_reminders: boolean | null
+          compact_mode: boolean | null
+          created_at: string | null
+          custom_good_actions: string[] | null
+          custom_mistake_tags: string[] | null
+          custom_risk_amounts: Json | null
+          daily_wrap_time: string | null
+          data_retention_days: number | null
+          debug_mode: boolean | null
+          default_model: string | null
+          default_risk_amount: number | null
+          edge_reminders: Json | null
+          enable_house_money: boolean | null
+          enable_stop_rule: boolean | null
+          experimental_features: boolean | null
+          export_format: string | null
+          house_money_threshold: number | null
+          id: string
+          last_aggression: string[] | null
+          last_locations: string[] | null
+          last_model: string | null
+          last_risk_tier: string | null
+          max_daily_losses: number | null
+          notifications_enabled: boolean | null
+          offline_mode: boolean | null
+          preferred_assets: string[] | null
+          session_alerts: boolean | null
+          show_advanced_features: boolean | null
+          theme: string | null
+          trade_alerts: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_backup?: boolean | null
+          auto_save?: boolean | null
+          bias_reminders?: boolean | null
+          compact_mode?: boolean | null
+          created_at?: string | null
+          custom_good_actions?: string[] | null
+          custom_mistake_tags?: string[] | null
+          custom_risk_amounts?: Json | null
+          daily_wrap_time?: string | null
+          data_retention_days?: number | null
+          debug_mode?: boolean | null
+          default_model?: string | null
+          default_risk_amount?: number | null
+          edge_reminders?: Json | null
+          enable_house_money?: boolean | null
+          enable_stop_rule?: boolean | null
+          experimental_features?: boolean | null
+          export_format?: string | null
+          house_money_threshold?: number | null
+          id?: string
+          last_aggression?: string[] | null
+          last_locations?: string[] | null
+          last_model?: string | null
+          last_risk_tier?: string | null
+          max_daily_losses?: number | null
+          notifications_enabled?: boolean | null
+          offline_mode?: boolean | null
+          preferred_assets?: string[] | null
+          session_alerts?: boolean | null
+          show_advanced_features?: boolean | null
+          theme?: string | null
+          trade_alerts?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_backup?: boolean | null
+          auto_save?: boolean | null
+          bias_reminders?: boolean | null
+          compact_mode?: boolean | null
+          created_at?: string | null
+          custom_good_actions?: string[] | null
+          custom_mistake_tags?: string[] | null
+          custom_risk_amounts?: Json | null
+          daily_wrap_time?: string | null
+          data_retention_days?: number | null
+          debug_mode?: boolean | null
+          default_model?: string | null
+          default_risk_amount?: number | null
+          edge_reminders?: Json | null
+          enable_house_money?: boolean | null
+          enable_stop_rule?: boolean | null
+          experimental_features?: boolean | null
+          export_format?: string | null
+          house_money_threshold?: number | null
+          id?: string
+          last_aggression?: string[] | null
+          last_locations?: string[] | null
+          last_model?: string | null
+          last_risk_tier?: string | null
+          max_daily_losses?: number | null
+          notifications_enabled?: boolean | null
+          offline_mode?: boolean | null
+          preferred_assets?: string[] | null
+          session_alerts?: boolean | null
+          show_advanced_features?: boolean | null
+          theme?: string | null
+          trade_alerts?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      daily_performance_metrics: {
+        Row: {
+          avg_pnl: number | null
+          avg_r_multiple: number | null
+          best_trade: number | null
+          closed_trades: number | null
+          losing_trades: number | null
+          mr_pnl: number | null
+          mr_trades: number | null
+          open_trades: number | null
+          total_pnl: number | null
+          total_trades: number | null
+          trade_date: string | null
+          trend_pnl: number | null
+          trend_trades: number | null
+          user_id: string | null
+          winning_trades: number | null
+          worst_trade: number | null
+        }
+        Relationships: []
+      }
+      secure_daily_performance_metrics: {
+        Row: {
+          avg_pnl: number | null
+          avg_r_multiple: number | null
+          best_trade: number | null
+          closed_trades: number | null
+          losing_trades: number | null
+          mr_pnl: number | null
+          mr_trades: number | null
+          open_trades: number | null
+          total_pnl: number | null
+          total_trades: number | null
+          trade_date: string | null
+          trend_pnl: number | null
+          trend_trades: number | null
+          user_id: string | null
+          winning_trades: number | null
+          worst_trade: number | null
+        }
+        Relationships: []
+      }
+      v_current_bias: {
+        Row: {
+          active: boolean | null
+          bias: string | null
+          confidence: string | null
+          day_key: string | null
+          id: string | null
+          market_state: string | null
+          selected_at: string | null
+          selected_by: string | null
+          tags: Json | null
+        }
+        Relationships: []
+      }
+      v_current_session_pattern: {
+        Row: {
+          asia_behavior: Database["public"]["Enums"]["session_behavior"] | null
+          confidence: number | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          inferred_scenario:
+            | Database["public"]["Enums"]["session_scenario"]
+            | null
+          london_behavior:
+            | Database["public"]["Enums"]["session_behavior"]
+            | null
+          notes: string | null
+          ny_behavior: Database["public"]["Enums"]["session_behavior"] | null
+          scenario_hint: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          asia_behavior?: Database["public"]["Enums"]["session_behavior"] | null
+          confidence?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          inferred_scenario?:
+            | Database["public"]["Enums"]["session_scenario"]
+            | null
+          london_behavior?:
+            | Database["public"]["Enums"]["session_behavior"]
+            | null
+          notes?: string | null
+          ny_behavior?: Database["public"]["Enums"]["session_behavior"] | null
+          scenario_hint?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          asia_behavior?: Database["public"]["Enums"]["session_behavior"] | null
+          confidence?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          inferred_scenario?:
+            | Database["public"]["Enums"]["session_scenario"]
+            | null
+          london_behavior?:
+            | Database["public"]["Enums"]["session_behavior"]
+            | null
+          notes?: string | null
+          ny_behavior?: Database["public"]["Enums"]["session_behavior"] | null
+          scenario_hint?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      database_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          details: string
+          status: string
+        }[]
+      }
+      get_current_bias: {
+        Args: { target_day: string }
+        Returns: {
+          active: boolean | null
+          bias: string
+          confidence: string | null
+          created_at: string | null
+          day_key: string
+          id: string
+          market_state: string | null
+          selected_at: string | null
+          selected_by: string | null
+          tags: Json | null
+          updated_at: string | null
+        }
+      }
+      get_daily_losses: {
+        Args: { p_date?: string; p_user_id: string }
+        Returns: number
+      }
+      get_user_trade_stats: {
+        Args: { p_days?: number; p_user_id: string }
+        Returns: {
+          avg_pnl: number
+          avg_r_multiple: number
+          closed_trades: number
+          losing_trades: number
+          mr_pnl: number
+          mr_trades: number
+          open_trades: number
+          total_pnl: number
+          total_trades: number
+          trend_pnl: number
+          trend_trades: number
+          win_rate: number
+          winning_trades: number
+        }[]
+      }
+      infer_session_scenario: {
+        Args: {
+          asia_behavior: Database["public"]["Enums"]["session_behavior"]
+          london_behavior: Database["public"]["Enums"]["session_behavior"]
+          ny_behavior: Database["public"]["Enums"]["session_behavior"]
+        }
+        Returns: {
+          confidence: number
+          expected_asia: Database["public"]["Enums"]["session_behavior"]
+          expected_london: Database["public"]["Enums"]["session_behavior"]
+          expected_ny: Database["public"]["Enums"]["session_behavior"]
+          scenario: Database["public"]["Enums"]["session_scenario"]
+        }[]
+      }
+      refresh_daily_performance_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      set_bias_state: {
+        Args: {
+          target_bias: string
+          target_confidence?: string
+          target_day: string
+          target_market_state?: string
+          target_tags?: string[]
+        }
+        Returns: {
+          active: boolean | null
+          bias: string
+          confidence: string | null
+          created_at: string | null
+          day_key: string
+          id: string
+          market_state: string | null
+          selected_at: string | null
+          selected_by: string | null
+          tags: Json | null
+          updated_at: string | null
+        }
+      }
+      validate_bias_value: {
+        Args: { bias_value: string }
+        Returns: boolean
+      }
+      validate_market_state_value: {
+        Args: { market_state_value: string }
+        Returns: boolean
+      }
+      generate_daily_reflection: {
+        Args: { p_user_id: string; p_reflection_date?: string }
+        Returns: {
+          id: string
+          user_id: string
+          reflection_date: string
+          total_trades: number | null
+          net_r_multiple: number | null
+          net_pnl: number | null
+          avg_emotional_score: number | null
+          emotional_stability_score: number | null
+          plan_adherence_percentage: number | null
+          bias_accuracy_percentage: number | null
+          session_discipline_percentage: number | null
+          top_mistakes: string[] | null
+          improvement_areas: string[] | null
+          positive_actions: string[] | null
+          daily_notes: string | null
+          key_learnings: string | null
+          tomorrow_focus: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+      }
+      get_reflection_analytics: {
+        Args: { p_user_id: string; p_days?: number }
+        Returns: {
+          reflection_date: string
+          total_trades: number
+          net_r_multiple: number
+          net_pnl: number
+          emotional_score: number
+          plan_adherence: number
+          bias_accuracy: number
+          session_discipline: number
+          top_mistakes: string[]
+          positive_actions: string[]
+        }[]
+      }
+    }
+    Enums: {
+      bias_enum:
+        | "OOB_LONG"
+        | "OOB_SHORT"
+        | "MR_LONG"
+        | "MR_SHORT"
+        | "NONE"
+        | "FLAT"
+      market_state_enum:
+        | "TRENDING"
+        | "RANGING"
+        | "VOLATILE"
+        | "CALM"
+        | "UNCLEAR"
+      session_behavior:
+        | "continuation"
+        | "reversal"
+        | "consolidation"
+        | "unknown"
+      session_scenario: "S1" | "S2" | "S3" | "none"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      bias_enum: [
+        "OOB_LONG",
+        "OOB_SHORT",
+        "MR_LONG",
+        "MR_SHORT",
+        "NONE",
+        "FLAT",
+      ],
+      market_state_enum: ["TRENDING", "RANGING", "VOLATILE", "CALM", "UNCLEAR"],
+      session_behavior: [
+        "continuation",
+        "reversal",
+        "consolidation",
+        "unknown",
+      ],
+      session_scenario: ["S1", "S2", "S3", "none"],
+    },
+  },
+} as const

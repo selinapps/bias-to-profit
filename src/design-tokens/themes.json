@@ -1,0 +1,154 @@
+{
+  "light": {
+    "color": {
+      "background": "hsl(0, 0%, 100%)",
+      "surface": "hsl(0, 0%, 98%)",
+      "surfaceVariant": "hsl(0, 0%, 96%)",
+      "surfaceContainer": "hsl(0, 0%, 94%)",
+      "surfaceContainerHigh": "hsl(0, 0%, 92%)",
+      "surfaceContainerHighest": "hsl(0, 0%, 90%)",
+      
+      "onBackground": "hsl(220, 25%, 6%)",
+      "onSurface": "hsl(220, 25%, 6%)",
+      "onSurfaceVariant": "hsl(220, 15%, 35%)",
+      
+      "primary": "hsl(212, 100%, 50%)",
+      "onPrimary": "hsl(0, 0%, 100%)",
+      "primaryContainer": "hsl(212, 100%, 95%)",
+      "onPrimaryContainer": "hsl(212, 100%, 20%)",
+      
+      "secondary": "hsl(221, 25%, 50%)",
+      "onSecondary": "hsl(0, 0%, 100%)",
+      "secondaryContainer": "hsl(221, 25%, 95%)",
+      "onSecondaryContainer": "hsl(221, 25%, 20%)",
+      
+      "tertiary": "hsl(150, 60%, 50%)",
+      "onTertiary": "hsl(0, 0%, 100%)",
+      "tertiaryContainer": "hsl(150, 60%, 95%)",
+      "onTertiaryContainer": "hsl(150, 60%, 20%)",
+      
+      "error": "hsl(0, 84%, 45%)",
+      "onError": "hsl(0, 0%, 100%)",
+      "errorContainer": "hsl(0, 84%, 95%)",
+      "onErrorContainer": "hsl(0, 84%, 20%)",
+      
+      "warning": "hsl(45, 93%, 50%)",
+      "onWarning": "hsl(220, 25%, 6%)",
+      "warningContainer": "hsl(45, 93%, 95%)",
+      "onWarningContainer": "hsl(45, 93%, 20%)",
+      
+      "success": "hsl(150, 60%, 50%)",
+      "onSuccess": "hsl(0, 0%, 100%)",
+      "successContainer": "hsl(150, 60%, 95%)",
+      "onSuccessContainer": "hsl(150, 60%, 20%)",
+      
+      "info": "hsl(200, 100%, 50%)",
+      "onInfo": "hsl(0, 0%, 100%)",
+      "infoContainer": "hsl(200, 100%, 95%)",
+      "onInfoContainer": "hsl(200, 100%, 20%)",
+      
+      "outline": "hsl(220, 20%, 85%)",
+      "outlineVariant": "hsl(220, 20%, 90%)",
+      
+      "shadow": "hsl(0, 0%, 0%)",
+      "scrim": "hsl(0, 0%, 0%)",
+      
+      "inverseSurface": "hsl(220, 25%, 6%)",
+      "inverseOnSurface": "hsl(0, 0%, 100%)",
+      "inversePrimary": "hsl(212, 100%, 80%)"
+    },
+    "elevation": {
+      "level0": "none",
+      "level1": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "level2": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      "level3": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "level4": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "level5": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
+    }
+  },
+  "dark": {
+    "color": {
+      "background": "hsl(220, 25%, 6%)",
+      "surface": "hsl(221, 25%, 8%)",
+      "surfaceVariant": "hsl(221, 25%, 10%)",
+      "surfaceContainer": "hsl(221, 25%, 12%)",
+      "surfaceContainerHigh": "hsl(221, 25%, 14%)",
+      "surfaceContainerHighest": "hsl(221, 25%, 16%)",
+      
+      "onBackground": "hsl(228, 20%, 95%)",
+      "onSurface": "hsl(228, 20%, 95%)",
+      "onSurfaceVariant": "hsl(218, 15%, 65%)",
+      
+      "primary": "hsl(212, 100%, 70%)",
+      "onPrimary": "hsl(220, 25%, 6%)",
+      "primaryContainer": "hsl(212, 100%, 20%)",
+      "onPrimaryContainer": "hsl(212, 100%, 95%)",
+      
+      "secondary": "hsl(221, 25%, 70%)",
+      "onSecondary": "hsl(220, 25%, 6%)",
+      "secondaryContainer": "hsl(221, 25%, 20%)",
+      "onSecondaryContainer": "hsl(221, 25%, 95%)",
+      
+      "tertiary": "hsl(150, 60%, 70%)",
+      "onTertiary": "hsl(220, 25%, 6%)",
+      "tertiaryContainer": "hsl(150, 60%, 20%)",
+      "onTertiaryContainer": "hsl(150, 60%, 95%)",
+      
+      "error": "hsl(0, 84%, 55%)",
+      "onError": "hsl(220, 25%, 6%)",
+      "errorContainer": "hsl(0, 84%, 20%)",
+      "onErrorContainer": "hsl(0, 84%, 95%)",
+      
+      "warning": "hsl(45, 93%, 70%)",
+      "onWarning": "hsl(220, 25%, 6%)",
+      "warningContainer": "hsl(45, 93%, 20%)",
+      "onWarningContainer": "hsl(45, 93%, 95%)",
+      
+      "success": "hsl(150, 60%, 70%)",
+      "onSuccess": "hsl(220, 25%, 6%)",
+      "successContainer": "hsl(150, 60%, 20%)",
+      "onSuccessContainer": "hsl(150, 60%, 95%)",
+      
+      "info": "hsl(200, 100%, 70%)",
+      "onInfo": "hsl(220, 25%, 6%)",
+      "infoContainer": "hsl(200, 100%, 20%)",
+      "onInfoContainer": "hsl(200, 100%, 95%)",
+      
+      "outline": "hsl(220, 20%, 18%)",
+      "outlineVariant": "hsl(220, 20%, 15%)",
+      
+      "shadow": "hsl(0, 0%, 0%)",
+      "scrim": "hsl(0, 0%, 0%)",
+      
+      "inverseSurface": "hsl(228, 20%, 95%)",
+      "inverseOnSurface": "hsl(220, 25%, 6%)",
+      "inversePrimary": "hsl(212, 100%, 30%)"
+    },
+    "elevation": {
+      "level0": "none",
+      "level1": "0 1px 2px 0 rgb(0 0 0 / 0.3)",
+      "level2": "0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4)",
+      "level3": "0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)",
+      "level4": "0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4)",
+      "level5": "0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4)"
+    }
+  },
+  "highContrast": {
+    "color": {
+      "background": "hsl(0, 0%, 100%)",
+      "surface": "hsl(0, 0%, 98%)",
+      "onBackground": "hsl(0, 0%, 0%)",
+      "onSurface": "hsl(0, 0%, 0%)",
+      "primary": "hsl(212, 100%, 30%)",
+      "onPrimary": "hsl(0, 0%, 100%)",
+      "error": "hsl(0, 84%, 30%)",
+      "onError": "hsl(0, 0%, 100%)",
+      "outline": "hsl(0, 0%, 20%)"
+    },
+    "elevation": {
+      "level1": "0 0 0 1px rgb(0 0 0)",
+      "level2": "0 0 0 2px rgb(0 0 0)",
+      "level3": "0 0 0 3px rgb(0 0 0)"
+    }
+  }
+}
