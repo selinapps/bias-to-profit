@@ -22,11 +22,12 @@ interface SimplifiedAddTradeSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onManageSetups?: () => void;
+  refreshTrades?: () => void;
 }
 
 const ALL_ASSETS = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'USDCHF', 'ES', 'NQ', '6E', 'XAUUSD', 'BTCUSD'] as const;
 
-export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups }: SimplifiedAddTradeSheetProps) {
+export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refreshTrades }: SimplifiedAddTradeSheetProps) {
   const { user } = useAuth();
   const { addTrade } = useTradesOptimized();
   const { settings } = useSettings();
@@ -189,6 +190,11 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups }: Sim
 
       resetForm();
       onClose();
+      
+      // Refresh the trades list to show the new trade immediately
+      if (refreshTrades) {
+        refreshTrades();
+      }
     } catch (error: any) {
       console.error('Error adding trade:', error);
       console.error('Error details:', {

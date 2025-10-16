@@ -984,6 +984,7 @@ ${todayTrades.map(trade =>
             setAddTradeWithDate(null);
           }}
           onManageSetups={() => setShowSetupManager(true)}
+          refreshTrades={refreshTrades}
         />
       ) : (
         <AddTradeBottomSheet
