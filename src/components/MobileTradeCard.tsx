@@ -131,7 +131,7 @@ export function MobileTradeCard({ trade, isOpen = false, onEdit, onDelete }: Mob
           <div className="flex items-center gap-1.5">
             <span>{formatTime(trade.entry_time)}</span>
             <span>•</span>
-            <span className="truncate">{trade.model?.replace(/_/g, ' ')}</span>
+            <span className="truncate">{(Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || 'Unknown'))?.replace(/_/g, ' ')}</span>
             {trade.duration_minutes && (
               <>
                 <span>•</span>
@@ -181,7 +181,7 @@ export function MobileTradeCard({ trade, isOpen = false, onEdit, onDelete }: Mob
               </div>
               <div className="bg-gradient-to-r from-purple-950/20 to-purple-950/10 rounded p-2 border border-purple-500/20">
                 <div className="text-purple-300 mb-1">Model</div>
-                <div className="font-semibold">{trade.model?.replace(/_/g, ' ').toUpperCase()}</div>
+                <div className="font-semibold">{(Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || 'Unknown'))?.replace(/_/g, ' ').toUpperCase()}</div>
               </div>
             </div>
 

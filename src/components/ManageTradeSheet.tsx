@@ -349,7 +349,7 @@ export function ManageTradeSheet({
                 <div>
                   <SheetTitle className="text-2xl font-bold">{trade.asset}</SheetTitle>
                   <SheetDescription className="text-trading-muted">
-                    {trade.direction.toUpperCase()} • {trade.model?.replace(/_/g, ' ')}
+                    {trade.direction.toUpperCase()} • {(Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || 'Unknown'))?.replace(/_/g, ' ')}
                   </SheetDescription>
                 </div>
               </div>

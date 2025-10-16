@@ -159,7 +159,9 @@ export function WeekDetailModal({ isOpen, onClose, weekNumber, weekStartDate }: 
       // Strategy breakdown
       const strategyBreakdown: { [key: string]: { count: number; pnl: number } } = {};
       closedTrades.forEach(trade => {
-        const strategy = trade.model || 'Unknown';
+        const strategy = (Array.isArray(trade.locations) && trade.locations.length > 0) 
+          ? String(trade.locations[0]) 
+          : (trade.notes || 'Unknown');
         if (!strategyBreakdown[strategy]) {
           strategyBreakdown[strategy] = { count: 0, pnl: 0 };
         }
@@ -409,9 +411,9 @@ export function WeekDetailModal({ isOpen, onClose, weekNumber, weekStartDate }: 
                                 {formatCurrency(trade.pnl || 0)}
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                {getStrategyIcon(trade.model || '')}
+                                {getStrategyIcon((Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || '')))}
                                 <Badge variant="secondary" className="text-xs">
-                                  {trade.model || 'Unknown'}
+                                  {(Array.isArray(trade.locations) && trade.locations.length > 0) ? String(trade.locations[0]) : (trade.notes || 'Unknown')}
                                 </Badge>
                               </div>
                             </div>

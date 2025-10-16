@@ -213,7 +213,10 @@ export function DailyWrap() {
   const orderFlowPerformance = (() => {
     // Group trades by setup/model
     const setupPerformance = todayTrades.reduce((acc, trade) => {
-      const setup = trade.model || 'Unknown';
+      // Get setup name from locations array
+      const setup = (Array.isArray(trade.locations) && trade.locations.length > 0) 
+        ? String(trade.locations[0]) 
+        : (trade.notes || 'Unknown');
       if (!acc[setup]) {
         acc[setup] = { trades: 0, totalR: 0, wins: 0 };
       }
@@ -331,7 +334,9 @@ export function DailyWrap() {
       trades: todayTrades.map(trade => ({
         asset: trade.asset,
         direction: trade.direction,
-        model: trade.model,
+        model: (Array.isArray(trade.locations) && trade.locations.length > 0) 
+          ? String(trade.locations[0]) 
+          : (trade.notes || 'Unknown'),
         pnl: trade.pnl,
         rMultiple: trade.r_multiple,
         entryTime: trade.entry_time,

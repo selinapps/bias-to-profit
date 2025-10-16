@@ -67,7 +67,13 @@ export function TradeHeatmap({ trades }: TradeHeatmapProps) {
   const setupGroups: Record<string, Trade[]> = {};
   trades.filter(t => t.status === 'closed').forEach(trade => {
     // Clean up legacy model names
-    let setupName = trade.model || 'Unknown';
+    // Get setup name from locations array (where actual setup name is stored)
+    let setupName = 'Unknown';
+    if (Array.isArray(trade.locations) && trade.locations.length > 0) {
+      setupName = String(trade.locations[0]);
+    } else if (trade.notes) {
+      setupName = trade.notes;
+    }
     if (setupName === 'trend' || setupName === 'Trend') {
       setupName = 'Trend Setup (Legacy)';
     } else if (setupName === 'mean_reversion' || setupName === 'MeanReversion' || setupName === 'Mean Reversion') {

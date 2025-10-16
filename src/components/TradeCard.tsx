@@ -229,7 +229,7 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
         
         {/* Trade Info */}
         <div className="flex items-center justify-between text-xs text-trading-muted mt-2">
-          <span>{format(new Date(trade.entry_time), 'MMM d, HH:mm')} • {trade.model?.replace(/_/g, ' ')}</span>
+          <span>{format(new Date(trade.entry_time), 'MMM d, HH:mm')} • {(Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || 'Unknown'))?.replace(/_/g, ' ')}</span>
           {Object.keys(orderFlowActions).length > 0 && (
             <span className="text-trading-accent">
               {Object.keys(orderFlowActions).length} actions recorded

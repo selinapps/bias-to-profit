@@ -524,78 +524,35 @@ export function TradingAnalytics() {
           <p className="text-sm text-trading-muted hidden sm:block">Performance insights and trading patterns</p>
         </div>
         
-        {/* Desktop: Side-by-side buttons, Mobile: Dropdown menu */}
+        {/* Actions Dropdown Menu (Desktop and Mobile) */}
         <div className="flex items-center gap-2">
-          {/* Mobile: Dropdown menu */}
-          <div className="sm:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreVertical className="h-4 w-4 mr-2" />
-                  Actions
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={exportToCSV}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportWeeklyReport}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export Report
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={compareWithPreviousWeek}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Compare
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={refreshAnalytics}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          
-          {/* Desktop: Individual buttons */}
-          <div className="hidden sm:flex items-center gap-2">
-            <Button
-              onClick={exportToCSV}
-              variant="outline"
-              size="sm"
-              className="hover:bg-trading-accent/10"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
-            <Button
-              onClick={exportWeeklyReport}
-              variant="outline"
-              size="sm"
-              className="hover:bg-trading-accent/10"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
-            <Button
-              onClick={compareWithPreviousWeek}
-              variant="outline"
-              size="sm"
-              className="hover:bg-trading-accent/10"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Compare
-            </Button>
-            <Button
-              onClick={refreshAnalytics}
-              variant="outline"
-              size="sm"
-              className="hover:bg-trading-accent/10"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4 mr-2" />
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={exportToCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportWeeklyReport}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export Report
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={compareWithPreviousWeek}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Compare
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={refreshAnalytics}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
