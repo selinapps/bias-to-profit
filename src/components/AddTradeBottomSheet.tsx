@@ -409,26 +409,13 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
         }
       }
       
-      // Create bias snapshot at trade entry time - this captures the bias state
-      // and session at the moment the trade is being logged, not the current day's bias
+      // Get session at trade entry time for tracking
       const tradeDate = entryTime;
       const sessionAtTradeTime = getActiveSession(tradeDate);
-      
-      const biasSnapshot = {
-        ...currentBiasState,
-        session: sessionAtTradeTime?.name ?? null, // Session based on actual trade time
-        trade_entry_time: entryTime.toISOString(), // Capture when this trade is being logged
-        trade_date: format(entryTime, 'yyyy-MM-dd'), // The actual date this trade is for
-        trade_time: format(entryTime, 'HH:mm:ss'), // The actual time this trade is for
-        session_at_trade_time: sessionAtTradeTime?.name ?? null // Explicit session at trade time
-      };
 
-        // Use setup name directly (no more model mapping)
-        const setupName = setup?.name || 'Custom';
-        
-        await addTrade({
+      await addTrade({
         asset,
-        model: setupName, // Store setup name in model field
+        model: 'trend', // Use 'trend' as default (DB constraint only allows 'trend' or 'mean_reversion')
         direction,
         locations: finalLocations,
         aggression,
@@ -449,8 +436,7 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
         is_experimental: isExperimental,
         override_reason: overrideReason || null,
         lot_size: parseFloat(lotSize) || 1.0,
-        challenge_id: selectedChallengeId,
-        bias_snapshot: biasSnapshot
+        challenge_id: selectedChallengeId
       });
 
       toast({
@@ -466,11 +452,17 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
       if (refreshTrades) {
         refreshTrades();
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error adding trade:', error);
+      console.error('Full error details:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code
+      });
       toast({
         title: "Error",
-        description: "Failed to add trade. Please try again.",
+        description: error?.message || "Failed to add trade. Please try again.",
         variant: "destructive"
       });
     } finally {

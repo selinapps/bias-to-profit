@@ -143,7 +143,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups }: Sim
       // Prepare trade data - omit challenge_id if no active challenge
       const tradeData: any = {
         asset,
-        model: currentSetup?.name || 'Custom', // Use setup name directly
+        model: 'trend', // Use 'trend' as default (DB constraint only allows 'trend' or 'mean_reversion')
         direction,
         locations: [currentSetup?.name || 'Custom'], // Use setup name as location
         aggression: [], // Simplified - no aggression tracking
@@ -162,23 +162,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups }: Sim
         notes: currentSetup?.name || null,
         is_experimental: false,
         override_reason: null,
-        lot_size: parseFloat(lotSize) || 1.0,
-        bias_snapshot: {
-          bias: 'NONE',
-          market_state: null,
-          confidence: null,
-          tags: null,
-          // ICT Session context for analysis
-          session: sessionAtEntry?.name || null,
-          session_id: sessionAtEntry?.id || null,
-          // Time tracking for best session analysis
-          trade_entry_time: entryTime.toISOString(),
-          trade_date: format(entryTime, 'yyyy-MM-dd'),
-          trade_time: format(entryTime, 'HH:mm:ss'),
-          trade_time_est: format(estTime, 'HH:mm:ss'),
-          day_of_week: format(entryTime, 'EEEE'),
-          hour_of_day: entryTime.getHours(),
-        }
+        lot_size: parseFloat(lotSize) || 1.0
       };
 
       // Only include challenge_id if there's an active challenge
@@ -193,6 +177,8 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups }: Sim
         dayOfWeek: format(entryTime, 'EEEE')
       });
       
+      console.log('📦 Full trade data being sent:', JSON.stringify(tradeData, null, 2));
+      
       await addTrade(tradeData);
 
       toast({
@@ -203,11 +189,17 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups }: Sim
 
       resetForm();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding trade:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code
+      });
       toast({
         title: "Error",
-        description: "Failed to add trade. Please try again.",
+        description: error?.message || "Failed to add trade. Please try again.",
         variant: "destructive"
       });
     } finally {

@@ -287,13 +287,23 @@ export function useTradesOptimized(): UseTradesOptimizedReturn {
   const addTrade = useCallback(async (tradeData: Omit<TradeInsert, 'user_id'>) => {
     if (!user) throw new Error('User not authenticated');
 
-    const { data, error } = await supabase.from('trades').insert({
+    const finalData = {
       ...tradeData,
       user_id: user.id,
       status: 'open'
-    }).select();
+    };
+    
+    console.log('🚀 Sending to Supabase:', JSON.stringify(finalData, null, 2));
+
+    const { data, error } = await supabase.from('trades').insert(finalData).select();
 
     if (error) {
+      console.error('❌ Supabase error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       logger.error('Error inserting trade:', error);
       throw error;
     }
