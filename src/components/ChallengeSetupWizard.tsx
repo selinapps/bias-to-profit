@@ -19,7 +19,8 @@ import {
   Trophy,
   Zap,
   Crown,
-  Leaf
+  Leaf,
+  Star
 } from 'lucide-react';
 import type { ChallengeSetup, ChallengeDifficulty } from '@/types/discipline';
 import { CHALLENGE_DIFFICULTIES } from '@/types/discipline';
@@ -30,11 +31,11 @@ interface ChallengeSetupWizardProps {
 }
 
 const STEPS = [
-  { id: 'welcome', title: 'Welcome', description: 'Start your discipline journey' },
+  { id: 'intro', title: 'Introduction', description: 'Transform your trading' },
   { id: 'difficulty', title: 'Difficulty', description: 'Choose your challenge level' },
   { id: 'rules', title: 'Rules', description: 'Review discipline rules' },
   { id: 'setup', title: 'Setup', description: 'Configure your challenge' },
-  { id: 'ready', title: 'Ready', description: 'Start your challenge' }
+  { id: 'launch', title: 'Launch', description: 'Begin your transformation' }
 ];
 
 export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeSetupWizardProps) {
@@ -85,38 +86,63 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
     switch (currentStep) {
       case 0:
         return (
-          <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <Trophy className="h-8 w-8 text-primary" />
+          <div className="text-center space-y-8">
+            <div className="relative">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full flex items-center justify-center">
+                <Trophy className="h-10 w-10 text-purple-500" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                <Star className="h-4 w-4 text-yellow-900" />
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-2">30-Day Discipline Challenge</h2>
-              <p className="text-muted-foreground">
-                Build unbreakable trading discipline through consistent practice of core rules.
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Master Your Trading Edge
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Join the elite 5% of traders who achieve consistent profitability through 
+                disciplined execution and systematic improvement.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-              <div className="flex items-start gap-3">
-                <Target className="h-5 w-5 text-primary mt-0.5" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-8">
+              <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Target className="h-6 w-6 text-blue-500" />
+                </div>
                 <div>
-                  <h3 className="font-medium">Follow Setup</h3>
-                  <p className="text-sm text-muted-foreground">Only trade your predefined setups</p>
+                  <h3 className="font-semibold text-lg">Setup Precision</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Execute only high-probability setups with clear edge
+                  </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-lg bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-purple-500" />
+                </div>
                 <div>
-                  <h3 className="font-medium">Respect SL</h3>
-                  <p className="text-sm text-muted-foreground">Never move stop loss against you</p>
+                  <h3 className="font-semibold text-lg">Risk Control</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Protect capital with unwavering stop loss discipline
+                  </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-lg bg-gradient-to-br from-green-500/10 to-transparent border border-green-500/20">
+                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-green-500" />
+                </div>
                 <div>
-                  <h3 className="font-medium">Risk Management</h3>
-                  <p className="text-sm text-muted-foreground">Strict risk per trade limits</p>
+                  <h3 className="font-semibold text-lg">Consistent Growth</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Build sustainable edge through 30 days of excellence
+                  </p>
                 </div>
               </div>
+            </div>
+            <div className="pt-4">
+              <p className="text-sm text-muted-foreground">
+                🎯 Track your progress • 📊 Measure your edge • 🏆 Achieve mastery
+              </p>
             </div>
           </div>
         );
@@ -295,39 +321,55 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
 
       case 4:
         return (
-          <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <Check className="h-8 w-8 text-green-600" />
+          <div className="text-center space-y-8">
+            <div className="relative">
+              <div className="mx-auto w-24 h-24 bg-gradient-to-br from-green-400/20 to-emerald-600/20 rounded-full flex items-center justify-center animate-pulse">
+                <Zap className="h-12 w-12 text-green-500" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-32 h-32 bg-green-500/10 rounded-full animate-ping" style={{ animationDuration: '2s' }}></div>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Ready to Start!</h2>
-              <p className="text-muted-foreground">
-                Your 30-day discipline challenge is configured and ready to begin.
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                You're All Set! 🚀
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                Your personalized challenge is ready. Time to turn discipline into profit 
+                and join the elite traders who master their edge.
               </p>
             </div>
-            <Card className="text-left">
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-2">Challenge Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Name:</span>
-                    <span className="font-medium">{customSetup.challenge_name}</span>
+            <Card className="text-left border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-lg">Your Challenge Configuration</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
+                    <span className="text-sm text-muted-foreground">Challenge Name</span>
+                    <span className="font-semibold">{customSetup.challenge_name}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Max Daily Losses:</span>
-                    <span className="font-medium">{customSetup.max_daily_losses}</span>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
+                    <span className="text-sm text-muted-foreground">Max Daily Losses</span>
+                    <Badge variant="outline" className="font-semibold">{customSetup.max_daily_losses} trades</Badge>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Max Risk Per Trade:</span>
-                    <span className="font-medium">{customSetup.max_risk_per_trade}%</span>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
+                    <span className="text-sm text-muted-foreground">Max Risk Per Trade</span>
+                    <Badge variant="outline" className="font-semibold">{customSetup.max_risk_per_trade}%</Badge>
                   </div>
-                  <div className="flex justify-between">
-                    <span>House Money Threshold:</span>
-                    <span className="font-medium">{customSetup.house_money_threshold}%</span>
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
+                    <span className="text-sm text-muted-foreground">House Money Threshold</span>
+                    <Badge variant="outline" className="font-semibold">{customSetup.house_money_threshold}%</Badge>
                   </div>
                 </div>
               </CardContent>
             </Card>
+            <div className="pt-2">
+              <p className="text-sm text-muted-foreground">
+                💪 Stay disciplined • 📈 Track everything • 🎯 Execute with precision
+              </p>
+            </div>
           </div>
         );
 
@@ -364,9 +406,9 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
             Previous
           </Button>
           {currentStep === STEPS.length - 1 ? (
-            <Button onClick={handleStartChallenge}>
-              <Trophy className="h-4 w-4 mr-2" />
-              Start Challenge
+            <Button onClick={handleStartChallenge} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+              <Zap className="h-4 w-4 mr-2" />
+              Launch Challenge
             </Button>
           ) : (
             <Button onClick={handleNext}>
