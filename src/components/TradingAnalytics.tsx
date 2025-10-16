@@ -4,6 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { 
   Clock, 
   TrendingUp, 
@@ -21,7 +28,8 @@ import {
   FileText,
   Brain,
   Zap,
-  Timer
+  Timer,
+  MoreVertical
 } from 'lucide-react';
 import { useTradingAnalytics } from '@/hooks/useTradingAnalytics';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
@@ -67,7 +75,7 @@ export function TradingAnalytics() {
       trade.entry_time ? format(new Date(trade.entry_time), 'yyyy-MM-dd HH:mm') : '',
       trade.asset || '',
       trade.direction || '',
-      trade.model || '',
+      Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || ''),
       trade.entry_price || '',
       trade.exit_price || '',
       trade.stop_loss || '',
@@ -509,49 +517,85 @@ export function TradingAnalytics() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Trading Analytics</h2>
-          <p className="text-trading-muted">Performance insights and trading patterns</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">Trading Analytics</h2>
+          <p className="text-sm text-trading-muted hidden sm:block">Performance insights and trading patterns</p>
         </div>
+        
+        {/* Desktop: Side-by-side buttons, Mobile: Dropdown menu */}
         <div className="flex items-center gap-2">
-          <Button
-            onClick={exportToCSV}
-            variant="outline"
-            size="sm"
-            className="hover:bg-trading-accent/10"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button
-            onClick={exportWeeklyReport}
-            variant="outline"
-            size="sm"
-            className="hover:bg-trading-accent/10"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-          <Button
-            onClick={compareWithPreviousWeek}
-            variant="outline"
-            size="sm"
-            className="hover:bg-trading-accent/10"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Compare
-          </Button>
-          <Button
-            onClick={refreshAnalytics}
-            variant="outline"
-            size="sm"
-            className="hover:bg-trading-accent/10"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          {/* Mobile: Dropdown menu */}
+          <div className="sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreVertical className="h-4 w-4 mr-2" />
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={exportToCSV}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportWeeklyReport}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Export Report
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={compareWithPreviousWeek}>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Compare
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={refreshAnalytics}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          {/* Desktop: Individual buttons */}
+          <div className="hidden sm:flex items-center gap-2">
+            <Button
+              onClick={exportToCSV}
+              variant="outline"
+              size="sm"
+              className="hover:bg-trading-accent/10"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button
+              onClick={exportWeeklyReport}
+              variant="outline"
+              size="sm"
+              className="hover:bg-trading-accent/10"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+            <Button
+              onClick={compareWithPreviousWeek}
+              variant="outline"
+              size="sm"
+              className="hover:bg-trading-accent/10"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Compare
+            </Button>
+            <Button
+              onClick={refreshAnalytics}
+              variant="outline"
+              size="sm"
+              className="hover:bg-trading-accent/10"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 

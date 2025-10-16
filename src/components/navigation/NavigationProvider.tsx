@@ -143,7 +143,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
     
     return {
       activeItem: 'dashboard',
-      isCollapsed: false,
+      isCollapsed: true, // Start collapsed by default
       density: 'comfortable',
       recentItems: [],
       pinnedItems: ['dashboard', 'trades']
