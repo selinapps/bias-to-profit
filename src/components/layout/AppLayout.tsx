@@ -167,7 +167,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { settings, updateSetting } = useSettings();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed
   const [showSettings, setShowSettings] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
