@@ -24,7 +24,8 @@ import {
   BarChart3,
   Award,
   Zap,
-  Activity
+  Activity,
+  Brain
 } from 'lucide-react';
 // import { useDisciplineChallenge } from '@/hooks/useDisciplineChallenge';
 import { useAuth } from '@/hooks/useAuth';
