@@ -3,14 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import {
   Target,
   Shield,
-  AlertTriangle,
   TrendingUp,
   X,
   Check,
@@ -18,12 +14,13 @@ import {
   ArrowLeft,
   Trophy,
   Zap,
-  Crown,
-  Leaf,
-  Star
+  Star,
+  Brain,
+  Activity,
+  Clock,
+  BarChart3
 } from 'lucide-react';
-import type { ChallengeSetup, ChallengeDifficulty } from '@/types/discipline';
-import { CHALLENGE_DIFFICULTIES } from '@/types/discipline';
+import type { ChallengeSetup } from '@/types/discipline';
 
 interface ChallengeSetupWizardProps {
   onCreateChallenge: (setup: ChallengeSetup) => Promise<void>;
@@ -31,18 +28,16 @@ interface ChallengeSetupWizardProps {
 }
 
 const STEPS = [
-  { id: 'intro', title: 'Introduction', description: 'Transform your trading' },
-  { id: 'difficulty', title: 'Difficulty', description: 'Choose your challenge level' },
-  { id: 'rules', title: 'Rules', description: 'Review discipline rules' },
+  { id: 'intro', title: 'Introduction', description: 'Build your trading edge' },
+  { id: 'metrics', title: 'Edge Metrics', description: 'How your edge is calculated' },
   { id: 'setup', title: 'Setup', description: 'Configure your challenge' },
-  { id: 'launch', title: 'Launch', description: 'Begin your transformation' }
+  { id: 'launch', title: 'Launch', description: 'Begin your journey' }
 ];
 
 export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeSetupWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<ChallengeDifficulty>(CHALLENGE_DIFFICULTIES[0]);
   const [customSetup, setCustomSetup] = useState<ChallengeSetup>({
-    challenge_name: '30-Day Discipline Challenge',
+    challenge_name: '30-Day Edge-Building Challenge',
     max_daily_losses: 3,
     max_risk_per_trade: 2.0,
     house_money_threshold: 3.0,
@@ -62,24 +57,8 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
     }
   };
 
-  const handleDifficultySelect = (difficulty: ChallengeDifficulty) => {
-    setSelectedDifficulty(difficulty);
-    setCustomSetup({
-      ...customSetup,
-      max_daily_losses: difficulty.max_daily_losses,
-      max_risk_per_trade: difficulty.max_risk_per_trade,
-      house_money_threshold: difficulty.house_money_threshold
-    });
-  };
-
   const handleStartChallenge = async () => {
     await onCreateChallenge(customSetup);
-  };
-
-  const getStepIcon = (stepIndex: number) => {
-    if (stepIndex < currentStep) return <Check className="h-4 w-4" />;
-    if (stepIndex === currentStep) return <div className="w-4 h-4 bg-primary rounded-full" />;
-    return <div className="w-4 h-4 bg-muted rounded-full" />;
   };
 
   const renderStep = () => {
@@ -88,60 +67,78 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
         return (
           <div className="text-center space-y-8">
             <div className="relative">
-              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full flex items-center justify-center">
-                <Trophy className="h-10 w-10 text-purple-500" />
+              <div className="mx-auto w-24 h-24 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full flex items-center justify-center">
+                <BarChart3 className="h-12 w-12 text-purple-500" />
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                <Star className="h-4 w-4 text-yellow-900" />
+              <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+                <Star className="h-5 w-5 text-yellow-900" />
               </div>
             </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Master Your Trading Edge
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Build Your Trading Edge
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Join the elite 5% of traders who achieve consistent profitability through 
-                disciplined execution and systematic improvement.
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Track and improve your <span className="font-semibold text-foreground">Edge Score</span> over 30 days. 
+                This isn't about following rigid rules—it's about building sustainable trading excellence through measurable metrics.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-8">
-              <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Target className="h-6 w-6 text-blue-500" />
+            
+            <div className="max-w-3xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                <div className="flex items-start gap-3 p-5 rounded-xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
+                    <BarChart3 className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-base mb-1">Live Edge Score</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Real-time calculation from your actual trades (0-100 score)
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Setup Precision</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Execute only high-probability setups with clear edge
-                  </p>
+                
+                <div className="flex items-start gap-3 p-5 rounded-xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center shrink-0">
+                    <Target className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-base mb-1">Data-Driven Insights</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Automatic analysis of process, risk, emotions, and more
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-lg bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-purple-500" />
+                
+                <div className="flex items-start gap-3 p-5 rounded-xl bg-gradient-to-br from-green-500/10 to-transparent border border-green-500/20">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
+                    <TrendingUp className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-base mb-1">30-Day Journey</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Track improvement over time with streaks and milestones
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Risk Control</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Protect capital with unwavering stop loss discipline
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center text-center space-y-3 p-6 rounded-lg bg-gradient-to-br from-green-500/10 to-transparent border border-green-500/20">
-                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-green-500" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Consistent Growth</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Build sustainable edge through 30 days of excellence
-                  </p>
+                
+                <div className="flex items-start gap-3 p-5 rounded-xl bg-gradient-to-br from-orange-500/10 to-transparent border border-orange-500/20">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center shrink-0">
+                    <Activity className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-base mb-1">Zero Manual Entry</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Everything calculated from your trade journal automatically
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
+
             <div className="pt-4">
               <p className="text-sm text-muted-foreground">
-                🎯 Track your progress • 📊 Measure your edge • 🏆 Achieve mastery
+                🎯 No daily forms • 📊 Automatic tracking • 🏆 Real-time updates
               </p>
             </div>
           </div>
@@ -149,87 +146,141 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
 
       case 1:
         return (
-          <div className="space-y-8">
-            <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Choose Your Path
+          <div className="space-y-6">
+            <div className="text-center space-y-3 mb-8">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Your Edge Score Formula
               </h2>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Select the difficulty that aligns with your current discipline level. 
-                You can always adjust these settings later.
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Your Edge Score (0-100) is automatically calculated from every trade you log. 
+                Here are the 5 weighted components:
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {CHALLENGE_DIFFICULTIES.map((difficulty) => (
-                <div
-                  key={difficulty.id}
-                  onClick={() => handleDifficultySelect(difficulty)}
-                  className={`relative cursor-pointer transition-all duration-300 ${
-                    selectedDifficulty.id === difficulty.id
-                      ? 'scale-105'
-                      : 'hover:scale-102'
-                  }`}
-                >
-                  <Card className={`h-full ${
-                    selectedDifficulty.id === difficulty.id
-                      ? difficulty.id === 'beginner' ? 'ring-2 ring-green-500 border-green-500 bg-gradient-to-br from-green-500/10 to-transparent'
-                      : difficulty.id === 'intermediate' ? 'ring-2 ring-blue-500 border-blue-500 bg-gradient-to-br from-blue-500/10 to-transparent'
-                      : 'ring-2 ring-purple-500 border-purple-500 bg-gradient-to-br from-purple-500/10 to-transparent'
-                      : 'hover:border-primary/50'
-                  }`}>
-                    <CardContent className="p-6 space-y-4">
-                      {/* Icon and Title */}
-                      <div className="flex items-center justify-between">
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                          difficulty.id === 'beginner' ? 'bg-green-500/20'
-                          : difficulty.id === 'intermediate' ? 'bg-blue-500/20'
-                          : 'bg-purple-500/20'
-                        }`}>
-                          {difficulty.id === 'beginner' && <Leaf className="h-7 w-7 text-green-500" />}
-                          {difficulty.id === 'intermediate' && <Zap className="h-7 w-7 text-blue-500" />}
-                          {difficulty.id === 'advanced' && <Crown className="h-7 w-7 text-purple-500" />}
-                        </div>
-                        {selectedDifficulty.id === difficulty.id && (
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                            difficulty.id === 'beginner' ? 'bg-green-500'
-                            : difficulty.id === 'intermediate' ? 'bg-blue-500'
-                            : 'bg-purple-500'
-                          }`}>
-                            <Check className="h-4 w-4 text-white" />
-                          </div>
-                        )}
+
+            <div className="space-y-3">
+              {/* Process Adherence */}
+              <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-500/10 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Check className="h-7 w-7 text-blue-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">Process Adherence</h3>
+                        <div className="text-2xl font-bold text-blue-500">30%</div>
                       </div>
-                      
-                      {/* Title and Description */}
-                      <div>
-                        <h3 className="text-xl font-bold mb-2">{difficulty.name}</h3>
-                        <p className="text-sm text-muted-foreground">{difficulty.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Did you follow your trading plan and checklists? Tracked via "good actions" in your trades.
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        ✓ Checklist completed • ✓ Plan followed • ✓ No impulsive entries
                       </div>
-                      
-                      {/* Stats */}
-                      <div className="space-y-3 pt-2">
-                        <div className="flex items-center justify-between p-2 rounded-lg bg-background/50">
-                          <span className="text-sm text-muted-foreground">Daily Loss Limit</span>
-                          <span className="font-semibold">{difficulty.max_daily_losses} trades</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded-lg bg-background/50">
-                          <span className="text-sm text-muted-foreground">Max Risk/Trade</span>
-                          <span className="font-semibold">{difficulty.max_risk_per_trade}%</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded-lg bg-background/50">
-                          <span className="text-sm text-muted-foreground">House Money At</span>
-                          <span className="font-semibold">{difficulty.house_money_threshold}%</span>
-                        </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Risk Consistency */}
+              <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 bg-emerald-500/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Shield className="h-7 w-7 text-emerald-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">Risk Consistency</h3>
+                        <div className="text-2xl font-bold text-emerald-500">25%</div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Maintaining consistent position sizing within $100-$500 risk per trade. Shows discipline in risk management.
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        ✓ Risk within limits • ✓ Consistent sizing • ✓ No over-leveraging
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Emotional Control */}
+              <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-500/10 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Brain className="h-7 w-7 text-purple-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">Emotional Control</h3>
+                        <div className="text-2xl font-bold text-purple-500">20%</div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Trading with calm emotions, high focus, and no revenge trading. Tracked via emotions data.
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        ✓ Stress ≤5 • ✓ Focus ≥6 • ✓ Low urge to recover
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Setup Quality */}
+              <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-500/10 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Target className="h-7 w-7 text-orange-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">Setup Quality</h3>
+                        <div className="text-2xl font-bold text-orange-500">15%</div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Using defined execution models (not "Unknown" or "Custom"). Shows you have a systematic approach.
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        ✓ Using defined setups • ✓ No random entries
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Session Alignment */}
+              <Card className="border-l-4 border-l-cyan-500 bg-gradient-to-r from-cyan-500/10 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 bg-cyan-500/20 rounded-xl flex items-center justify-center shrink-0">
+                      <Clock className="h-7 w-7 text-cyan-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-lg">Session Alignment</h3>
+                        <div className="text-2xl font-bold text-cyan-500">10%</div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Trading during optimal ICT killzones (London Open, NY Killzone, Silver Bullet hour).
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        ✓ ICT killzones • ✓ Optimal timing
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                💡 <strong>Tip:</strong> Start with Beginner if you're new to discipline challenges
-              </p>
+
+            <div className="text-center pt-4">
+              <div className="inline-block p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+                <p className="text-sm font-semibold mb-1">Total Edge Score = Weighted Average</p>
+                <p className="text-xs text-muted-foreground">
+                  Updates automatically with each trade you journal
+                </p>
+              </div>
             </div>
           </div>
         );
@@ -238,107 +289,18 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
         return (
           <div className="space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                The 5 Sacred Rules
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Master these core principles over 30 days. Each rule is worth 20 points 
-                in your daily discipline score.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {[
-                {
-                  icon: Target,
-                  title: 'Follow Your Setup',
-                  description: 'Only take trades that match your predefined setup criteria. No impulsive trades.',
-                  color: 'blue',
-                  gradient: 'from-blue-500/20 to-blue-600/5',
-                  iconBg: 'bg-blue-500/20',
-                  iconColor: 'text-blue-500'
-                },
-                {
-                  icon: Shield,
-                  title: 'Never Move Stop Loss',
-                  description: 'Never move your stop loss against you. You can only move it in your favor.',
-                  color: 'red',
-                  gradient: 'from-red-500/20 to-red-600/5',
-                  iconBg: 'bg-red-500/20',
-                  iconColor: 'text-red-500'
-                },
-                {
-                  icon: AlertTriangle,
-                  title: 'Respect Risk Per Trade',
-                  description: `Never risk more than ${selectedDifficulty.max_risk_per_trade}% of your account per trade. Protect your capital.`,
-                  color: 'orange',
-                  gradient: 'from-orange-500/20 to-orange-600/5',
-                  iconBg: 'bg-orange-500/20',
-                  iconColor: 'text-orange-500'
-                },
-                {
-                  icon: TrendingUp,
-                  title: 'House Money Rules',
-                  description: `When you reach ${selectedDifficulty.house_money_threshold}% profit, reduce risk and protect your gains.`,
-                  color: 'green',
-                  gradient: 'from-green-500/20 to-green-600/5',
-                  iconBg: 'bg-green-500/20',
-                  iconColor: 'text-green-500'
-                },
-                {
-                  icon: X,
-                  title: 'Three Losses Rule',
-                  description: `Stop trading immediately after ${selectedDifficulty.max_daily_losses} consecutive losses. Live to trade another day.`,
-                  color: 'purple',
-                  gradient: 'from-purple-500/20 to-purple-600/5',
-                  iconBg: 'bg-purple-500/20',
-                  iconColor: 'text-purple-500'
-                }
-              ].map((rule, index) => (
-                <Card key={index} className={`border-l-4 border-l-${rule.color}-500 bg-gradient-to-r ${rule.gradient}`}>
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${rule.iconBg}`}>
-                        <rule.icon className={`h-6 w-6 ${rule.iconColor}`} />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-lg">{rule.title}</h3>
-                          <div className="flex items-center gap-2">
-                            <Badge className={rule.iconBg}>20 pts</Badge>
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{rule.description}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-sm font-semibold">Total Daily Score: 100 points</p>
-              <p className="text-xs text-muted-foreground">
-                Follow all 5 rules perfectly each day to achieve 100% discipline score
-              </p>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-8">
-            <div className="text-center space-y-3">
               <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-                Fine-Tune Your Challenge
+                Personalize Your Challenge
               </h2>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Personalize your challenge settings to match your trading style and goals.
+                Give your challenge a name and set optional risk parameters for tracking.
               </p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-2xl mx-auto">
               {/* Challenge Name */}
               <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-primary" />
                     <Label htmlFor="challenge-name" className="text-base font-semibold">Challenge Name</Label>
@@ -347,26 +309,26 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
                     id="challenge-name"
                     value={customSetup.challenge_name}
                     onChange={(e) => setCustomSetup({ ...customSetup, challenge_name: e.target.value })}
-                    placeholder="My Trading Discipline Journey"
+                    placeholder="My 30-Day Edge-Building Journey"
                     className="text-base h-12"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Give your challenge a memorable name that motivates you
+                    This will appear on your challenge dashboard
                   </p>
                 </CardContent>
               </Card>
 
-              {/* Settings Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Max Daily Losses */}
-                <Card className="border-red-500/20 bg-gradient-to-br from-red-500/5 to-transparent">
-                  <CardContent className="p-5 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                        <X className="h-4 w-4 text-red-500" />
-                      </div>
-                      <Label htmlFor="max-losses" className="font-semibold">Max Daily Losses</Label>
-                    </div>
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Optional:</strong> Set risk parameters (these don't affect your Edge Score)
+                </p>
+              </div>
+
+              {/* Risk Parameters - Optional */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-70">
+                <Card className="border-orange-500/20">
+                  <CardContent className="p-4 space-y-3">
+                    <Label htmlFor="max-losses" className="text-sm font-semibold">Max Daily Losses</Label>
                     <Input
                       id="max-losses"
                       type="number"
@@ -374,129 +336,107 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
                       max="5"
                       value={customSetup.max_daily_losses}
                       onChange={(e) => setCustomSetup({ ...customSetup, max_daily_losses: parseInt(e.target.value) })}
-                      className="text-lg h-12 text-center font-bold"
+                      className="text-center h-10"
                     />
-                    <p className="text-xs text-muted-foreground text-center">
-                      Stop after this many losses
-                    </p>
+                    <p className="text-xs text-muted-foreground">Personal limit</p>
                   </CardContent>
                 </Card>
 
-                {/* Max Risk Per Trade */}
-                <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-transparent">
-                  <CardContent className="p-5 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
-                      </div>
-                      <Label htmlFor="max-risk" className="font-semibold">Max Risk (%)</Label>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        id="max-risk"
-                        type="number"
-                        min="0.5"
-                        max="5"
-                        step="0.5"
-                        value={customSetup.max_risk_per_trade}
-                        onChange={(e) => setCustomSetup({ ...customSetup, max_risk_per_trade: parseFloat(e.target.value) })}
-                        className="text-lg h-12 text-center font-bold pr-8"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Per trade risk limit
-                    </p>
+                <Card className="border-red-500/20">
+                  <CardContent className="p-4 space-y-3">
+                    <Label htmlFor="max-risk" className="text-sm font-semibold">Max Risk %</Label>
+                    <Input
+                      id="max-risk"
+                      type="number"
+                      min="0.5"
+                      max="5"
+                      step="0.5"
+                      value={customSetup.max_risk_per_trade}
+                      onChange={(e) => setCustomSetup({ ...customSetup, max_risk_per_trade: parseFloat(e.target.value) })}
+                      className="text-center h-10"
+                    />
+                    <p className="text-xs text-muted-foreground">Per trade</p>
                   </CardContent>
                 </Card>
 
-                {/* House Money Threshold */}
-                <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
-                  <CardContent className="p-5 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                      </div>
-                      <Label htmlFor="house-money" className="font-semibold">House Money (%)</Label>
-                    </div>
-                    <div className="relative">
-                      <Input
-                        id="house-money"
-                        type="number"
-                        min="1"
-                        max="10"
-                        step="0.5"
-                        value={customSetup.house_money_threshold}
-                        onChange={(e) => setCustomSetup({ ...customSetup, house_money_threshold: parseFloat(e.target.value) })}
-                        className="text-lg h-12 text-center font-bold pr-8"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Profit threshold
-                    </p>
+                <Card className="border-green-500/20">
+                  <CardContent className="p-4 space-y-3">
+                    <Label htmlFor="house-money" className="text-sm font-semibold">House Money %</Label>
+                    <Input
+                      id="house-money"
+                      type="number"
+                      min="1"
+                      max="10"
+                      step="0.5"
+                      value={customSetup.house_money_threshold}
+                      onChange={(e) => setCustomSetup({ ...customSetup, house_money_threshold: parseFloat(e.target.value) })}
+                      className="text-center h-10"
+                    />
+                    <p className="text-xs text-muted-foreground">Profit threshold</p>
                   </CardContent>
                 </Card>
               </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                ⚙️ Settings are pre-filled based on your selected difficulty level
-              </p>
             </div>
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="text-center space-y-8">
             <div className="relative">
-              <div className="mx-auto w-24 h-24 bg-gradient-to-br from-green-400/20 to-emerald-600/20 rounded-full flex items-center justify-center animate-pulse">
-                <Zap className="h-12 w-12 text-green-500" />
+              <div className="mx-auto w-28 h-28 bg-gradient-to-br from-green-400/20 to-emerald-600/20 rounded-full flex items-center justify-center animate-pulse">
+                <Zap className="h-14 w-14 text-green-500" />
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-32 h-32 bg-green-500/10 rounded-full animate-ping" style={{ animationDuration: '2s' }}></div>
+                <div className="w-36 h-36 bg-green-500/10 rounded-full animate-ping" style={{ animationDuration: '2s' }}></div>
               </div>
             </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                You're All Set! 🚀
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                Ready to Launch! 🚀
               </h2>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Your personalized challenge is ready. Time to turn discipline into profit 
-                and join the elite traders who master their edge.
+                Your Edge-Building challenge is configured. Start journaling trades 
+                and watch your Edge Score improve over the next 30 days.
               </p>
             </div>
-            <Card className="text-left border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Trophy className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-lg">Your Challenge Configuration</h3>
+            
+            <Card className="max-w-2xl mx-auto border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <BarChart3 className="h-6 w-6 text-primary" />
+                  <h3 className="font-bold text-xl">{customSetup.challenge_name}</h3>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
-                    <span className="text-sm text-muted-foreground">Challenge Name</span>
-                    <span className="font-semibold">{customSetup.challenge_name}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
-                    <span className="text-sm text-muted-foreground">Max Daily Losses</span>
-                    <Badge variant="outline" className="font-semibold">{customSetup.max_daily_losses} trades</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
-                    <span className="text-sm text-muted-foreground">Max Risk Per Trade</span>
-                    <Badge variant="outline" className="font-semibold">{customSetup.max_risk_per_trade}%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
-                    <span className="text-sm text-muted-foreground">House Money Threshold</span>
-                    <Badge variant="outline" className="font-semibold">{customSetup.house_money_threshold}%</Badge>
+                
+                <div className="space-y-4 text-left">
+                  <div className="p-4 rounded-lg bg-background/80">
+                    <div className="text-sm text-muted-foreground mb-2">What happens next:</div>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>Journal your trades as normal with checklists and emotions</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>Your Edge Score updates automatically from your trade data</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>Track progress across 5 weighted components over 30 days</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>Unlock achievements as you hit Edge Score milestones</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <div className="pt-2">
+
+            <div className="pt-4">
               <p className="text-sm text-muted-foreground">
-                💪 Stay disciplined • 📈 Track everything • 🎯 Execute with precision
+                💡 Remember: Quality over quantity. Each trade should be well-documented for accurate scoring.
               </p>
             </div>
           </div>
@@ -511,7 +451,7 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
     <div className="max-w-4xl mx-auto">
       <Card className="border-2">
         <CardHeader className="space-y-6">
-          {/* Header with title and close button */}
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-2xl">{STEPS[currentStep].title}</CardTitle>
@@ -522,22 +462,20 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
             </Button>
           </div>
           
-          {/* Modern Step Indicator */}
-          <div className="flex items-center justify-between gap-2">
+          {/* Progress Indicator */}
+          <div className="flex items-center gap-2">
             {STEPS.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-1">
+              <React.Fragment key={step.id}>
                 <div className="flex flex-col items-center gap-2 flex-1">
-                  <div className={`w-full h-1 rounded-full transition-all ${
+                  <div className={`w-full h-1.5 rounded-full transition-all ${
                     index <= currentStep ? 'bg-primary' : 'bg-muted'
                   }`} />
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
-                      index < currentStep ? 'bg-primary text-primary-foreground' 
-                      : index === currentStep ? 'bg-primary text-primary-foreground ring-4 ring-primary/20'
-                      : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {index < currentStep ? <Check className="h-4 w-4" /> : index + 1}
-                    </div>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                    index < currentStep ? 'bg-primary text-primary-foreground' 
+                    : index === currentStep ? 'bg-primary text-primary-foreground ring-4 ring-primary/20'
+                    : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {index < currentStep ? <Check className="h-5 w-5" /> : index + 1}
                   </div>
                   <p className={`text-xs font-medium hidden md:block ${
                     index === currentStep ? 'text-foreground' : 'text-muted-foreground'
@@ -546,11 +484,11 @@ export function ChallengeSetupWizard({ onCreateChallenge, onCancel }: ChallengeS
                   </p>
                 </div>
                 {index < STEPS.length - 1 && (
-                  <div className={`w-full h-1 rounded-full mx-2 transition-all ${
+                  <div className={`w-full h-1.5 rounded-full mx-2 transition-all ${
                     index < currentStep ? 'bg-primary' : 'bg-muted'
                   }`} />
                 )}
-              </div>
+              </React.Fragment>
             ))}
           </div>
         </CardHeader>
