@@ -131,14 +131,24 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
   ]);
 
   const [state, setState] = useState<NavigationState>(() => {
-    // Load from localStorage if available
-    const saved = localStorage.getItem('navigation-state');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // Fallback to default
+    // Version check - force reset if version changed
+    const NAVIGATION_VERSION = 'v2'; // Increment this to force reset
+    const savedVersion = localStorage.getItem('navigation-version');
+    
+    // Load from localStorage if available AND version matches
+    if (savedVersion === NAVIGATION_VERSION) {
+      const saved = localStorage.getItem('navigation-state');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // Fallback to default
+        }
       }
+    } else {
+      // Version mismatch or no version - clear old data and set new version
+      localStorage.removeItem('navigation-state');
+      localStorage.setItem('navigation-version', NAVIGATION_VERSION);
     }
     
     return {
