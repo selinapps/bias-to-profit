@@ -263,35 +263,41 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
               )}
             </div>
             
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <Label htmlFor="entry-date" className="text-xs text-slate-400">Date</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="entry-date" className="text-xs text-trading-muted">Date</Label>
                 <Input
                   id="entry-date"
                   type="date"
                   value={format(entryTime, 'yyyy-MM-dd')}
                   onChange={(e) => {
-                    const [year, month, day] = e.target.value.split('-').map(Number);
-                    const newTime = new Date(entryTime);
-                    newTime.setFullYear(year, month - 1, day);
-                    setEntryTime(newTime);
+                    const dateValue = e.target.value;
+                    if (dateValue) {
+                      const [year, month, day] = dateValue.split('-').map(Number);
+                      const newTime = new Date(entryTime);
+                      newTime.setFullYear(year, month - 1, day);
+                      setEntryTime(newTime);
+                    }
                   }}
-                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
+                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                 />
               </div>
-              <div>
-                <Label htmlFor="entry-time" className="text-xs text-slate-400">Time (Local)</Label>
+              <div className="space-y-1">
+                <Label htmlFor="entry-time" className="text-xs text-trading-muted">Time</Label>
                 <Input
                   id="entry-time"
                   type="time"
                   value={format(entryTime, 'HH:mm')}
                   onChange={(e) => {
-                    const [hours, minutes] = e.target.value.split(':').map(Number);
-                    const newTime = new Date(entryTime);
-                    newTime.setHours(hours, minutes, 0, 0);
-                    setEntryTime(newTime);
+                    const timeValue = e.target.value;
+                    if (timeValue) {
+                      const [hours, minutes] = timeValue.split(':').map(Number);
+                      const newTime = new Date(entryTime);
+                      newTime.setHours(hours, minutes, 0, 0);
+                      setEntryTime(newTime);
+                    }
                   }}
-                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
+                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                 />
               </div>
             </div>
