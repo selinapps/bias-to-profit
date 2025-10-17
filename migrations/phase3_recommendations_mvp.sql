@@ -85,11 +85,11 @@ BEGIN
   RETURN QUERY
   WITH discipline_stats AS (
     SELECT 
-      COALESCE(discipline_tag, 'untagged') as tag,
-      COUNT(*) as trade_count,
-      SUM(COALESCE(r_multiple, 0)) as total_r,
-      AVG(COALESCE(r_multiple, 0)) as avg_r,
-      (COUNT(*) FILTER (WHERE COALESCE(r_multiple, 0) > 0)::numeric / NULLIF(COUNT(*), 0) * 100) as win_rate
+      COALESCE(discipline_tag, 'untagged') as discipline_tag_value,
+      COUNT(*) as count_trades,
+      SUM(COALESCE(r_multiple, 0)) as sum_r,
+      AVG(COALESCE(r_multiple, 0)) as average_r,
+      (COUNT(*) FILTER (WHERE COALESCE(r_multiple, 0) > 0)::numeric / NULLIF(COUNT(*), 0) * 100) as win_pct
     FROM trades
     WHERE user_id = p_user_id
       AND status = 'closed'
@@ -97,26 +97,26 @@ BEGIN
     GROUP BY COALESCE(discipline_tag, 'untagged')
   ),
   baseline AS (
-    SELECT AVG(avg_r) as baseline_avg_r
+    SELECT AVG(average_r) as baseline_avg_r
     FROM discipline_stats
-    WHERE tag IN ('followed_plan', 'Followed Plan', 'followed plan')
+    WHERE discipline_tag_value IN ('followed_plan', 'Followed Plan', 'followed plan')
   )
   SELECT 
-    ds.tag,
-    ds.trade_count,
-    ds.total_r,
-    ds.avg_r,
-    ds.win_rate,
+    ds.discipline_tag_value::text as tag,
+    ds.count_trades::bigint as trade_count,
+    ds.sum_r::numeric as total_r,
+    ds.average_r::numeric as avg_r,
+    ds.win_pct::numeric as win_rate,
     -- Expected gain if we remove negative tags
     CASE 
-      WHEN ds.avg_r < 0 THEN ABS(ds.total_r)
-      WHEN ds.avg_r < (SELECT baseline_avg_r FROM baseline) 
-        THEN (SELECT baseline_avg_r FROM baseline) * ds.trade_count - ds.total_r
+      WHEN ds.average_r < 0 THEN ABS(ds.sum_r)
+      WHEN ds.average_r < COALESCE((SELECT baseline_avg_r FROM baseline), 0)
+        THEN COALESCE((SELECT baseline_avg_r FROM baseline), 0) * ds.count_trades - ds.sum_r
       ELSE 0
-    END as expected_gain_if_removed
+    END::numeric as expected_gain_if_removed
   FROM discipline_stats ds
-  WHERE ds.tag IN ('FOMO', 'fomo', 'revenge', 'Revenge', 'impatient', 'Impatient')
-    OR ds.avg_r < 0
+  WHERE ds.discipline_tag_value IN ('FOMO', 'fomo', 'revenge', 'Revenge', 'impatient', 'Impatient')
+    OR ds.average_r < 0
   ORDER BY expected_gain_if_removed DESC;
 END;
 $$;
