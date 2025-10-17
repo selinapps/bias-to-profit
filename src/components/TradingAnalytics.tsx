@@ -30,7 +30,8 @@ import {
   Zap,
   Timer,
   MoreVertical,
-  Sparkles
+  Sparkles,
+  Lightbulb
 } from 'lucide-react';
 import { useTradingAnalytics } from '@/hooks/useTradingAnalytics';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
