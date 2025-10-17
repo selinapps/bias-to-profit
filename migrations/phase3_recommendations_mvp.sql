@@ -262,6 +262,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
   recommendation_count integer := 0;
+  rows_inserted integer := 0;
 BEGIN
   -- Clear old active recommendations (older than 30 days)
   DELETE FROM recommendations 
@@ -314,7 +315,8 @@ BEGIN
   FROM get_fomo_cost_analysis(p_user_id)
   WHERE expected_gain_if_removed > 1.0; -- Only show if significant impact
 
-  GET DIAGNOSTICS recommendation_count = ROW_COUNT;
+  GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+  recommendation_count := recommendation_count + rows_inserted;
 
   -- ============================================================
   -- 2. CONTINUATION OPPORTUNITY RECOMMENDATIONS
@@ -360,7 +362,8 @@ BEGIN
   FROM get_continuation_opportunities(p_user_id)
   WHERE potential_improvement_r >= 3.0; -- Only show significant opportunities
 
-  GET DIAGNOSTICS recommendation_count = recommendation_count + ROW_COUNT;
+  GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+  recommendation_count := recommendation_count + rows_inserted;
 
   -- ============================================================
   -- 3. CONFIDENCE CALIBRATION RECOMMENDATIONS
@@ -413,7 +416,8 @@ BEGIN
     now() + interval '30 days'
   FROM get_confidence_calibration(p_user_id);
 
-  GET DIAGNOSTICS recommendation_count = recommendation_count + ROW_COUNT;
+  GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+  recommendation_count := recommendation_count + rows_inserted;
 
   -- Return total count
   RETURN recommendation_count;
