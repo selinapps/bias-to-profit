@@ -92,7 +92,7 @@ export function ContinuationBarChart({ data, loading = false, error = null }: Co
       
       <div className="mt-4 text-xs text-muted-foreground">
         <p><strong>Insight:</strong> High continuation rates (70%+) suggest you could hold longer. 
-        Low rates (< 50%) mean your exits are well-timed.</p>
+        Low rates (&lt; 50%) mean your exits are well-timed.</p>
       </div>
     </ChartContainer>
   );
