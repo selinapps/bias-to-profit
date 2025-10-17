@@ -29,7 +29,8 @@ import {
   Brain,
   Zap,
   Timer,
-  MoreVertical
+  MoreVertical,
+  Sparkles
 } from 'lucide-react';
 import { useTradingAnalytics } from '@/hooks/useTradingAnalytics';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
@@ -42,6 +43,9 @@ import { EfficiencyScatterChart } from './Analytics/charts/EfficiencyScatterChar
 import { ContinuationBarChart } from './Analytics/charts/ContinuationBarChart';
 import { ConfidenceBarChart } from './Analytics/charts/ConfidenceBarChart';
 import { DisciplinePieChart } from './Analytics/charts/DisciplinePieChart';
+
+// Phase 3: Recommendations
+import { RecommendationsDashboard } from './RecommendationsDashboard';
 
 export function TradingAnalytics() {
   const [selectedPeriod, setSelectedPeriod] = useState<'7' | '30' | '90'>('30');
@@ -585,7 +589,7 @@ export function TradingAnalytics() {
       </div>
 
       <Tabs defaultValue="best-hours" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 sm:grid-cols-10 grid-rows-2 sm:grid-rows-1 h-16 sm:h-10 gap-1">
+        <TabsList className="grid w-full grid-cols-5 sm:grid-cols-11 grid-rows-2 sm:grid-rows-1 h-16 sm:h-10 gap-1">
           <TabsTrigger value="best-hours" className="flex items-center gap-1 text-xs sm:text-sm px-2">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Hours</span>
@@ -625,6 +629,10 @@ export function TradingAnalytics() {
           <TabsTrigger value="discipline" className="flex items-center gap-1 text-xs sm:text-sm px-2">
             <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
             <span className="hidden sm:inline text-blue-400">Discipline</span>
+          </TabsTrigger>
+          <TabsTrigger value="recommendations" className="flex items-center gap-1 text-xs sm:text-sm px-2">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400" />
+            <span className="hidden sm:inline text-purple-400">Recommendations</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1673,6 +1681,11 @@ export function TradingAnalytics() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ✅ PHASE 3: TAB 11 - RECOMMENDATIONS */}
+        <TabsContent value="recommendations" className="space-y-4">
+          <RecommendationsDashboard />
         </TabsContent>
 
       </Tabs>

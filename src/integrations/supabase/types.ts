@@ -892,6 +892,63 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendations: {
+        Row: {
+          id: string
+          user_id: string
+          category: string
+          priority: string
+          title: string
+          description: string
+          action: string | null
+          potential_impact: number | null
+          evidence: Json | null
+          status: string
+          created_at: string | null
+          expires_at: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          category: string
+          priority?: string
+          title: string
+          description: string
+          action?: string | null
+          potential_impact?: number | null
+          evidence?: Json | null
+          status?: string
+          created_at?: string | null
+          expires_at?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          category?: string
+          priority?: string
+          title?: string
+          description?: string
+          action?: string | null
+          potential_impact?: number | null
+          evidence?: Json | null
+          status?: string
+          created_at?: string | null
+          expires_at?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+            referencedSchema: "auth"
+          }
+        ]
+      }
     }
     Functions: {
       database_health_check: {
@@ -1126,6 +1183,42 @@ export type Database = {
           avg_r_multiple: number
           trades_with_efficiency: number
         }[]
+      }
+      get_fomo_cost_analysis: {
+        Args: { p_user_id: string }
+        Returns: {
+          tag: string
+          trade_count: number
+          total_r: number
+          avg_r: number
+          win_rate: number
+          expected_gain_if_removed: number
+        }[]
+      }
+      get_continuation_opportunities: {
+        Args: { p_user_id: string }
+        Returns: {
+          setup_name: string
+          continuation_rate: number
+          avg_extra_r: number
+          target_hit_trades: number
+          recommended_hold_fraction: number
+          potential_improvement_r: number
+        }[]
+      }
+      get_confidence_calibration: {
+        Args: { p_user_id: string }
+        Returns: {
+          confidence_level: number
+          trade_count: number
+          win_rate: number
+          avg_r: number
+          calibration_flag: string
+        }[]
+      }
+      generate_recommendations: {
+        Args: { p_user_id: string }
+        Returns: number
       }
     }
     Enums: {
