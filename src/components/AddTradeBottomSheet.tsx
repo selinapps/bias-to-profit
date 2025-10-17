@@ -469,10 +469,13 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
         variant: "default"
       });
 
+      // Explicitly call refresh to ensure UI updates
+      if (refreshTrades) {
+        await refreshTrades();
+      }
+
       resetForm();
-      onClose();
-      
-      // Note: No manual refresh needed - addTrade handles optimistic updates and auto-refresh
+      onClose()
     } catch (error: any) {
       logger.error('Error adding trade:', error);
       console.error('Full error details:', {
@@ -674,7 +677,7 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
                             handleEntryTimeChange(newDate);
                           }
                         }}
-                        className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20"
+                        className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                       />
                     </div>
                     <div className="space-y-1">
@@ -702,7 +705,7 @@ export function AddTradeBottomSheet({ isOpen, onClose, biasState, onRequestBiasE
                             handleEntryTimeChange(newDate);
                           }
                         }}
-                        className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20"
+                        className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                       />
                     </div>
                   </div>

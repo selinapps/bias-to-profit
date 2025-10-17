@@ -133,12 +133,12 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
       .eq('id', tradeId);
 
     // Then close the trade (this calculates P&L and R-Multiple)
-    await closeTrade(tradeId, exitPrice);
+    // Pass exitTime if provided to prevent it from being overwritten with current date
+    const exitDate = exitTime ? new Date(exitTime) : undefined;
+    await closeTrade(tradeId, exitPrice, exitDate);
     
-    // Refresh the trades list to update the display
-    setTimeout(() => {
-      refreshTrades();
-    }, 500);
+    // Refresh the trades list to update the display immediately
+    await refreshTrades();
   };
 
   const handleOrderFlowAction = (action: string, description: string) => {

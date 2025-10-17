@@ -536,7 +536,7 @@ export function ManageTradeSheet({
                     type="datetime-local"
                     value={exitTime}
                     onChange={(e) => setExitTime(e.target.value)}
-                    className="h-12 text-base bg-trading-card/80 text-foreground border-trading-accent/50 focus:border-trading-accent placeholder:text-trading-muted"
+                    className="h-12 text-base bg-trading-card/80 text-foreground border-trading-accent/50 focus:border-trading-accent placeholder:text-trading-muted [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                   />
                   
                   {/* Quick Time Presets */}

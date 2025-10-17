@@ -27,7 +27,7 @@ const DIRECTIONS = ['long', 'short'];
 const RISK_TIERS = ['a', 'b', 'c'];
 
 export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) {
-  const { updateTrade } = useTradesOptimized();
+  const { updateTrade, refreshTrades } = useTradesOptimized();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -90,6 +90,9 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
   // Track changes
   useEffect(() => {
     if (trade) {
+      const tradeEntryTime = trade.entry_time ? format(new Date(trade.entry_time), "yyyy-MM-dd'T'HH:mm") : '';
+      const tradeExitTime = trade.exit_time ? format(new Date(trade.exit_time), "yyyy-MM-dd'T'HH:mm") : '';
+      
       const hasFormChanges = 
         asset !== (trade.asset || '') ||
         model !== (trade.model || '') ||
@@ -102,12 +105,14 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
         lotSize !== String((trade as any).lot_size || '1.0') ||
         pnl !== String(trade.pnl || '') ||
         rMultiple !== String(trade.r_multiple || '') ||
+        entryTime !== tradeEntryTime ||
+        exitTime !== tradeExitTime ||
         notes !== (trade.notes || '') ||
         tradingSession !== (trade.trading_session || '');
       
       setHasChanges(hasFormChanges);
     }
-  }, [asset, model, direction, riskTier, riskAmount, entryPrice, stopLoss, exitPrice, lotSize, pnl, rMultiple, notes, tradingSession, trade]);
+  }, [asset, model, direction, riskTier, riskAmount, entryPrice, stopLoss, exitPrice, lotSize, pnl, rMultiple, entryTime, exitTime, notes, tradingSession, trade]);
 
   const handleSave = async () => {
     if (!trade) return;
@@ -135,6 +140,9 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
       };
 
       await updateTrade(trade.id, updates);
+      
+      // Refresh trades to ensure UI updates
+      await refreshTrades();
       
       toast({
         title: "Trade Updated",
@@ -355,6 +363,7 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
                     type="datetime-local"
                     value={entryTime}
                     onChange={(e) => setEntryTime(e.target.value)}
+                    className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                   />
                 </div>
 
@@ -364,6 +373,7 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
                     type="datetime-local"
                     value={exitTime}
                     onChange={(e) => setExitTime(e.target.value)}
+                    className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                   />
                 </div>
               </div>

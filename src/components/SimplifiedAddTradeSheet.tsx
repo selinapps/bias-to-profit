@@ -210,10 +210,13 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
         variant: "default"
       });
 
+      // Explicitly call refresh to ensure UI updates
+      if (refreshTrades) {
+        await refreshTrades();
+      }
+
       resetForm();
-      onClose();
-      
-      // Note: No manual refresh needed - addTrade handles optimistic updates and auto-refresh
+      onClose()
     } catch (error: any) {
       console.error('Error adding trade:', error);
       console.error('Error details:', {
@@ -273,7 +276,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                     newTime.setFullYear(year, month - 1, day);
                     setEntryTime(newTime);
                   }}
-                  className="h-10 bg-slate-900 border-slate-700 mt-1"
+                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
               </div>
               <div>
@@ -288,19 +291,44 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                     newTime.setHours(hours, minutes, 0, 0);
                     setEntryTime(newTime);
                   }}
-                  className="h-10 bg-slate-900 border-slate-700 mt-1"
+                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
               </div>
             </div>
 
-            {currentSession && (
-              <div className="text-xs text-slate-400 bg-slate-900/50 rounded p-2">
-                <div className="flex items-center justify-between">
-                  <span>📍 {currentSession.description}</span>
-                  <span className="text-blue-400">{currentSession.localTime}</span>
+            {/* Enhanced Session Snapshot - Matching Advanced Journal */}
+            <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-3 mt-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500 mb-2">
+                Current Session Snapshot
+              </p>
+              {currentSession ? (
+                <div className="space-y-1 text-slate-200">
+                  <div className="flex items-center gap-2">
+                    <span className="relative inline-flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    </span>
+                    <span className="text-sm font-semibold">{currentSession.name}</span>
+                    <span className="text-xs text-slate-400">
+                      ({format(entryTime, 'HH:mm')})
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {currentSession.localTime}
+                  </p>
+                  {currentSession.priceHint && (
+                    <p className="text-xs text-blue-400 font-medium mt-1">{currentSession.priceHint}</p>
+                  )}
+                  {currentSession.description && (
+                    <p className="text-xs text-slate-400 mt-1">{currentSession.description}</p>
+                  )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-xs text-slate-400">
+                  No active session detected
+                </p>
+              )}
+            </div>
 
             <div className="flex gap-2 mt-3">
               <Button
