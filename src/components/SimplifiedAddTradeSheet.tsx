@@ -276,7 +276,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                     newTime.setFullYear(year, month - 1, day);
                     setEntryTime(newTime);
                   }}
-                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                 />
               </div>
               <div>
@@ -291,7 +291,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                     newTime.setHours(hours, minutes, 0, 0);
                     setEntryTime(newTime);
                   }}
-                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                  className="h-10 text-sm bg-input border-trading-border text-foreground focus:border-trading-accent focus:ring-trading-accent/20 mt-1 [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                 />
               </div>
             </div>

@@ -1212,7 +1212,7 @@ ${closedTrades.map(trade =>
                     type="datetime-local"
                     value={tradeForm.datetime}
                     onChange={(e) => setTradeForm({...tradeForm, datetime: e.target.value})}
-                    className="bg-input border-trading-border"
+                    className="bg-input border-trading-border [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
                   />
                 </div>
 
