@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, Shield, AlertTriangle, Edit3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Shield, AlertTriangle, Edit3, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ import {
   type ActionHintEmphasis
 } from '@/lib/orderFlowHints';
 import { ManageTradeSheet } from './ManageTradeSheet';
+import { PostTradeObservationModal } from './PostTradeObservationModal';
 import { supabase } from '@/integrations/supabase/client';
 import { getPipValueConfig } from '@/lib/tradingCalculations';
 
@@ -43,6 +44,7 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
   const [isClosing, setIsClosing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showManageSheet, setShowManageSheet] = useState(false);
+  const [showObservationModal, setShowObservationModal] = useState(false);
   const [orderFlowActions, setOrderFlowActions] = useState<Record<string, { action: string; timestamp: number }>>({});
 
   const handleCloseTrade = async () => {
@@ -247,6 +249,17 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
                   >
                     <Edit3 className="h-4 w-4 mr-1" />
                     Edit
+                  </Button>
+                )}
+                {trade.status === 'closed' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowObservationModal(true)}
+                    className="shrink-0 border-cyan-400/50 hover:border-cyan-400 hover:bg-cyan-950/30"
+                  >
+                    <Activity className="h-4 w-4 mr-1" />
+                    Observation
                   </Button>
                 )}
                 <Button
@@ -790,6 +803,13 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
           onCloseTrade={handleCloseTradeWithLessons}
           isMobile={isMobile}
           onRefresh={refreshTrades}
+        />
+
+        <PostTradeObservationModal
+          isOpen={showObservationModal}
+          onClose={() => setShowObservationModal(false)}
+          trade={trade}
+          onSuccess={refreshTrades}
         />
     </Card>
   );
