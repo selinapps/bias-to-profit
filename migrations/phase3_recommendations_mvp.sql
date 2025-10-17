@@ -36,15 +36,26 @@ CREATE TABLE IF NOT EXISTS public.recommendations (
   metadata jsonb -- Extra fields for future use
 );
 
--- Indexes
+-- Indexes (drop first if they exist)
+DROP INDEX IF EXISTS public.idx_recommendations_user_id;
+DROP INDEX IF EXISTS public.idx_recommendations_user_status;
+DROP INDEX IF EXISTS public.idx_recommendations_priority;
+DROP INDEX IF EXISTS public.idx_recommendations_category;
+DROP INDEX IF EXISTS public.idx_recommendations_created_at;
+
 CREATE INDEX idx_recommendations_user_id ON public.recommendations(user_id);
 CREATE INDEX idx_recommendations_user_status ON public.recommendations(user_id, status);
 CREATE INDEX idx_recommendations_priority ON public.recommendations(priority);
 CREATE INDEX idx_recommendations_category ON public.recommendations(category);
 CREATE INDEX idx_recommendations_created_at ON public.recommendations(created_at DESC);
 
--- RLS Policies
+-- RLS Policies (drop first if they exist)
 ALTER TABLE public.recommendations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own recommendations" ON public.recommendations;
+DROP POLICY IF EXISTS "Users can insert their own recommendations" ON public.recommendations;
+DROP POLICY IF EXISTS "Users can update their own recommendations" ON public.recommendations;
+DROP POLICY IF EXISTS "Users can delete their own recommendations" ON public.recommendations;
 
 CREATE POLICY "Users can view their own recommendations"
   ON public.recommendations FOR SELECT
