@@ -37,6 +37,12 @@ import { usePostTradeAnalytics } from '@/hooks/analytics/usePostTradeAnalytics';
 import { format } from 'date-fns';
 import { useEffect } from 'react';
 
+// Phase 2C: Chart components
+import { EfficiencyScatterChart } from './Analytics/charts/EfficiencyScatterChart';
+import { ContinuationBarChart } from './Analytics/charts/ContinuationBarChart';
+import { ConfidenceBarChart } from './Analytics/charts/ConfidenceBarChart';
+import { DisciplinePieChart } from './Analytics/charts/DisciplinePieChart';
+
 export function TradingAnalytics() {
   const [selectedPeriod, setSelectedPeriod] = useState<'7' | '30' | '90'>('30');
   const { 
@@ -1241,6 +1247,13 @@ export function TradingAnalytics() {
 
         {/* ✅ PHASE 2B: TAB 7 - EFFICIENCY */}
         <TabsContent value="efficiency" className="space-y-4">
+          {/* Phase 2C: Efficiency Scatter Chart */}
+          <EfficiencyScatterChart 
+            data={closedTrades}
+            loading={loading}
+            error={error}
+          />
+
           <Card className="bg-trading-card border-trading-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1309,6 +1322,13 @@ export function TradingAnalytics() {
 
         {/* ✅ PHASE 2B: TAB 8 - OBSERVATIONS */}
         <TabsContent value="observations" className="space-y-4">
+          {/* Phase 2C: Continuation Bar Chart */}
+          <ContinuationBarChart 
+            data={analyticsData?.continuationBySetup || null}
+            loading={postTradeAnalytics.loading}
+            error={postTradeAnalytics.error}
+          />
+
           {/* Observation Summary */}
           {analyticsData?.summary && (
             <Card className="bg-trading-card border-trading-border">
@@ -1486,6 +1506,13 @@ export function TradingAnalytics() {
 
         {/* ✅ PHASE 2B: TAB 9 - CONFIDENCE */}
         <TabsContent value="confidence" className="space-y-4">
+          {/* Phase 2C: Confidence Bar Chart */}
+          <ConfidenceBarChart 
+            data={analyticsData?.confidencePerf || null}
+            loading={postTradeAnalytics.loading}
+            error={postTradeAnalytics.error}
+          />
+
           <Card className="bg-trading-card border-trading-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1563,6 +1590,13 @@ export function TradingAnalytics() {
 
         {/* ✅ PHASE 2B: TAB 10 - DISCIPLINE */}
         <TabsContent value="discipline" className="space-y-4">
+          {/* Phase 2C: Discipline Pie Chart */}
+          <DisciplinePieChart 
+            data={analyticsData?.disciplinePerf || null}
+            loading={postTradeAnalytics.loading}
+            error={postTradeAnalytics.error}
+          />
+
           <Card className="bg-trading-card border-trading-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
