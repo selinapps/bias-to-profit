@@ -185,6 +185,33 @@ export function MobileTradeCard({ trade, isOpen = false, onEdit, onDelete }: Mob
               </div>
             </div>
 
+            {/* MAE/MFE/Efficiency */}
+            {((trade as any).mae_r || (trade as any).mfe_r || (trade as any).efficiency) && (
+              <div className="bg-gradient-to-br from-orange-950/30 to-amber-950/30 border border-orange-500/30 rounded p-3">
+                <div className="text-xs font-semibold text-orange-400 mb-2">📊 Excursion Analytics</div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  {(trade as any).mae_r && (
+                    <div className="text-center">
+                      <div className="text-red-400 font-bold text-base">{Number((trade as any).mae_r).toFixed(2)}R</div>
+                      <div className="text-muted-foreground text-[10px]">MAE</div>
+                    </div>
+                  )}
+                  {(trade as any).mfe_r && (
+                    <div className="text-center">
+                      <div className="text-green-400 font-bold text-base">{Number((trade as any).mfe_r).toFixed(2)}R</div>
+                      <div className="text-muted-foreground text-[10px]">MFE</div>
+                    </div>
+                  )}
+                  {(trade as any).efficiency && (
+                    <div className="text-center">
+                      <div className="text-amber-400 font-bold text-base">{(Number((trade as any).efficiency) * 100).toFixed(0)}%</div>
+                      <div className="text-muted-foreground text-[10px]">Efficiency</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Trade Lessons */}
             {trade.trade_lessons && (
               <div className="bg-gradient-to-br from-purple-950/30 to-blue-950/30 rounded p-2 border border-purple-400/30">

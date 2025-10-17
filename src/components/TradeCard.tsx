@@ -658,6 +658,49 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
                   </div>
                 </div>
 
+                {/* MAE/MFE/Efficiency Analytics */}
+                {((trade as any).mae_r || (trade as any).mfe_r || (trade as any).efficiency) && (
+                  <div className="bg-gradient-to-br from-orange-950/30 to-amber-950/30 border border-orange-500/30 rounded-lg p-4">
+                    <h4 className="text-sm font-medium mb-3 text-orange-400 uppercase tracking-wide flex items-center gap-2">
+                      📊 Excursion Analytics
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      {(trade as any).mae_r && (
+                        <div>
+                          <span className="text-trading-muted">MAE (R):</span>
+                          <div className="font-mono text-lg font-bold text-red-400">
+                            {Number((trade as any).mae_r).toFixed(2)}R
+                          </div>
+                          <div className="text-xs text-muted-foreground">Max Adverse</div>
+                        </div>
+                      )}
+                      {(trade as any).mfe_r && (
+                        <div>
+                          <span className="text-trading-muted">MFE (R):</span>
+                          <div className="font-mono text-lg font-bold text-green-400">
+                            {Number((trade as any).mfe_r).toFixed(2)}R
+                          </div>
+                          <div className="text-xs text-muted-foreground">Max Favorable</div>
+                        </div>
+                      )}
+                      {(trade as any).efficiency && (
+                        <div>
+                          <span className="text-trading-muted">Efficiency:</span>
+                          <div className="font-mono text-lg font-bold text-amber-400">
+                            {(Number((trade as any).efficiency) * 100).toFixed(1)}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Capture Rate</div>
+                        </div>
+                      )}
+                    </div>
+                    {(trade as any).mfe_r && trade.r_multiple && (
+                      <div className="mt-3 pt-3 border-t border-orange-500/20 text-xs text-muted-foreground">
+                        Captured {trade.r_multiple.toFixed(2)}R of {Number((trade as any).mfe_r).toFixed(2)}R available
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Trade Lessons */}
                 {trade.trade_lessons && (
                   <div className="bg-muted/20 rounded-lg p-4">
