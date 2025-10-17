@@ -134,7 +134,26 @@ export function TradeCard({ trade, isOpen = false, onEdit, onDelete }: TradeCard
 
     // Then close the trade (this calculates P&L and R-Multiple)
     // Pass exitTime if provided to prevent it from being overwritten with current date
-    const exitDate = exitTime ? new Date(exitTime) : undefined;
+    let exitDate: Date | undefined;
+    if (exitTime) {
+      // Handle different date formats
+      console.log('🕐 Parsing exitTime:', exitTime);
+      if (exitTime.includes('/')) {
+        // Handle "13/10/2025, 12:40 PM" format
+        const [datePart, timePart] = exitTime.split(', ');
+        const [day, month, year] = datePart.split('/');
+        const [time, period] = timePart.split(' ');
+        const [hours, minutes] = time.split(':');
+        let hour24 = parseInt(hours);
+        if (period === 'PM' && hour24 !== 12) hour24 += 12;
+        if (period === 'AM' && hour24 === 12) hour24 = 0;
+        
+        exitDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hour24, parseInt(minutes));
+        console.log('🕐 Parsed exitDate:', exitDate);
+      } else {
+        exitDate = new Date(exitTime);
+      }
+    }
     await closeTrade(tradeId, exitPrice, exitDate);
     
     // Refresh the trades list to update the display immediately

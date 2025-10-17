@@ -322,7 +322,7 @@ export function CTraderImportModal({ isOpen, onClose, onImportComplete }: CTrade
                       type="date"
                       value={tradeDate}
                       onChange={(e) => setTradeDate(e.target.value)}
-                      className="h-9 w-full px-3 rounded-md border border-input bg-background text-sm [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
+                      className="h-9 w-full px-3 rounded-md border border-input bg-background text-sm [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4 [&::-webkit-calendar-picker-indicator]:ml-2"
                     />
                   </div>
 

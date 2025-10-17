@@ -376,9 +376,23 @@ export function useTradesOptimized(): UseTradesOptimizedReturn {
     const rMultiple = riskAmount > 0 ? Number((pnl / riskAmount).toFixed(3)) : 0;
 
     const exitTimeToUse = exitTime || new Date();
-    const durationMinutes = Math.round(
-      (exitTimeToUse.getTime() - new Date(trade.entry_time).getTime()) / (1000 * 60)
-    );
+    
+    // Debug logging for duration calculation
+    console.log('🕐 Duration Calculation Debug:');
+    console.log('  Entry time:', trade.entry_time);
+    console.log('  Exit time:', exitTimeToUse.toISOString());
+    console.log('  Entry date object:', new Date(trade.entry_time));
+    console.log('  Exit date object:', exitTimeToUse);
+    
+    const entryTime = new Date(trade.entry_time);
+    const exitTimeObj = exitTimeToUse;
+    const diffMs = exitTimeObj.getTime() - entryTime.getTime();
+    const durationMinutes = Math.round(diffMs / (1000 * 60));
+    
+    console.log('  Time difference (ms):', diffMs);
+    console.log('  Duration (minutes):', durationMinutes);
+    console.log('  Duration (hours):', Math.floor(durationMinutes / 60));
+    console.log('  Duration (remaining minutes):', durationMinutes % 60);
 
     const { error } = await supabase
       .from('trades')

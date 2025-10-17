@@ -232,7 +232,7 @@ export default function Reflection() {
             type="date"
             value={format(selectedDate, 'yyyy-MM-dd')}
             onChange={(e) => setSelectedDate(new Date(e.target.value))}
-            className="px-3 py-2 border border-border rounded-md bg-background text-on-surface [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
+            className="px-3 py-2 border border-border rounded-md bg-background text-on-surface [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4 [&::-webkit-calendar-picker-indicator]:ml-2"
           />
           
           {/* Next Day Button */}

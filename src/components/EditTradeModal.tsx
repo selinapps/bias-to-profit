@@ -363,7 +363,7 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
                     type="datetime-local"
                     value={entryTime}
                     onChange={(e) => setEntryTime(e.target.value)}
-                    className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
+                    className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4 [&::-webkit-calendar-picker-indicator]:ml-2"
                   />
                 </div>
 
@@ -373,7 +373,7 @@ export function EditTradeModal({ isOpen, onClose, trade }: EditTradeModalProps) 
                     type="datetime-local"
                     value={exitTime}
                     onChange={(e) => setExitTime(e.target.value)}
-                    className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200"
+                    className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:brightness-200 [&::-webkit-calendar-picker-indicator]:w-4 [&::-webkit-calendar-picker-indicator]:h-4 [&::-webkit-calendar-picker-indicator]:ml-2"
                   />
                 </div>
               </div>
