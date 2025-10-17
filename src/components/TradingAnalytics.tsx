@@ -589,52 +589,79 @@ export function TradingAnalytics() {
       </div>
 
       <Tabs defaultValue="best-hours" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 sm:grid-cols-11 grid-rows-2 sm:grid-rows-1 h-16 sm:h-10 gap-1">
-          <TabsTrigger value="best-hours" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Hours</span>
-          </TabsTrigger>
-          <TabsTrigger value="weekly" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Weekly</span>
-          </TabsTrigger>
-          <TabsTrigger value="daily" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Daily</span>
-          </TabsTrigger>
-          <TabsTrigger value="models" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Target className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Setups</span>
-          </TabsTrigger>
-          <TabsTrigger value="edge-diagnostics" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <PieChart className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Edge</span>
-          </TabsTrigger>
-          <TabsTrigger value="equity" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <LineChart className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Equity</span>
-          </TabsTrigger>
-          <TabsTrigger value="efficiency" className="flex items-center gap-1 text-xs sm:text-sm px-2 border-l border-purple-500/30">
-            <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-orange-400" />
-            <span className="hidden sm:inline text-orange-400">Efficiency</span>
-          </TabsTrigger>
-          <TabsTrigger value="observations" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-cyan-400" />
-            <span className="hidden sm:inline text-cyan-400">Observations</span>
-          </TabsTrigger>
-          <TabsTrigger value="confidence" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400" />
-            <span className="hidden sm:inline text-purple-400">Confidence</span>
-          </TabsTrigger>
-          <TabsTrigger value="discipline" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
-            <span className="hidden sm:inline text-blue-400">Discipline</span>
-          </TabsTrigger>
-          <TabsTrigger value="recommendations" className="flex items-center gap-1 text-xs sm:text-sm px-2">
-            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400" />
-            <span className="hidden sm:inline text-purple-400">Recommendations</span>
-          </TabsTrigger>
-        </TabsList>
+        {/* Grouped Tab Navigation */}
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Time Analysis Group */}
+          <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
+            <span className="text-xs text-muted-foreground px-2">Time</span>
+            <TabsList className="h-9 bg-transparent">
+              <TabsTrigger value="best-hours" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Clock className="h-3 w-3 mr-1" />
+                Hours
+              </TabsTrigger>
+              <TabsTrigger value="weekly" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Calendar className="h-3 w-3 mr-1" />
+                Weekly
+              </TabsTrigger>
+              <TabsTrigger value="daily" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <BarChart3 className="h-3 w-3 mr-1" />
+                Daily
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Performance Group */}
+          <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
+            <span className="text-xs text-muted-foreground px-2">Performance</span>
+            <TabsList className="h-9 bg-transparent">
+              <TabsTrigger value="models" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Target className="h-3 w-3 mr-1" />
+                Setups
+              </TabsTrigger>
+              <TabsTrigger value="edge-diagnostics" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <PieChart className="h-3 w-3 mr-1" />
+                Edge
+              </TabsTrigger>
+              <TabsTrigger value="equity" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <LineChart className="h-3 w-3 mr-1" />
+                Equity
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Advanced Analytics Group */}
+          <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
+            <span className="text-xs text-muted-foreground px-2">Advanced</span>
+            <TabsList className="h-9 bg-transparent">
+              <TabsTrigger value="efficiency" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Zap className="h-3 w-3 mr-1 text-orange-400" />
+                <span className="text-orange-400">Efficiency</span>
+              </TabsTrigger>
+              <TabsTrigger value="observations" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Activity className="h-3 w-3 mr-1 text-cyan-400" />
+                <span className="text-cyan-400">Observations</span>
+              </TabsTrigger>
+              <TabsTrigger value="confidence" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                <span className="text-purple-400">Confidence</span>
+              </TabsTrigger>
+              <TabsTrigger value="discipline" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                <span className="text-blue-400">Discipline</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Recommendations - Standalone */}
+          <div className="flex items-center gap-1 bg-gradient-to-r from-purple-950/50 to-pink-950/50 rounded-lg p-1 border border-purple-500/30">
+            <TabsList className="h-9 bg-transparent">
+              <TabsTrigger value="recommendations" className="text-xs px-4 data-[state=active]:bg-purple-900/50">
+                <Sparkles className="h-3 w-3 mr-1 text-purple-400" />
+                <span className="text-purple-400 font-semibold">Recommendations</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
 
         {/* Best Trading Hours */}
         <TabsContent value="best-hours" className="space-y-4">
