@@ -261,16 +261,23 @@ FROM (
 -- TEST 22: Function Performance Baseline
 -- ============================================================
 
--- Time all analytics functions (should be < 100ms each)
-\timing on
+-- Run these individually in Supabase SQL Editor to check speed
+-- Each should complete in < 100ms (check Execution Time at bottom)
 
 SELECT * FROM get_efficiency_by_setup(auth.uid());
-SELECT * FROM get_confidence_performance(auth.uid());
-SELECT * FROM get_discipline_performance(auth.uid());
-SELECT * FROM get_continuation_by_setup(auth.uid());
-SELECT * FROM get_reversal_after_stop_by_setup(auth.uid());
+-- Check execution time in SQL Editor results panel
 
-\timing off
+SELECT * FROM get_confidence_performance(auth.uid());
+-- Check execution time in SQL Editor results panel
+
+SELECT * FROM get_discipline_performance(auth.uid());
+-- Check execution time in SQL Editor results panel
+
+SELECT * FROM get_continuation_by_setup(auth.uid());
+-- Check execution time in SQL Editor results panel
+
+SELECT * FROM get_reversal_after_stop_by_setup(auth.uid());
+-- Check execution time in SQL Editor results panel
 
 -- ============================================================
 -- VALIDATION COMPLETE
