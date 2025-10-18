@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
-import { TrendingUp, TrendingDown, Zap, CheckCircle2, Plus, Settings, Clock, ChevronDown, ChevronUp, Brain, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Zap, CheckCircle2, Plus, Settings, Clock, ChevronDown, ChevronUp, Brain, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
 import { useAuth } from '@/hooks/useAuth';
