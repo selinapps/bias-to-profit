@@ -801,16 +801,27 @@ ${todayTrades.map(trade =>
                     ) : (
                       <div className="space-y-2">
                         {setupLeaderboard.map((row) => (
-                          <div key={row.setup} className="flex items-center justify-between p-3 rounded-lg border border-trading-border">
-                            <div className="flex items-center gap-3">
-                              <Badge variant="outline" className="text-xs">{row.tradeCount} trades</Badge>
-                              <span className="font-semibold text-foreground">{row.setup.replace(/_/g, ' ')}</span>
+                          <div 
+                            key={row.setup} 
+                            className={`${
+                              isMobile 
+                                ? 'flex flex-col gap-2 p-2.5' 
+                                : 'flex items-center justify-between p-3'
+                            } rounded-lg border border-trading-border`}
+                          >
+                            <div className={`flex items-center ${isMobile ? 'justify-between' : 'gap-3'} flex-wrap`}>
+                              <Badge variant="outline" className="text-xs whitespace-nowrap">{row.tradeCount} trades</Badge>
+                              <span className="font-semibold text-foreground text-sm">{row.setup.replace(/_/g, ' ')}</span>
                             </div>
-                            <div className="flex items-center gap-6 text-sm">
-                              <span className="text-trading-muted">Win:</span>
-                              <span className="font-bold">{row.winRate.toFixed(0)}%</span>
-                              <span className="text-trading-muted">Avg R:</span>
-                              <span className="font-bold">{row.avgR.toFixed(2)}R</span>
+                            <div className={`flex items-center ${isMobile ? 'justify-between gap-4' : 'gap-6'} text-sm`}>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-trading-muted text-xs">Win:</span>
+                                <span className="font-bold">{row.winRate.toFixed(0)}%</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-trading-muted text-xs">Avg R:</span>
+                                <span className="font-bold">{row.avgR.toFixed(2)}R</span>
+                              </div>
                             </div>
                           </div>
                         ))}

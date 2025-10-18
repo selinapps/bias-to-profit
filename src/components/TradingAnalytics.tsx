@@ -36,6 +36,7 @@ import {
 import { useTradingAnalytics } from '@/hooks/useTradingAnalytics';
 import { useTradesOptimized } from '@/hooks/useTradesOptimized';
 import { usePostTradeAnalytics } from '@/hooks/analytics/usePostTradeAnalytics';
+import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
 import { format } from 'date-fns';
 import { useEffect } from 'react';
 
@@ -50,6 +51,7 @@ import { RecommendationsDashboard } from './RecommendationsDashboard';
 
 export function TradingAnalytics() {
   const [selectedPeriod, setSelectedPeriod] = useState<'7' | '30' | '90'>('30');
+  const { isMobile } = useMobileOptimizations();
   const { 
     bestHours, 
     weeklySummary, 
@@ -590,78 +592,101 @@ export function TradingAnalytics() {
       </div>
 
       <Tabs defaultValue="best-hours" className="space-y-4">
-        {/* Grouped Tab Navigation */}
-        <div className="flex flex-wrap gap-2 items-center">
+        {/* Grouped Tab Navigation - Mobile Responsive */}
+        <div className={`flex flex-wrap gap-2 items-center ${isMobile ? 'justify-center' : ''}`}>
           {/* Time Analysis Group */}
           <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
-            <span className="text-xs text-muted-foreground px-2">Time</span>
+            <span className={`text-xs text-muted-foreground ${isMobile ? 'px-1' : 'px-2'}`}>Time</span>
             <TabsList className="h-9 bg-transparent">
-              <TabsTrigger value="best-hours" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="best-hours" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <Clock className="h-3 w-3 mr-1" />
-                Hours
+                {!isMobile && 'Hours'}
               </TabsTrigger>
-              <TabsTrigger value="weekly" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="weekly" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <Calendar className="h-3 w-3 mr-1" />
-                Weekly
+                {!isMobile && 'Weekly'}
               </TabsTrigger>
-              <TabsTrigger value="daily" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="daily" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <BarChart3 className="h-3 w-3 mr-1" />
-                Daily
+                {!isMobile && 'Daily'}
               </TabsTrigger>
             </TabsList>
           </div>
 
           {/* Performance Group */}
           <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
-            <span className="text-xs text-muted-foreground px-2">Performance</span>
+            <span className={`text-xs text-muted-foreground ${isMobile ? 'hidden' : 'px-2'}`}>Performance</span>
             <TabsList className="h-9 bg-transparent">
-              <TabsTrigger value="models" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="models" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <Target className="h-3 w-3 mr-1" />
-                Setups
+                {!isMobile && 'Setups'}
               </TabsTrigger>
-              <TabsTrigger value="edge-diagnostics" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="edge-diagnostics" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <PieChart className="h-3 w-3 mr-1" />
-                Edge
+                {!isMobile && 'Edge'}
               </TabsTrigger>
-              <TabsTrigger value="equity" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="equity" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <LineChart className="h-3 w-3 mr-1" />
-                Equity
+                {!isMobile && 'Equity'}
               </TabsTrigger>
             </TabsList>
           </div>
 
-          {/* Advanced Analytics Group */}
+          {/* Advanced Analytics Group - Mobile Optimized (3 options) */}
           <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
-            <span className="text-xs text-muted-foreground px-2">Advanced</span>
+            <span className={`text-xs text-muted-foreground ${isMobile ? 'hidden' : 'px-2'}`}>Advanced</span>
             <TabsList className="h-9 bg-transparent">
-              <TabsTrigger value="efficiency" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="efficiency" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <Zap className="h-3 w-3 mr-1 text-orange-400" />
-                <span className="text-orange-400">Efficiency</span>
+                {!isMobile && <span className="text-orange-400">Efficiency</span>}
               </TabsTrigger>
-              <TabsTrigger value="observations" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="observations" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <Activity className="h-3 w-3 mr-1 text-cyan-400" />
-                <span className="text-cyan-400">Observations</span>
+                {!isMobile && <span className="text-cyan-400">Observations</span>}
               </TabsTrigger>
-              <TabsTrigger value="confidence" className="text-xs px-3 data-[state=active]:bg-slate-800">
+              <TabsTrigger value="confidence" className={`text-xs ${isMobile ? 'px-2' : 'px-3'} data-[state=active]:bg-slate-800`}>
                 <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                <span className="text-purple-400">Confidence</span>
+                {!isMobile && <span className="text-purple-400">Confidence</span>}
               </TabsTrigger>
-              <TabsTrigger value="discipline" className="text-xs px-3 data-[state=active]:bg-slate-800">
-                <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                <span className="text-blue-400">Discipline</span>
-              </TabsTrigger>
+              {/* Show Discipline only on desktop */}
+              {!isMobile && (
+                <TabsTrigger value="discipline" className="text-xs px-3 data-[state=active]:bg-slate-800">
+                  <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                  <span className="text-blue-400">Discipline</span>
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
           {/* Recommendations - Standalone */}
           <div className="flex items-center gap-1 bg-gradient-to-r from-purple-950/50 to-pink-950/50 rounded-lg p-1 border border-purple-500/30">
             <TabsList className="h-9 bg-transparent">
-              <TabsTrigger value="recommendations" className="text-xs px-4 data-[state=active]:bg-purple-900/50">
+              <TabsTrigger value="recommendations" className={`text-xs ${isMobile ? 'px-2' : 'px-4'} data-[state=active]:bg-purple-900/50`}>
                 <Sparkles className="h-3 w-3 mr-1 text-purple-400" />
-                <span className="text-purple-400 font-semibold">Recommendations</span>
+                {!isMobile && <span className="text-purple-400 font-semibold">Recommendations</span>}
               </TabsTrigger>
             </TabsList>
           </div>
+          
+          {/* Mobile: Discipline Tab in Dropdown */}
+          {isMobile && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 px-2 bg-slate-900/50">
+                  <MoreVertical className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => {
+                  const disciplineTab = document.querySelector('[value="discipline"]') as HTMLElement;
+                  if (disciplineTab) disciplineTab.click();
+                }}>
+                  <Shield className="h-4 w-4 mr-2 text-blue-400" />
+                  Discipline
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Best Trading Hours */}

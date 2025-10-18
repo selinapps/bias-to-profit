@@ -48,103 +48,119 @@ export function MobileTradeCard({ trade, isOpen = false, onEdit, onDelete }: Mob
   };
 
   return (
-    <Card className="bg-trading-card border-trading-border hover:border-trading-accent/30 transition-colors">
-      <CardContent className="p-2">
-        {/* Compact Main Row - Most Important Info */}
-        <div className="flex items-center justify-between">
-          {/* Left: Asset, Direction & Status */}
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <div className="flex items-center gap-1">
-              {trade.direction === 'long' ? (
-                <TrendingUp className="h-3.5 w-3.5 text-green-400" />
-              ) : (
-                <TrendingDown className="h-3.5 w-3.5 text-red-400" />
-              )}
-              <span className="font-semibold text-sm truncate">{trade.asset}</span>
+    <Card className="bg-trading-card border-trading-border hover:border-trading-accent/30 transition-colors relative overflow-hidden">
+      {/* Trading Direction Overlay Badge */}
+      <div className={`absolute top-2 left-2 z-10 ${
+        trade.direction === 'long' 
+          ? 'bg-green-500/20 border-green-500/50' 
+          : 'bg-red-500/20 border-red-500/50'
+      } border rounded-full p-1`}>
+        {trade.direction === 'long' ? (
+          <TrendingUp className="h-3 w-3 text-green-400" />
+        ) : (
+          <TrendingDown className="h-3 w-3 text-red-400" />
+        )}
+      </div>
+      
+      <CardContent className="p-3 pt-10">
+        {/* Redesigned Main Row - Better Spacing */}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          {/* Left: Asset & Badges */}
+          <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+            <span className="font-bold text-base truncate">{trade.asset}</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-5 whitespace-nowrap">
+                {trade.direction.toUpperCase()}
+              </Badge>
+              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-5 whitespace-nowrap">
+                {trade.risk_tier.toUpperCase()}
+              </Badge>
             </div>
-            <Badge variant="outline" className="text-xs px-1 py-0.5 h-5">
-              {trade.direction.toUpperCase()}
-            </Badge>
-            <Badge variant="secondary" className="text-xs px-1 py-0.5 h-5">
-              {trade.risk_tier.toUpperCase()}
-            </Badge>
           </div>
 
-          {/* Center: Entry Price (Most Important Price) */}
-          <div className="text-center min-w-0">
-            <div className="text-xs text-trading-muted">Entry</div>
-            <div className="font-mono text-sm font-bold">{formatPrice(Number(trade.entry_price))}</div>
-          </div>
-
-          {/* Right: P&L & Actions */}
-          <div className="flex items-center gap-1.5">
+          {/* Right Column: Entry Price & P&L */}
+          <div className="flex flex-col gap-1.5 items-end min-w-[90px]">
+            {/* Entry Price - Prominent */}
+            <div className="text-right">
+              <div className="text-[10px] text-trading-muted leading-tight">Entry</div>
+              <div className="font-mono text-sm font-bold leading-tight">{formatPrice(Number(trade.entry_price))}</div>
+            </div>
+            
+            {/* P&L Display */}
             {!isOpen && trade.status === 'closed' && (
-              <div className="text-right min-w-0">
-                <div className={`text-sm font-bold flex items-center gap-0.5 ${getPnLColor(trade.pnl || 0)}`}>
+              <div className="text-right">
+                <div className={`text-sm font-bold flex items-center justify-end gap-0.5 ${getPnLColor(trade.pnl || 0)}`}>
                   {getPnLIcon(trade.pnl || 0)}
-                  ${(trade.pnl || 0).toFixed(0)}
+                  <span className="leading-tight">${(trade.pnl || 0).toFixed(0)}</span>
                 </div>
-                <div className="text-xs text-trading-accent">
+                <div className="text-xs text-trading-accent leading-tight">
                   {trade.r_multiple ? `${trade.r_multiple > 0 ? '+' : ''}${trade.r_multiple.toFixed(1)}R` : '0.0R'}
                 </div>
-              </div>
-            )}
-            
-            {isOpen && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowManageSheet(true)}
-                className="h-7 px-2 text-xs bg-gradient-to-r from-purple-950/50 to-blue-950/50 border-trading-accent/50 hover:border-trading-accent hover:bg-purple-950/70"
-              >
-                <Edit3 className="h-3 w-3" />
-              </Button>
-            )}
-            
-            {!isOpen && (
-              <div className="flex gap-1">
-                {onEdit && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(trade)}
-                    className="h-7 w-7 p-0"
-                  >
-                    <Edit3 className="h-3 w-3" />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="h-7 w-7 p-0"
-                >
-                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </Button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Compact Secondary Info */}
-        <div className="flex items-center justify-between mt-1 text-xs text-trading-muted">
-          <div className="flex items-center gap-1.5">
-            <span>{formatTime(trade.entry_time)}</span>
-            <span>•</span>
-            <span className="truncate">{(Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || 'Unknown'))?.replace(/_/g, ' ')}</span>
-            {trade.duration_minutes && (
-              <>
-                <span>•</span>
-                <span>
-                  {Math.floor(trade.duration_minutes / 60)}h{trade.duration_minutes % 60}m
-                </span>
-              </>
+        {/* Action Buttons Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex-1" />
+          {isOpen && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowManageSheet(true)}
+              className="h-7 px-3 text-xs bg-gradient-to-r from-purple-950/50 to-blue-950/50 border-trading-accent/50 hover:border-trading-accent hover:bg-purple-950/70"
+            >
+              <Edit3 className="h-3 w-3 mr-1" />
+              Manage
+            </Button>
+          )}
+          
+          {!isOpen && (
+            <div className="flex gap-1.5">
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(trade)}
+                  className="h-7 w-7 p-0"
+                >
+                  <Edit3 className="h-3 w-3" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="h-7 w-7 p-0"
+              >
+                {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Compact Secondary Info - Improved Layout */}
+        <div className="mt-2 pt-2 border-t border-trading-border/50">
+          <div className="flex items-center justify-between text-xs text-trading-muted">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="whitespace-nowrap">{formatTime(trade.entry_time)}</span>
+              <span>•</span>
+              <span className="truncate max-w-[120px]">{(Array.isArray(trade.locations) && trade.locations.length > 0 ? String(trade.locations[0]) : (trade.notes || 'Unknown'))?.replace(/_/g, ' ')}</span>
+              {trade.duration_minutes && (
+                <>
+                  <span>•</span>
+                  <span className="whitespace-nowrap">
+                    {Math.floor(trade.duration_minutes / 60)}h{trade.duration_minutes % 60}m
+                  </span>
+                </>
+              )}
+            </div>
+            
+            {!isOpen && trade.exit_time && (
+              <span className="text-xs whitespace-nowrap">Closed {formatTime(trade.exit_time)}</span>
             )}
           </div>
-          
-          {!isOpen && trade.exit_time && (
-            <span className="text-xs">Closed {formatTime(trade.exit_time)}</span>
-          )}
         </div>
 
         {/* Expanded Details for Closed Trades */}
