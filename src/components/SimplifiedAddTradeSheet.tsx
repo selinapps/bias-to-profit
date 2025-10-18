@@ -250,11 +250,11 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
 
         <div className="space-y-6 py-6">
           {/* Entry Time & ICT Session */}
-          <Card className="p-4 bg-slate-800/50 border-slate-700">
+          <Card className="p-4 bg-muted/10 border-trading-border">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-blue-400" />
-                <span className="text-sm font-semibold text-slate-200">Entry Time & Session</span>
+                <span className="text-sm font-semibold text-foreground">Entry Time & Session</span>
               </div>
               {currentSession && (
                 <Badge className={currentSession.color}>
