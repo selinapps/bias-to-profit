@@ -165,6 +165,8 @@
     height: 16px !important;
     margin-left: 8px !important;
     cursor: pointer !important;
+    -webkit-mask: none !important;
+    mask: none !important;
   }
   
   /* Light theme calendar icons */
