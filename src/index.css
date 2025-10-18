@@ -159,6 +159,12 @@
     color: hsl(var(--foreground)) !important;
     opacity: 1 !important;
     filter: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-left: 8px !important;
+    cursor: pointer !important;
   }
   
   /* Light theme calendar icons */
