@@ -61,6 +61,20 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
   const [confidence, setConfidence] = useState<number>(3); // Default to 3 (medium)
   const [disciplineTag, setDisciplineTag] = useState<string>('');
   
+  // ✅ PHASE 3E: Market Context State
+  const [htfBias, setHtfBias] = useState<string>('Neutral');
+  const [htfBiasTf, setHtfBiasTf] = useState<string>('H4');
+  const [vwapType, setVwapType] = useState<string>('Day');
+  const [vwapBand, setVwapBand] = useState<string>('');
+  const [atrTf, setAtrTf] = useState<string>('M15');
+  const [atrPeriod, setAtrPeriod] = useState<number>(14);
+  const [atrValuePips, setAtrValuePips] = useState<string>('');
+  const [atrUnits, setAtrUnits] = useState<string>('pips');
+  const [profileScope, setProfileScope] = useState<string>('Session');
+  const [fvaPosition, setFvaPosition] = useState<string>('');
+  const [poiType, setPoiType] = useState<string>('');
+  const [poiScope, setPoiScope] = useState<string>('Intra-day');
+  
   // Loading state
   const [submitting, setSubmitting] = useState(false);
 
@@ -139,6 +153,19 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
     setChecklistItems([]);
     setConfidence(3);
     setDisciplineTag('');
+    // Phase 3E: Reset market context
+    setHtfBias('Neutral');
+    setHtfBiasTf('H4');
+    setVwapType('Day');
+    setVwapBand('');
+    setAtrTf('M15');
+    setAtrPeriod(14);
+    setAtrValuePips('');
+    setAtrUnits('pips');
+    setProfileScope('Session');
+    setFvaPosition('');
+    setPoiType('');
+    setPoiScope('Intra-day');
     const now = new Date();
     setEntryTime(now);
     setCurrentSession(getActiveSession(now));
@@ -181,6 +208,20 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
         checklist_items_all: checklistItemsAll.length > 0 ? checklistItemsAll : null, // ✅ PHASE 3D - all items shown
         confidence: confidence || null, // ✅ NEW - 1-5 scale
         discipline_tag: disciplineTag || null, // ✅ NEW - discipline classification
+        
+        // ✅ PHASE 3E: Market Context
+        htf_bias: htfBias || null,
+        htf_bias_tf: htfBiasTf || null,
+        vwap_type: vwapType || null,
+        vwap_band: vwapBand || null,
+        atr_tf: atrTf || null,
+        atr_period: atrPeriod || null,
+        atr_value_pips: atrValuePips ? parseFloat(atrValuePips) : null,
+        atr_units: atrUnits || null,
+        profile_scope: profileScope || null,
+        fva_position: fvaPosition || null,
+        poi_type: poiType || null,
+        poi_scope: poiScope || null,
         
         // Optional fields
         notes: currentSetup?.name || null,
@@ -499,6 +540,217 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
               </div>
             </Card>
           )}
+
+          {/* ✅ PHASE 3E: Market Context (Collapsible) */}
+          <Card className="p-4 bg-gradient-to-br from-blue-950/20 to-purple-950/20 border-blue-500/30">
+            <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => setShowEmotions(!showEmotions)}>
+              <Label className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                <BarChart3 className="h-4 w-4 text-blue-400" />
+                Market Context (Optional)
+              </Label>
+              <div className="flex items-center gap-2">
+                {(htfBias !== 'Neutral' || vwapBand || fvaPosition || poiType) && (
+                  <Badge variant="secondary" className="text-xs">
+                    {[htfBias !== 'Neutral', vwapBand, fvaPosition, poiType].filter(Boolean).length} Set
+                  </Badge>
+                )}
+                {showEmotions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
+            </div>
+
+            {showEmotions && (
+              <div className="space-y-4">
+                {/* HTF Bias */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">HTF Bias</Label>
+                    <Select value={htfBias} onValueChange={setHtfBias}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Bullish">📈 Bullish</SelectItem>
+                        <SelectItem value="Bearish">📉 Bearish</SelectItem>
+                        <SelectItem value="Neutral">➖ Neutral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">HTF Timeframe</Label>
+                    <Select value={htfBiasTf} onValueChange={setHtfBiasTf}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="D1">D1</SelectItem>
+                        <SelectItem value="H4">H4</SelectItem>
+                        <SelectItem value="H1">H1</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* VWAP Context */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">VWAP Type</Label>
+                    <Select value={vwapType} onValueChange={setVwapType}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Session">Session</SelectItem>
+                        <SelectItem value="Day">Day</SelectItem>
+                        <SelectItem value="Week">Week</SelectItem>
+                        <SelectItem value="Anchored">Anchored</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">VWAP Band</Label>
+                    <Select value={vwapBand} onValueChange={setVwapBand}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue placeholder="Select band..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Below −3σ">Below −3σ</SelectItem>
+                        <SelectItem value="−3σ to −2σ">−3σ to −2σ</SelectItem>
+                        <SelectItem value="−2σ to −1σ">−2σ to −1σ</SelectItem>
+                        <SelectItem value="−1σ to VWAP">−1σ to VWAP</SelectItem>
+                        <SelectItem value="At VWAP">At VWAP</SelectItem>
+                        <SelectItem value="VWAP to +1σ">VWAP to +1σ</SelectItem>
+                        <SelectItem value="+1σ to +2σ">+1σ to +2σ</SelectItem>
+                        <SelectItem value="+2σ to +3σ">+2σ to +3σ</SelectItem>
+                        <SelectItem value="Above +3σ">Above +3σ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* ATR Context */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">ATR TF</Label>
+                    <Select value={atrTf} onValueChange={setAtrTf}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="M1">M1</SelectItem>
+                        <SelectItem value="M5">M5</SelectItem>
+                        <SelectItem value="M15">M15</SelectItem>
+                        <SelectItem value="M30">M30</SelectItem>
+                        <SelectItem value="H1">H1</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">ATR Period</Label>
+                    <Select value={String(atrPeriod)} onValueChange={(v) => setAtrPeriod(Number(v))}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="7">7</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="14">14</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">ATR (pips)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={atrValuePips}
+                      onChange={(e) => setAtrValuePips(e.target.value)}
+                      placeholder="12.5"
+                      className="h-10 bg-slate-900"
+                    />
+                  </div>
+                </div>
+
+                {/* FVA Position */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">Profile Scope</Label>
+                    <Select value={profileScope} onValueChange={setProfileScope}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Session">Session</SelectItem>
+                        <SelectItem value="Prior Day">Prior Day</SelectItem>
+                        <SelectItem value="Week">Week</SelectItem>
+                        <SelectItem value="Composite (N)">Composite (N)</SelectItem>
+                        <SelectItem value="Leg">Leg</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">FVA Position</Label>
+                    <Select value={fvaPosition} onValueChange={setFvaPosition}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Below VAL">Below VAL</SelectItem>
+                        <SelectItem value="VAL to POC">VAL to POC</SelectItem>
+                        <SelectItem value="At POC">At POC</SelectItem>
+                        <SelectItem value="POC to VAH">POC to VAH</SelectItem>
+                        <SelectItem value="Above VAH">Above VAH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* POI Type */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">POI Type</Label>
+                    <Select value={poiType} onValueChange={setPoiType}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue placeholder="Select POI..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        <SelectItem value="LVN">LVN</SelectItem>
+                        <SelectItem value="HVN">HVN</SelectItem>
+                        <SelectItem value="POC">POC</SelectItem>
+                        <SelectItem value="VAH">VAH</SelectItem>
+                        <SelectItem value="VAL">VAL</SelectItem>
+                        <SelectItem value="VWAP">VWAP</SelectItem>
+                        <SelectItem value="Order Block (Bull)">Order Block (Bull)</SelectItem>
+                        <SelectItem value="Order Block (Bear)">Order Block (Bear)</SelectItem>
+                        <SelectItem value="FVG">FVG</SelectItem>
+                        <SelectItem value="Breaker">Breaker</SelectItem>
+                        <SelectItem value="Asia High">Asia High</SelectItem>
+                        <SelectItem value="Asia Low">Asia Low</SelectItem>
+                        <SelectItem value="IB High">IB High</SelectItem>
+                        <SelectItem value="IB Low">IB Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-2 block">POI Scope</Label>
+                    <Select value={poiScope} onValueChange={setPoiScope}>
+                      <SelectTrigger className="h-10 bg-slate-900">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Intra-day">Intra-day</SelectItem>
+                        <SelectItem value="Prior Day">Prior Day</SelectItem>
+                        <SelectItem value="Weekly">Weekly</SelectItem>
+                        <SelectItem value="Composite">Composite</SelectItem>
+                        <SelectItem value="Anchored Leg">Anchored Leg</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
 
           {/* Price Levels */}
           <div className="space-y-4">

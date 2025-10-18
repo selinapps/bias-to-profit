@@ -166,6 +166,25 @@ export type Database = {
           discipline_tag: string | null // "followed_plan", "FOMO", etc.
           notes: string | null
           
+          // ✅ PHASE 3E: Market Context (Entry stage)
+          htf_bias: string | null // 'Bullish', 'Bearish', 'Neutral'
+          htf_bias_tf: string | null // 'D1', 'H4', 'H1'
+          bias_aligned: boolean | null // Auto: direction matches htf_bias
+          vwap_type: string | null // 'Session', 'Day', 'Week', 'Anchored'
+          vwap_band: string | null // 'Below −3σ', '−3σ to −2σ', etc.
+          vwap_side: string | null // 'Above', 'At', 'Below' (auto)
+          atr_tf: string | null // 'M1', 'M5', 'M15', 'M30', 'H1'
+          atr_period: number | null // 5, 7, 10, 14, 20
+          atr_value_pips: number | null // ATR value in pips
+          atr_units: string | null // 'pips', 'ticks', 'points'
+          atr_bucket: string | null // 'Low', 'Normal', 'High', 'Extreme' (auto)
+          profile_scope: string | null // 'Session', 'Prior Day', 'Week', etc.
+          fva_position: string | null // 'Below VAL', 'VAL to POC', etc.
+          inside_value: boolean | null // Auto: between VAL-VAH
+          outside_value: boolean | null // Auto: above VAH or below VAL
+          poi_type: string | null // 'Order Block (Bull)', 'FVG', etc.
+          poi_scope: string | null // 'Intra-day', 'Prior Day', etc.
+          
           // Exit data (Close/Manage stage)
           exit_time: string | null
           exit_price: number | null
@@ -246,6 +265,25 @@ export type Database = {
           discipline_tag?: string | null
           notes?: string | null
           
+          // ✅ PHASE 3E: Optional market context
+          htf_bias?: string | null
+          htf_bias_tf?: string | null
+          bias_aligned?: boolean | null
+          vwap_type?: string | null
+          vwap_band?: string | null
+          vwap_side?: string | null
+          atr_tf?: string | null
+          atr_period?: number | null
+          atr_value_pips?: number | null
+          atr_units?: string | null
+          atr_bucket?: string | null
+          profile_scope?: string | null
+          fva_position?: string | null
+          inside_value?: boolean | null
+          outside_value?: boolean | null
+          poi_type?: string | null
+          poi_scope?: string | null
+          
           // Optional exit data
           exit_time?: string | null
           exit_price?: number | null
@@ -323,6 +361,25 @@ export type Database = {
           checklist_items_all?: string[] | null // ✅ PHASE 3D
           discipline_tag?: string | null
           notes?: string | null
+          
+          // ✅ PHASE 3E: Market context
+          htf_bias?: string | null
+          htf_bias_tf?: string | null
+          bias_aligned?: boolean | null
+          vwap_type?: string | null
+          vwap_band?: string | null
+          vwap_side?: string | null
+          atr_tf?: string | null
+          atr_period?: number | null
+          atr_value_pips?: number | null
+          atr_units?: string | null
+          atr_bucket?: string | null
+          profile_scope?: string | null
+          fva_position?: string | null
+          inside_value?: boolean | null
+          outside_value?: boolean | null
+          poi_type?: string | null
+          poi_scope?: string | null
           
           // Exit data
           exit_time?: string | null
@@ -1242,6 +1299,55 @@ export type Database = {
         }[]
       }
       generate_checklist_recommendations: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      get_htf_bias_impact: {
+        Args: { p_user_id: string }
+        Returns: {
+          htf_bias: string
+          aligned_count: number
+          not_aligned_count: number
+          aligned_win_rate: number
+          not_aligned_win_rate: number
+          aligned_avg_r: number
+          not_aligned_avg_r: number
+          impact_difference: number
+          total_impact_r: number
+          recommendation: string
+        }[]
+      }
+      get_vwap_performance: {
+        Args: { p_user_id: string }
+        Returns: {
+          vwap_band: string
+          trade_count: number
+          win_rate: number
+          avg_r: number
+          best_band: boolean
+        }[]
+      }
+      get_fva_performance: {
+        Args: { p_user_id: string }
+        Returns: {
+          fva_position: string
+          trade_count: number
+          win_rate: number
+          avg_r: number
+          best_zone: boolean
+        }[]
+      }
+      get_poi_performance: {
+        Args: { p_user_id: string }
+        Returns: {
+          poi_type: string
+          trade_count: number
+          win_rate: number
+          avg_r: number
+          best_poi: boolean
+        }[]
+      }
+      generate_market_context_recommendations: {
         Args: { p_user_id: string }
         Returns: number
       }
