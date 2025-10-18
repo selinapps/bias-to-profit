@@ -110,14 +110,21 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
   };
 
   const checklistComplete = checklistItems.length === 0 || checklistItems.every(item => item.checked);
+  
+  // ✅ PHASE 3D: Allow submission even if checklist incomplete (track skips, don't block)
+  const checklistItemsSkipped = checklistItems
+    .filter(item => !item.checked)
+    .map(item => item.text);
+  
+  const checklistItemsAll = checklistItems.map(item => item.text);
+  
   const isFormValid = Boolean(
     entryPrice && 
     stopLoss && 
     target && 
     asset && 
-    selectedSetup && 
-    checklistComplete
-    // Note: activeChallenge is optional - trades can be logged without a challenge
+    selectedSetup
+    // ✅ REMOVED: checklistComplete (now optional - we track skips instead)
   );
 
   const resetForm = () => {
@@ -169,7 +176,9 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
         
         // Psychology & Discipline
         emotions: emotions,
-        checklist_passed: checklistComplete, // ✅ NEW - based on checklist completion
+        checklist_passed: checklistComplete, // ✅ Boolean - based on checklist completion
+        checklist_items_skipped: checklistItemsSkipped.length > 0 ? checklistItemsSkipped : null, // ✅ PHASE 3D - which items skipped
+        checklist_items_all: checklistItemsAll.length > 0 ? checklistItemsAll : null, // ✅ PHASE 3D - all items shown
         confidence: confidence || null, // ✅ NEW - 1-5 scale
         discipline_tag: disciplineTag || null, // ✅ NEW - discipline classification
         
@@ -449,13 +458,30 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
 
           {/* Setup Checklist */}
           {currentSetup && checklistItems.length > 0 && (
-            <Card className="p-4 bg-slate-800/50 border-slate-700">
-              <div className="flex items-center justify-between mb-3">
+            <Card className={`p-4 border ${
+              checklistComplete 
+                ? 'bg-green-950/20 border-green-700/50' 
+                : 'bg-yellow-950/20 border-yellow-700/50'
+            }`}>
+              <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-semibold text-slate-200">Setup Checklist</span>
-                <Badge variant={checklistComplete ? "default" : "secondary"} className={checklistComplete ? "bg-emerald-600" : ""}>
-                  {checklistItems.filter(item => item.checked).length}/{checklistItems.length}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={checklistComplete ? "default" : "secondary"} className={checklistComplete ? "bg-emerald-600" : "bg-yellow-600"}>
+                    {checklistItems.filter(item => item.checked).length}/{checklistItems.length}
+                  </Badge>
+                  {!checklistComplete && (
+                    <Badge variant="outline" className="text-xs bg-yellow-900/50 text-yellow-300 border-yellow-500/50">
+                      ⚠️ {checklistItemsSkipped.length} Skipped
+                    </Badge>
+                  )}
+                </div>
               </div>
+              {!checklistComplete && (
+                <p className="text-xs text-yellow-300/90 mb-3 flex items-start gap-1">
+                  <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  <span>You can still submit - skipped items will be tracked for performance analysis.</span>
+                </p>
+              )}
               <div className="space-y-2">
                 {checklistItems.map((item, index) => (
                   <label key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer">
@@ -464,7 +490,9 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                       onCheckedChange={() => toggleChecklist(index)}
                       className="mt-0.5"
                     />
-                    <span className="text-sm text-slate-300">{item.text}</span>
+                    <span className={`text-sm ${item.checked ? 'text-slate-300' : 'text-yellow-300/80 font-medium'}`}>
+                      {item.text}
+                    </span>
                     {item.checked && <CheckCircle2 className="h-4 w-4 text-emerald-400 ml-auto flex-shrink-0" />}
                   </label>
                 ))}

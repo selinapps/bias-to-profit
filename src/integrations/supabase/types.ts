@@ -161,6 +161,8 @@ export type Database = {
           confidence: number | null // 1-5 scale
           emotions: Json | null // {calm_stressed, focus, urge_recover}
           checklist_passed: boolean | null
+          checklist_items_skipped: string[] | null // ✅ PHASE 3D - which items were unchecked
+          checklist_items_all: string[] | null // ✅ PHASE 3D - all items shown (for historical reference)
           discipline_tag: string | null // "followed_plan", "FOMO", etc.
           notes: string | null
           
@@ -239,6 +241,8 @@ export type Database = {
           confidence?: number | null
           emotions?: Json | null
           checklist_passed?: boolean | null
+          checklist_items_skipped?: string[] | null // ✅ PHASE 3D
+          checklist_items_all?: string[] | null // ✅ PHASE 3D
           discipline_tag?: string | null
           notes?: string | null
           
@@ -315,6 +319,8 @@ export type Database = {
           confidence?: number | null
           emotions?: Json | null
           checklist_passed?: boolean | null
+          checklist_items_skipped?: string[] | null // ✅ PHASE 3D
+          checklist_items_all?: string[] | null // ✅ PHASE 3D
           discipline_tag?: string | null
           notes?: string | null
           
@@ -1217,6 +1223,25 @@ export type Database = {
         }[]
       }
       generate_recommendations: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      get_checklist_item_impact: {
+        Args: { p_user_id: string }
+        Returns: {
+          item_text: string
+          times_skipped: number
+          times_not_skipped: number
+          win_rate_when_skipped: number
+          win_rate_when_not_skipped: number
+          avg_r_when_skipped: number
+          avg_r_when_not_skipped: number
+          impact_difference: number
+          impact_total_r: number
+          recommendation_priority: string
+        }[]
+      }
+      generate_checklist_recommendations: {
         Args: { p_user_id: string }
         Returns: number
       }
