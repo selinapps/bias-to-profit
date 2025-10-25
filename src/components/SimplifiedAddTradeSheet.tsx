@@ -17,6 +17,7 @@ import { useChallenge } from '@/hooks/useChallenge';
 import { format } from 'date-fns';
 import { calculateDirectionalPips, getPipValueConfig, calculateEstimatedProfit } from '@/lib/tradingCalculations';
 import { getActiveSession, type TradingSession } from '@/lib/tradingSessions';
+import { SESSION_BEHAVIORS, SESSION_SCENARIOS, getBehaviorsBySession } from '@/lib/sessionBehaviors';
 
 interface SimplifiedAddTradeSheetProps {
   isOpen: boolean;
@@ -75,6 +76,11 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
   const [poiType, setPoiType] = useState<string>('');
   const [poiScope, setPoiScope] = useState<string>('Intra-day');
   
+  // ✅ Session Behaviors
+  const [selectedBehavior, setSelectedBehavior] = useState<string>('');
+  const [selectedScenario, setSelectedScenario] = useState<'S1' | 'S2' | 'S3' | ''>('');
+  const [showSessionBehaviors, setShowSessionBehaviors] = useState(false);
+  
   // Loading state
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,6 +88,10 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
   useEffect(() => {
     const session = getActiveSession(entryTime);
     setCurrentSession(session);
+    
+    // Reset behavior when session changes
+    setSelectedBehavior('');
+    setSelectedScenario('');
   }, [entryTime]);
 
   // Get current setup
@@ -166,6 +176,8 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
     setFvaPosition('');
     setPoiType('');
     setPoiScope('Intra-day');
+    setSelectedBehavior('');
+    setSelectedScenario('');
     const now = new Date();
     setEntryTime(now);
     setCurrentSession(getActiveSession(now));
@@ -222,6 +234,10 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
         fva_position: fvaPosition || null,
         poi_type: poiType || null,
         poi_scope: poiScope || null,
+        
+        // ✅ Session Behaviors (Phase 3E extension)
+        session_behavior: selectedBehavior || null,
+        session_scenario: selectedScenario || null,
         
         // Optional fields
         notes: currentSetup?.name || null,
@@ -747,6 +763,107 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Session Behavior & Scenarios */}
+                <div className="border-t border-slate-700 pt-4 mt-4">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer mb-3"
+                    onClick={() => setShowSessionBehaviors(!showSessionBehaviors)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-orange-400" />
+                      <Label className="text-sm font-semibold text-foreground cursor-pointer">
+                        Session Behavior (Backtest Analysis)
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {(selectedBehavior || selectedScenario) && (
+                        <Badge variant="secondary" className="text-xs bg-orange-500/20 text-orange-300 border-orange-400/50">
+                          {[selectedBehavior, selectedScenario].filter(Boolean).length} Set
+                        </Badge>
+                      )}
+                      {showSessionBehaviors ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  </div>
+
+                  {showSessionBehaviors && (
+                    <div className="space-y-4">
+                      {/* Session Behavior Selection */}
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-2 block">
+                          Current Session Behavior
+                        </Label>
+                        <Select value={selectedBehavior} onValueChange={setSelectedBehavior}>
+                          <SelectTrigger className="h-10 bg-slate-900">
+                            <SelectValue placeholder="Select behavior..." />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {currentSession && getBehaviorsBySession(currentSession.name).map(behavior => (
+                              <SelectItem key={behavior.id} value={behavior.id}>
+                                {behavior.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {/* Display behavior description when selected */}
+                        {selectedBehavior && SESSION_BEHAVIORS[selectedBehavior] && (
+                          <div className="mt-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <p className="text-xs text-slate-300 mb-2">
+                              {SESSION_BEHAVIORS[selectedBehavior].description}
+                            </p>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase text-slate-500">Trading Hints:</p>
+                              {SESSION_BEHAVIORS[selectedBehavior].tradingHints.map((hint, idx) => (
+                                <p key={idx} className="text-xs text-blue-300">• {hint}</p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Session Scenario Selection */}
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-2 block">
+                          Trading Scenario (S1/S2/S3)
+                        </Label>
+                        <Select value={selectedScenario} onValueChange={(v) => setSelectedScenario(v as 'S1' | 'S2' | 'S3')}>
+                          <SelectTrigger className="h-10 bg-slate-900">
+                            <SelectValue placeholder="Select scenario..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="S1">S1 - London Sweep & Reversal</SelectItem>
+                            <SelectItem value="S2">S2 - London Breakout with Continuation</SelectItem>
+                            <SelectItem value="S3">S3 - London Rejection & Range Hold</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        {/* Display scenario details when selected */}
+                        {selectedScenario && SESSION_SCENARIOS[selectedScenario] && (
+                          <div className="mt-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <p className="text-xs text-slate-300 mb-2">
+                              {SESSION_SCENARIOS[selectedScenario].description}
+                            </p>
+                            <div className="space-y-1 mt-2">
+                              <p className="text-[10px] uppercase text-slate-500">Trading Implications:</p>
+                              {SESSION_SCENARIOS[selectedScenario].tradingImplications.map((implication, idx) => (
+                                <p key={idx} className="text-xs text-green-300">• {implication}</p>
+                              ))}
+                            </div>
+                            {SESSION_SCENARIOS[selectedScenario].examples.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-slate-700">
+                                <p className="text-[10px] uppercase text-slate-500 mb-1">Examples:</p>
+                                {SESSION_SCENARIOS[selectedScenario].examples.map((example, idx) => (
+                                  <p key={idx} className="text-xs text-purple-300">→ {example}</p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

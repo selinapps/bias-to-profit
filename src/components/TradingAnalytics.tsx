@@ -658,6 +658,16 @@ export function TradingAnalytics() {
             </TabsList>
           </div>
 
+          {/* Market Context Analytics - New Backtesting Tab */}
+          <div className="flex items-center gap-1 bg-gradient-to-r from-amber-950/50 to-orange-950/50 rounded-lg p-1 border border-amber-500/30">
+            <TabsList className="h-9 bg-transparent">
+              <TabsTrigger value="market-context" className={`text-xs ${isMobile ? 'px-2' : 'px-4'} data-[state=active]:bg-amber-900/50`}>
+                <Activity className="h-3 w-3 mr-1 text-amber-400" />
+                {!isMobile && <span className="text-amber-400 font-semibold">Market Context</span>}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
           {/* Recommendations - Standalone */}
           <div className="flex items-center gap-1 bg-gradient-to-r from-purple-950/50 to-pink-950/50 rounded-lg p-1 border border-purple-500/30">
             <TabsList className="h-9 bg-transparent">
@@ -1736,7 +1746,311 @@ export function TradingAnalytics() {
           </Card>
         </TabsContent>
 
-        {/* ✅ PHASE 3: TAB 11 - RECOMMENDATIONS */}
+        {/* ✅ TAB 11 - MARKET CONTEXT ANALYTICS */}
+        <TabsContent value="market-context" className="space-y-4">
+          {(() => {
+            // Calculate market context analytics
+            const sessionBehaviors = closedTrades.reduce((acc, trade) => {
+              const behavior = (trade as any).session_behavior;
+              if (behavior) {
+                if (!acc[behavior]) {
+                  acc[behavior] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                }
+                acc[behavior].trades.push(trade);
+                acc[behavior].totalR += (trade.r_multiple || 0);
+                acc[behavior].totalPnL += (trade.pnl || 0);
+                if ((trade.r_multiple || 0) > 0) acc[behavior].wins++;
+              }
+              return acc;
+            }, {} as Record<string, any>);
+
+            const sessionScenarios = closedTrades.reduce((acc, trade) => {
+              const scenario = (trade as any).session_scenario;
+              if (scenario) {
+                if (!acc[scenario]) {
+                  acc[scenario] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                }
+                acc[scenario].trades.push(trade);
+                acc[scenario].totalR += (trade.r_multiple || 0);
+                acc[scenario].totalPnL += (trade.pnl || 0);
+                if ((trade.r_multiple || 0) > 0) acc[scenario].wins++;
+              }
+              return acc;
+            }, {} as Record<string, any>);
+
+            // Day of week performance
+            const dayOfWeekPerf = closedTrades.reduce((acc, trade) => {
+              if (trade.entry_time) {
+                const day = format(new Date(trade.entry_time), 'EEEE');
+                if (!acc[day]) {
+                  acc[day] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                }
+                acc[day].trades.push(trade);
+                acc[day].totalR += (trade.r_multiple || 0);
+                acc[day].totalPnL += (trade.pnl || 0);
+                if ((trade.r_multiple || 0) > 0) acc[day].wins++;
+              }
+              return acc;
+            }, {} as Record<string, any>);
+
+            // Hour of day performance (NY time)
+            const hourOfDayPerf = closedTrades.reduce((acc, trade) => {
+              if (trade.entry_time) {
+                const nyTime = new Date(trade.entry_time.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const hour = nyTime.getHours();
+                if (!acc[hour]) {
+                  acc[hour] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                }
+                acc[hour].trades.push(trade);
+                acc[hour].totalR += (trade.r_multiple || 0);
+                acc[hour].totalPnL += (trade.pnl || 0);
+                if ((trade.r_multiple || 0) > 0) acc[hour].wins++;
+              }
+              return acc;
+            }, {} as Record<string, any>);
+
+            return (
+              <>
+                {/* Session Behavior Performance */}
+                <Card className="bg-trading-card border-trading-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-amber-400" />
+                      Session Behavior Performance
+                    </CardTitle>
+                    <p className="text-sm text-trading-muted">
+                      How different session behaviors performed in your backtest
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {Object.keys(sessionBehaviors).length === 0 ? (
+                      <div className="text-center py-8 text-trading-muted">
+                        <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No session behavior data yet. Add behaviors when entering trades.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {Object.entries(sessionBehaviors)
+                          .sort((a, b) => b[1].totalPnL - a[1].totalPnL)
+                          .map(([behavior, data]: [string, any]) => (
+                            <div
+                              key={behavior}
+                              className={`p-4 border rounded-lg ${
+                                data.totalPnL > 0
+                                  ? 'bg-green-950/10 border-green-500/20'
+                                  : 'bg-red-950/10 border-red-500/20'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div>
+                                  <h5 className="font-semibold text-foreground capitalize">
+                                    {behavior.replace(/_/g, ' ')}
+                                  </h5>
+                                  <p className="text-xs text-trading-muted">{data.trades.length} trades</p>
+                                </div>
+                                <Badge className={data.totalPnL >= 0 ? 'bg-green-600' : 'bg-red-600'}>
+                                  {formatCurrency(data.totalPnL)}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div className="text-center">
+                                  <div className="font-bold text-trading-accent">
+                                    {data.trades.length > 0 ? ((data.wins / data.trades.length) * 100).toFixed(0) : 0}%
+                                  </div>
+                                  <div className="text-xs text-trading-muted">Win Rate</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-bold text-orange-300">
+                                    {data.trades.length > 0 ? (data.totalR / data.trades.length).toFixed(2) : 0}R
+                                  </div>
+                                  <div className="text-xs text-trading-muted">Avg R Multiple</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-bold text-blue-300">{data.wins}</div>
+                                  <div className="text-xs text-trading-muted">Wins</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-bold text-purple-300">
+                                    {data.trades.length - data.wins}
+                                  </div>
+                                  <div className="text-xs text-trading-muted">Losses</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Session Scenarios (S1/S2/S3) */}
+                <Card className="bg-trading-card border-trading-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-orange-400" />
+                      Trading Scenario Performance (S1/S2/S3)
+                    </CardTitle>
+                    <p className="text-sm text-trading-muted">
+                      Which scenario worked best for your strategy
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {Object.keys(sessionScenarios).length === 0 ? (
+                      <div className="text-center py-8 text-trading-muted">
+                        <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No scenario data yet. Track S1/S2/S3 on your trades.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {['S1', 'S2', 'S3'].map(scenario => {
+                          const data = sessionScenarios[scenario];
+                          if (!data) return null;
+                          return (
+                            <div
+                              key={scenario}
+                              className={`p-4 border rounded-lg ${
+                                data.totalPnL > 0
+                                  ? 'bg-green-950/10 border-green-500/20'
+                                  : 'bg-red-950/10 border-red-500/20'
+                              }`}
+                            >
+                              <div className="text-center mb-3">
+                                <h5 className="text-lg font-bold text-foreground mb-1">{scenario}</h5>
+                                <p className="text-xs text-trading-muted">{data.trades.length} trades</p>
+                              </div>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-trading-muted">Win Rate:</span>
+                                  <span className="font-bold text-trading-accent">
+                                    {data.trades.length > 0 ? ((data.wins / data.trades.length) * 100).toFixed(0) : 0}%
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-trading-muted">Avg R:</span>
+                                  <span className="font-bold text-orange-300">
+                                    {data.trades.length > 0 ? (data.totalR / data.trades.length).toFixed(2) : 0}R
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-trading-muted">Total P&L:</span>
+                                  <span className={`font-bold ${data.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {formatCurrency(data.totalPnL)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Day of Week Performance */}
+                <Card className="bg-trading-card border-trading-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-blue-400" />
+                      Day of Week Analysis
+                    </CardTitle>
+                    <p className="text-sm text-trading-muted">
+                      Which days are most profitable for your strategy
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
+                        const data = dayOfWeekPerf[day];
+                        if (!data) return null;
+                        return (
+                          <div
+                            key={day}
+                            className={`p-3 border rounded-lg text-center ${
+                              data.totalPnL > 0
+                                ? 'bg-green-950/10 border-green-500/20'
+                                : data.totalPnL < 0
+                                  ? 'bg-red-950/10 border-red-500/20'
+                                  : 'bg-muted/10 border-muted/20'
+                            }`}
+                          >
+                            <div className="font-semibold text-sm mb-1">{day.slice(0, 3)}</div>
+                            <div className="text-2xl font-bold mb-1 text-foreground">{data.trades.length}</div>
+                            <div className={`text-xs font-semibold mb-1 ${data.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {formatCurrency(data.totalPnL)}
+                            </div>
+                            <div className="text-xs text-trading-muted">
+                              {data.trades.length > 0 ? ((data.wins / data.trades.length) * 100).toFixed(0) : 0}% WR
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Hour of Day Performance (NY Time) */}
+                <Card className="bg-trading-card border-trading-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-purple-400" />
+                      Hour of Day Performance (NY Time)
+                    </CardTitle>
+                    <p className="text-sm text-trading-muted">
+                      Best trading hours in New York timezone
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {Object.keys(hourOfDayPerf).length === 0 ? (
+                      <div className="text-center py-4 text-trading-muted">No hourly data available</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {Object.entries(hourOfDayPerf)
+                          .sort((a, b) => Number(a[0]) - Number(b[0]))
+                          .map(([hour, data]: [string, any]) => (
+                            <div
+                              key={hour}
+                              className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/30"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="text-sm font-semibold text-foreground w-16">
+                                  {formatHour(Number(hour))}
+                                </div>
+                                <div className="text-xs text-trading-muted w-24">
+                                  {data.trades.length} trades
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-center">
+                                  <div className="text-xs text-trading-muted">Win Rate</div>
+                                  <div className="font-semibold text-foreground">
+                                    {data.trades.length > 0 ? ((data.wins / data.trades.length) * 100).toFixed(0) : 0}%
+                                  </div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-xs text-trading-muted">Avg R</div>
+                                  <div className="font-semibold text-orange-300">
+                                    {data.trades.length > 0 ? (data.totalR / data.trades.length).toFixed(2) : 0}R
+                                  </div>
+                                </div>
+                                <div className="text-center w-24">
+                                  <div className="text-xs text-trading-muted">Total P&L</div>
+                                  <div className={`font-bold ${data.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {formatCurrency(data.totalPnL)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            );
+          })()}
+        </TabsContent>
+
+        {/* ✅ PHASE 3: TAB 12 - RECOMMENDATIONS */}
         <TabsContent value="recommendations" className="space-y-4">
           <RecommendationsDashboard />
         </TabsContent>
