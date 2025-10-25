@@ -1796,7 +1796,9 @@ export function TradingAnalytics() {
             // Hour of day performance (NY time)
             const hourOfDayPerf = closedTrades.reduce((acc, trade) => {
               if (trade.entry_time) {
-                const nyTime = new Date(trade.entry_time.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                // Convert entry_time (UTC) to NY time
+                const entryDate = new Date(trade.entry_time);
+                const nyTime = new Date(entryDate.toLocaleString('en-US', { timeZone: 'America/New_York' }));
                 const hour = nyTime.getHours();
                 if (!acc[hour]) {
                   acc[hour] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
@@ -1996,7 +1998,7 @@ export function TradingAnalytics() {
                       Hour of Day Performance (NY Time)
                     </CardTitle>
                     <p className="text-sm text-trading-muted">
-                      Best trading hours in New York timezone
+                      Best trading hours in New York timezone. Times are based on entry_time converted to NY timezone.
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -2010,12 +2012,13 @@ export function TradingAnalytics() {
                             <div
                               key={hour}
                               className="flex items-center justify-between p-3 rounded-lg border border-slate-700/50 bg-slate-900/30"
+                              title={`${hour}:00-${hour}:59 NY Time`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className="text-sm font-semibold text-foreground w-16">
-                                  {formatHour(Number(hour))}
+                                <div className="text-sm font-semibold text-foreground w-20">
+                                  {formatHour(Number(hour))} NY
                                 </div>
-                                <div className="text-xs text-trading-muted w-24">
+                                <div className="text-xs text-trading-muted w-20">
                                   {data.trades.length} trades
                                 </div>
                               </div>
