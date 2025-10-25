@@ -1811,6 +1811,191 @@ export function TradingAnalytics() {
               return acc;
             }, {} as Record<string, any>);
 
+            // Deep Analytics: Cross-correlation analysis
+            const deepAnalytics = (() => {
+              const insights: Array<{
+                title: string;
+                insight: string;
+                performance: { winRate: number; avgR: number; sample: number; totalPnL: number };
+                confidence: 'high' | 'medium' | 'low';
+              }> = [];
+
+              // 1. HTF Bias + Behavior combinations
+              const biasBehaviorCombo = closedTrades.reduce((acc, trade) => {
+                const bias = (trade as any).htf_bias;
+                const behavior = (trade as any).session_behavior;
+                if (bias && behavior) {
+                  const key = `${bias}+${behavior}`;
+                  if (!acc[key]) {
+                    acc[key] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                  }
+                  acc[key].trades.push(trade);
+                  acc[key].totalR += (trade.r_multiple || 0);
+                  acc[key].totalPnL += (trade.pnl || 0);
+                  if ((trade.r_multiple || 0) > 0) acc[key].wins++;
+                }
+                return acc;
+              }, {} as Record<string, any>);
+
+              // Find best bias + behavior combo
+              const bestBiasBehavior = Object.entries(biasBehaviorCombo)
+                .filter(([_, data]: [string, any]) => data.trades.length >= 5)
+                .sort((a, b) => b[1].totalPnL - a[1].totalPnL)[0];
+
+              if (bestBiasBehavior) {
+                const [combo, data] = bestBiasBehavior;
+                const [bias, behavior] = combo.split('+');
+                const winRate = (data.wins / data.trades.length) * 100;
+                insights.push({
+                  title: `Best Combo: ${bias} Bias + ${behavior.replace(/_/g, ' ')}`,
+                  insight: `This combination of HTF bias and session behavior is your strongest edge. Trade more of this setup.`,
+                  performance: {
+                    winRate,
+                    avgR: data.totalR / data.trades.length,
+                    sample: data.trades.length,
+                    totalPnL: data.totalPnL
+                  },
+                  confidence: data.trades.length >= 10 ? 'high' : data.trades.length >= 5 ? 'medium' : 'low'
+                });
+              }
+
+              // 2. VWAP Band + FVA Position
+              const vwapFvaCombo = closedTrades.reduce((acc, trade) => {
+                const vwap = (trade as any).vwap_band;
+                const fva = (trade as any).fva_position;
+                if (vwap && fva) {
+                  const key = `${vwap}+${fva}`;
+                  if (!acc[key]) {
+                    acc[key] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                  }
+                  acc[key].trades.push(trade);
+                  acc[key].totalR += (trade.r_multiple || 0);
+                  acc[key].totalPnL += (trade.pnl || 0);
+                  if ((trade.r_multiple || 0) > 0) acc[key].wins++;
+                }
+                return acc;
+              }, {} as Record<string, any>);
+
+              const bestVwapFva = Object.entries(vwapFvaCombo)
+                .filter(([_, data]: [string, any]) => data.trades.length >= 3)
+                .sort((a, b) => b[1].totalPnL - a[1].totalPnL)[0];
+
+              if (bestVwapFva) {
+                const [combo, data] = bestVwapFva;
+                const [vwap, fva] = combo.split('+');
+                const winRate = (data.wins / data.trades.length) * 100;
+                insights.push({
+                  title: `Optimal VWAP + FVA: ${vwap} + ${fva}`,
+                  insight: `This specific value area setup performs exceptionally well for your strategy.`,
+                  performance: {
+                    winRate,
+                    avgR: data.totalR / data.trades.length,
+                    sample: data.trades.length,
+                    totalPnL: data.totalPnL
+                  },
+                  confidence: data.trades.length >= 7 ? 'high' : data.trades.length >= 3 ? 'medium' : 'low'
+                });
+              }
+
+              // 3. POI Type performance
+              const poiPerf = closedTrades.reduce((acc, trade) => {
+                const poi = (trade as any).poi_type;
+                if (poi) {
+                  if (!acc[poi]) {
+                    acc[poi] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                  }
+                  acc[poi].trades.push(trade);
+                  acc[poi].totalR += (trade.r_multiple || 0);
+                  acc[poi].totalPnL += (trade.pnl || 0);
+                  if ((trade.r_multiple || 0) > 0) acc[poi].wins++;
+                }
+                return acc;
+              }, {} as Record<string, any>);
+
+              const top3POI = Object.entries(poiPerf)
+                .filter(([_, data]: [string, any]) => data.trades.length >= 3)
+                .sort((a, b) => b[1].totalPnL - a[1].totalPnL)
+                .slice(0, 3);
+
+              top3POI.forEach(([poi, data]: [string, any]) => {
+                const winRate = (data.wins / data.trades.length) * 100;
+                if (winRate >= 60 || data.totalPnL > 0) {
+                  insights.push({
+                    title: `Strong POI: ${poi}`,
+                    insight: `This POI type consistently delivers strong results. Focus on these setups.`,
+                    performance: {
+                      winRate,
+                      avgR: data.totalR / data.trades.length,
+                      sample: data.trades.length,
+                      totalPnL: data.totalPnL
+                    },
+                    confidence: data.trades.length >= 7 ? 'high' : 'medium'
+                  });
+                }
+              });
+
+              // 4. Time-based edge
+              const bestHour = Object.entries(hourOfDayPerf)
+                .filter(([_, data]: [string, any]) => data.trades.length >= 3)
+                .sort((a, b) => b[1].totalPnL - a[1].totalPnL)[0];
+
+              if (bestHour) {
+                const [hour, data] = bestHour;
+                const winRate = (data.wins / data.trades.length) * 100;
+                insights.push({
+                  title: `Best Trading Hour: ${formatHour(Number(hour))} NY`,
+                  insight: `Your trades perform significantly better during this hour window. Consider focusing your trading activity here.`,
+                  performance: {
+                    winRate,
+                    avgR: data.totalR / data.trades.length,
+                    sample: data.trades.length,
+                    totalPnL: data.totalPnL
+                  },
+                  confidence: data.trades.length >= 10 ? 'high' : 'medium'
+                });
+              }
+
+              // 5. Scenario + Day combination
+              const scenarioDay = closedTrades.reduce((acc, trade) => {
+                const scenario = (trade as any).session_scenario;
+                if (trade.entry_time && scenario) {
+                  const day = format(new Date(trade.entry_time), 'EEEE');
+                  const key = `${scenario}+${day}`;
+                  if (!acc[key]) {
+                    acc[key] = { trades: [], wins: 0, totalR: 0, totalPnL: 0 };
+                  }
+                  acc[key].trades.push(trade);
+                  acc[key].totalR += (trade.r_multiple || 0);
+                  acc[key].totalPnL += (trade.pnl || 0);
+                  if ((trade.r_multiple || 0) > 0) acc[key].wins++;
+                }
+                return acc;
+              }, {} as Record<string, any>);
+
+              const bestScenarioDay = Object.entries(scenarioDay)
+                .filter(([_, data]: [string, any]) => data.trades.length >= 3)
+                .sort((a, b) => b[1].totalPnL - a[1].totalPnL)[0];
+
+              if (bestScenarioDay) {
+                const [combo, data] = bestScenarioDay;
+                const [scenario, day] = combo.split('+');
+                const winRate = (data.wins / data.trades.length) * 100;
+                insights.push({
+                  title: `${scenario} on ${day} Performance`,
+                  insight: `This scenario type on ${day} shows exceptional results. Plan to trade this combination more actively.`,
+                  performance: {
+                    winRate,
+                    avgR: data.totalR / data.trades.length,
+                    sample: data.trades.length,
+                    totalPnL: data.totalPnL
+                  },
+                  confidence: data.trades.length >= 7 ? 'high' : 'medium'
+                });
+              }
+
+              return insights.slice(0, 5); // Top 5 insights
+            })();
+
             return (
               <>
                 {/* Session Behavior Performance */}
@@ -1884,6 +2069,112 @@ export function TradingAnalytics() {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* 🎯 KEY INSIGHTS - Cross-Analysis */}
+                {deepAnalytics.length > 0 && (
+                  <Card className="bg-gradient-to-br from-amber-950/20 to-orange-950/20 border-amber-500/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-amber-400" />
+                        💎 Key Insights & Optimal Setups
+                      </CardTitle>
+                      <p className="text-sm text-trading-muted">
+                        Cross-analysis of all market context inputs to identify your best-performing combinations
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {deepAnalytics.map((insight, index) => (
+                          <div
+                            key={index}
+                            className="p-4 rounded-lg border border-amber-500/30 bg-slate-900/50 backdrop-blur-sm"
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1">
+                                  <Lightbulb className={`h-5 w-5 ${
+                                    insight.confidence === 'high' ? 'text-green-400' :
+                                    insight.confidence === 'medium' ? 'text-yellow-400' :
+                                    'text-orange-400'
+                                  }`} />
+                                </div>
+                                <div>
+                                  <h5 className="font-semibold text-foreground mb-1">
+                                    {insight.title}
+                                  </h5>
+                                  <p className="text-sm text-trading-muted mb-2">
+                                    {insight.insight}
+                                  </p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge className={
+                                      insight.confidence === 'high' ? 'bg-green-600' :
+                                      insight.confidence === 'medium' ? 'bg-yellow-600' :
+                                      'bg-orange-600'
+                                    }>
+                                      {insight.confidence === 'high' ? 'High' :
+                                       insight.confidence === 'medium' ? 'Medium' : 'Low'} Confidence
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {insight.performance.sample} trades
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className={`text-lg font-bold ${
+                                  insight.performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                                }`}>
+                                  {formatCurrency(insight.performance.totalPnL)}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-slate-700">
+                              <div className="text-center">
+                                <div className="text-xs text-trading-muted mb-1">Win Rate</div>
+                                <div className="font-semibold text-trading-accent">
+                                  {insight.performance.winRate.toFixed(0)}%
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-trading-muted mb-1">Avg R</div>
+                                <div className="font-semibold text-orange-300">
+                                  {insight.performance.avgR.toFixed(2)}R
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-trading-muted mb-1">Sample</div>
+                                <div className="font-semibold text-purple-300">
+                                  {insight.performance.sample} trades
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-trading-muted mb-1">Total P&L</div>
+                                <div className={`font-semibold ${
+                                  insight.performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                                }`}>
+                                  {formatCurrency(insight.performance.totalPnL)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {deepAnalytics.length > 0 && (
+                        <div className="mt-4 p-3 bg-blue-950/20 border border-blue-500/30 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <Sparkles className="h-4 w-4 text-blue-400 mt-0.5" />
+                            <div className="text-xs text-blue-200">
+                              <strong>Pro Tip:</strong> Use these insights to focus your trading on the combinations that consistently perform best. 
+                              Track 10+ trades per combination for high-confidence results.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Session Scenarios (S1/S2/S3) */}
                 <Card className="bg-trading-card border-trading-border">
