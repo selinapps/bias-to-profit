@@ -80,6 +80,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
   const [selectedBehavior, setSelectedBehavior] = useState<string>('');
   const [selectedScenario, setSelectedScenario] = useState<'S1' | 'S2' | 'S3' | ''>('');
   const [showSessionBehaviors, setShowSessionBehaviors] = useState(false);
+  const [sweepTime, setSweepTime] = useState<Date | null>(null);
   
   // Loading state
   const [submitting, setSubmitting] = useState(false);
@@ -178,6 +179,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
     setPoiScope('Intra-day');
     setSelectedBehavior('');
     setSelectedScenario('');
+    setSweepTime(null);
     const now = new Date();
     setEntryTime(now);
     setCurrentSession(getActiveSession(now));
@@ -238,6 +240,7 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
         // ✅ Session Behaviors (Phase 3E extension)
         session_behavior: selectedBehavior || null,
         session_scenario: selectedScenario || null,
+        sweep_time: sweepTime ? sweepTime.toISOString() : null,
         
         // Optional fields
         notes: currentSetup?.name || null,
@@ -822,6 +825,48 @@ export function SimplifiedAddTradeSheet({ isOpen, onClose, onManageSetups, refre
                           </div>
                         )}
                       </div>
+
+                      {/* Sweep Time Input (for sweep behaviors) */}
+                      {selectedBehavior && SESSION_BEHAVIORS[selectedBehavior]?.requiresSweepTime && (
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-2 block">
+                            Sweep Time
+                          </Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="time"
+                              value={sweepTime ? format(sweepTime, 'HH:mm') : ''}
+                              onChange={(e) => {
+                                const timeValue = e.target.value;
+                                if (timeValue) {
+                                  const [hours, minutes] = timeValue.split(':').map(Number);
+                                  const newSweepTime = sweepTime || new Date();
+                                  newSweepTime.setHours(hours, minutes, 0, 0);
+                                  setSweepTime(newSweepTime);
+                                } else {
+                                  setSweepTime(null);
+                                }
+                              }}
+                              className="h-10 bg-slate-900"
+                              placeholder="HH:MM"
+                            />
+                            {sweepTime && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSweepTime(null)}
+                                className="h-10 text-xs bg-slate-900"
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            ⏰ Track when the sweep happened (NY Time)
+                          </p>
+                        </div>
+                      )}
 
                       {/* Session Scenario Selection */}
                       <div>

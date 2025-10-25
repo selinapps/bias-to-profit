@@ -4,6 +4,8 @@ export interface SessionBehavior {
   description: string;
   tradingHints: string[];
   typicalScenarios: string[];
+  requiresSweepTime?: boolean; // For tracking when sweep happened
+  sweepType?: 'high' | 'low' | 'both' | null; // Type of sweep if applicable
 }
 
 export interface SessionScenario {
@@ -14,8 +16,9 @@ export interface SessionScenario {
   examples: string[];
 }
 
-// Session Behaviors
+// Session Behaviors - Expanded with specific sweep types
 export const SESSION_BEHAVIORS: Record<string, SessionBehavior> = {
+  // ASIA SESSION
   asia_consolidation: {
     id: 'asia_consolidation',
     name: 'Asia Consolidation',
@@ -38,42 +41,112 @@ export const SESSION_BEHAVIORS: Record<string, SessionBehavior> = {
     ],
     typicalScenarios: ['S3 - Asia Breakout Continues']
   },
-  london_sweep_asia: {
-    id: 'london_sweep_asia',
-    name: 'London Sweep Asia Range',
-    description: 'London sweeps Asia highs/lows to trap retail, then reverses',
+
+  // LONDON SESSION - SPECIFIC SWEEPS
+  london_sweep_asia_low: {
+    id: 'london_sweep_asia_low',
+    name: 'London Sweep Asia Low',
+    description: 'London sweeps Asia low (liquidity grab) then reverses up',
     tradingHints: [
-      'Wait for sweep confirmation',
-      'Entry after liquidity grab',
-      'High probability reversal setup',
-      'Watch for order blocks at Asia extremes'
+      'Wait for sweep to Asia low',
+      'Entry after liquidity grab confirmation',
+      'Target Asia high or extension',
+      'High win rate reversal setup',
+      'Watch for order blocks at Asia low'
     ],
-    typicalScenarios: ['S1 - Mean Reversion Trade']
+    typicalScenarios: ['S1 - Mean Reversion Trade'],
+    requiresSweepTime: true,
+    sweepType: 'low'
   },
-  london_break_asia: {
-    id: 'london_break_asia',
-    name: 'London Break Asia Range',
-    description: 'London breaks through Asia range with volume',
+  london_sweep_asia_high: {
+    id: 'london_sweep_asia_high',
+    name: 'London Sweep Asia High',
+    description: 'London sweeps Asia high (liquidity grab) then reverses down',
     tradingHints: [
-      'Breakout trade opportunity',
-      'Enter on retest of broken level',
-      'Targets at next liquidity zone',
-      'Strong directional move expected'
+      'Wait for sweep to Asia high',
+      'Entry after liquidity grab confirmation',
+      'Target Asia low or extension',
+      'High win rate reversal setup',
+      'Watch for order blocks at Asia high'
     ],
-    typicalScenarios: ['S2 - Trend Continuation Trade']
+    typicalScenarios: ['S1 - Mean Reversion Trade'],
+    requiresSweepTime: true,
+    sweepType: 'high'
   },
-  london_rejection_asia: {
-    id: 'london_rejection_asia',
-    name: 'London Rejection of Asia Range',
-    description: 'London tries to break Asia range but fails',
+  london_sweep_both: {
+    id: 'london_sweep_both',
+    name: 'London Sweep Both (High & Low)',
+    description: 'London sweeps both Asia high and low, creating confusion before direction',
     tradingHints: [
-      'Rejection means range holds',
-      'Fade the rejection',
-      'Target back to opposite end of range',
-      'Short-lived moves expected'
+      'Both extremes swept',
+      'Wait for clear direction after both sweeps',
+      'Lower time frame confirmation needed',
+      'Higher risk setup'
     ],
-    typicalScenarios: ['S1 - Range Trading']
+    typicalScenarios: ['S1 - Complex Mean Reversion'],
+    requiresSweepTime: true,
+    sweepType: 'both'
   },
+  
+  // LONDON SESSION - BREAKOUTS
+  london_break_asia_high: {
+    id: 'london_break_asia_high',
+    name: 'London Break Above Asia High',
+    description: 'London breaks above Asia high with volume and continuation',
+    tradingHints: [
+      'Bullish breakout trade',
+      'Enter on retest of broken Asia high',
+      'Targets above Asia range',
+      'Strong continuation expected',
+      'Stop below Asia high'
+    ],
+    typicalScenarios: ['S2 - Trend Continuation Trade'],
+    sweepType: null
+  },
+  london_break_asia_low: {
+    id: 'london_break_asia_low',
+    name: 'London Break Below Asia Low',
+    description: 'London breaks below Asia low with volume and continuation',
+    tradingHints: [
+      'Bearish breakout trade',
+      'Enter on retest of broken Asia low',
+      'Targets below Asia range',
+      'Strong continuation expected',
+      'Stop above Asia low'
+    ],
+    typicalScenarios: ['S2 - Trend Continuation Trade'],
+    sweepType: null
+  },
+  
+  // LONDON SESSION - REJECTIONS
+  london_rejection_asia_high: {
+    id: 'london_rejection_asia_high',
+    name: 'London Rejection of Asia High',
+    description: 'London tries to break/sweep Asia high but gets rejected',
+    tradingHints: [
+      'Bearish rejection setup',
+      'Fade the move after rejection',
+      'Target back to Asia low',
+      'Range holds above Asia low'
+    ],
+    typicalScenarios: ['S1 - Range Trading'],
+    sweepType: null
+  },
+  london_rejection_asia_low: {
+    id: 'london_rejection_asia_low',
+    name: 'London Rejection of Asia Low',
+    description: 'London tries to break/sweep Asia low but gets rejected',
+    tradingHints: [
+      'Bullish rejection setup',
+      'Fade the move after rejection',
+      'Target back to Asia high',
+      'Range holds below Asia high'
+    ],
+    typicalScenarios: ['S1 - Range Trading'],
+    sweepType: null
+  },
+
+  // NEW YORK SESSION
   ny_continuation: {
     id: 'ny_continuation',
     name: 'NY Continuation',
@@ -84,7 +157,8 @@ export const SESSION_BEHAVIORS: Record<string, SessionBehavior> = {
       'Target extension levels',
       'High momentum expected'
     ],
-    typicalScenarios: ['S2 - Trend Trade']
+    typicalScenarios: ['S2 - Trend Trade'],
+    sweepType: null
   },
   ny_reversal: {
     id: 'ny_reversal',
@@ -96,7 +170,8 @@ export const SESSION_BEHAVIORS: Record<string, SessionBehavior> = {
       'Lower time frame reversals',
       'Risk management critical'
     ],
-    typicalScenarios: ['S3 - Mean Reversion']
+    typicalScenarios: ['S3 - Mean Reversion'],
+    sweepType: null
   },
   ny_overlap_momentum: {
     id: 'ny_overlap_momentum',
@@ -108,7 +183,21 @@ export const SESSION_BEHAVIORS: Record<string, SessionBehavior> = {
       'Wide stops recommended',
       'Highest probability setups'
     ],
-    typicalScenarios: ['S2 - Breakout Trade', 'S1 - Liquidity Run']
+    typicalScenarios: ['S2 - Breakout Trade', 'S1 - Liquidity Run'],
+    sweepType: null
+  },
+  ny_london_break_failure: {
+    id: 'ny_london_break_failure',
+    name: 'NY London Break Failure',
+    description: 'London made a break but NY fails to continue, reverses',
+    tradingHints: [
+      'London breakout fake',
+      'Counter London direction',
+      'Fade London momentum',
+      'Expect range to return'
+    ],
+    typicalScenarios: ['S3 - Mean Reversion'],
+    sweepType: null
   }
 };
 
@@ -183,10 +272,19 @@ export const getBehaviorsBySession = (sessionName: string): SessionBehavior[] =>
     relevant.push('asia_consolidation', 'asia_expansion');
   }
   if (sessionKey.includes('london')) {
-    relevant.push('london_sweep_asia', 'london_break_asia', 'london_rejection_asia');
+    // Add all London-specific behaviors
+    relevant.push(
+      'london_sweep_asia_low',
+      'london_sweep_asia_high', 
+      'london_sweep_both',
+      'london_break_asia_high',
+      'london_break_asia_low',
+      'london_rejection_asia_high',
+      'london_rejection_asia_low'
+    );
   }
   if (sessionKey.includes('new york') || sessionKey.includes('ny')) {
-    relevant.push('ny_continuation', 'ny_reversal', 'ny_overlap_momentum');
+    relevant.push('ny_continuation', 'ny_reversal', 'ny_overlap_momentum', 'ny_london_break_failure');
   }
 
   return relevant.map(id => SESSION_BEHAVIORS[id]).filter(Boolean);
